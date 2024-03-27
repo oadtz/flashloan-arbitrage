@@ -1,71 +1,103 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.20;
 
-// Import necessary Aave and ERC20 interfaces
-import "@aave/core-v3/contracts/flashloan/base/FlashLoanSimpleReceiverBase.sol";
-import "@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { FlashLoanSimpleReceiverBase } from "@aave/core-v3/contracts/flashloan/base/FlashLoanSimpleReceiverBase.sol";
+import { IPoolAddressesProvider } from "@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol";
+import { IERC20 } from "@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol";
+import { SafeERC20 } from "@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeERC20.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ArbitrageBot is FlashLoanSimpleReceiverBase {
-    using SafeMath for uint;
 
-    // Event to log asset and balance
-    event Log(address asset, uint val);
+interface IRouter {
+   function swapExactTokensForTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[2] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
+}
 
-    constructor(address provider) FlashLoanSimpleReceiverBase(IPoolAddressesProvider(provider)) {}
+contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
+    using SafeERC20 for IERC20;
 
-    // Function to initiate a flash loan
-    function createFlashLoan(address asset, uint amount) external {
-        address receiver = address(this);
-        bytes memory params = "";
-        uint16 referralCode = 0;
+    address public immutable ROUTER0;
+    address public immutable ROUTER1;
 
-        // Log the asset and its balance before the flash loan
-        emit Log(asset, IERC20(asset).balanceOf(address(this)));
-
-        // Initiate the flash loan
-        POOL.flashLoanSimple(
-            receiver,
-            asset,
-            amount,
-            params,
-            referralCode
-        );
+    constructor(address _addressProvider, address _router0, address _router1)
+        FlashLoanSimpleReceiverBase(IPoolAddressesProvider(_addressProvider))
+        Ownable(msg.sender)
+    {
+        ROUTER0 = _router0;
+        ROUTER1 = _router1;
     }
 
-    // Function called by Aave after a flash loan is initiated
+    function executeSwap(address router, address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOutMin) internal {
+        safeIncreaseAllowance(IERC20(tokenIn), router, amountIn);
+        IRouter(router).swapExactTokensForTokens(amountIn, amountOutMin, [tokenIn, tokenOut], address(this), block.timestamp);
+    }
+
+    function safeIncreaseAllowance(IERC20 token, address spender, uint256 amountNeeded) internal {
+        uint256 currentAllowance = token.allowance(address(this), spender);
+        if(currentAllowance < amountNeeded) {
+            token.safeApprove(spender, 0); 
+            token.safeApprove(spender, amountNeeded); 
+        }
+    }
+
+    /**
+        This function is called after your contract has received the flash loaned amount
+     */
     function executeOperation(
         address asset,
         uint256 amount,
         uint256 premium,
         address initiator,
         bytes calldata params
-    ) external returns (bool) {
-
-        // 👇 Your custom logic for the flash loan should be implemented here 👇
+    ) external override returns (bool) {
+        require(msg.sender == address(POOL), "Call must come from the Pool");
         require(initiator == address(this), "Initiator is not this contract");
-        
-        // This is where you can implement your custom logic for the flash loan.
-        // You can use 'asset' to identify the token being borrowed, 'amount' for the borrowed amount,
-        // and 'premium' for the premium fee.
-        
-        // Example: 
-        // 1. Use 'asset' and 'amount' to perform some operations
-        // 2. Make sure to repay the flash loan by transferring 'amount' + 'premium' back to Aave
-        // 3. You can also use 'params' to pass additional data if needed.
-        (uint256 amount1) = abi.decode(params, (uint256));
 
-        // 👆 Your custom logic for the flash loan should be implemented above here 👆
+        (address router0, address router1, address token0, address token1, uint256 amount0, uint256 amount1) = abi.decode(params, (address, address, address, address, uint256, uint256));
 
-        // Log the asset and its balance after the flash loan
-        emit Log(asset, IERC20(asset).balanceOf(address(this)));
+        require(router0 == ROUTER0 || router0 == ROUTER1, "Invalid router0");
+        require(router1 == ROUTER0 || router1 == ROUTER1, "Invalid router1");
+        require(router0 != router1, "Routers must be different");
 
-        // Calculate the total amount owing (amount borrowed + premium)
-        uint amountOwing = amount.add(premium).add(amount1);
-
-        // Approve Aave to transfer the amount owing from this contract
-        IERC20(asset).approve(address(POOL), amountOwing);
+        executeSwap(router0, token0, token1, amount0, amount1);
+        executeSwap(router1, token1, token0, IERC20(token1).balanceOf(address(this)), amount0 + premium);
+      
+        safeIncreaseAllowance(IERC20(asset), address(POOL), amount + premium);
 
         return true;
     }
+
+    function executeArbitrage(
+        address router0,
+        address router1,
+        address token0,
+        address token1,
+        uint256 amount0,
+        uint256 amount1
+    ) external onlyOwner {
+        require(router0 == ROUTER0 || router0 == ROUTER1, "Invalid router0");
+        require(router1 == ROUTER0 || router1 == ROUTER1, "Invalid router1");
+        require(router0 != router1, "Routers must be different");
+
+        bytes memory params = abi.encode(router0, router1, token0, token1, amount0, amount1);
+        POOL.flashLoanSimple(address(this), token0, amount0, params, 0);
+    }
+
+    function getBalance(address _tokenAddress) external view returns (uint256) {
+        return IERC20(_tokenAddress).balanceOf(address(this));
+    }
+
+    function withdraw(address token) external onlyOwner {
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        IERC20(token).safeTransfer(owner(), balance);
+    }
+
+    receive() external payable {}
+
+    fallback() external payable {}
 }
