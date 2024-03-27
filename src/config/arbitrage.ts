@@ -255,7 +255,7 @@ export const arbitrageConfig = {
     ],
   },
   bsc: {
-    address: "0xd0f82e310718248c1967b78bA8976cE6d9364BD8",
+    address: "0xf94252ad82B4D570b81AAA25795a0a45A587EDb4",
     abi: [
       {
         inputs: [

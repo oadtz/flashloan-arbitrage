@@ -7,8 +7,7 @@ import { arbitrageConfig } from "./config/arbitrage";
 
 // Constants
 const SLIPPAGE_TOLERANCE = 0.5;
-const GAS_LIMIT = 1500000;
-const ETH_AMOUNT = 1;
+const ETH_AMOUNT = 1000000;
 
 const provider = new ethers.JsonRpcProvider(appConfig.bscRpcUrl);
 const web3 = new Web3(new Web3.providers.HttpProvider(appConfig.bscRpcUrl));
@@ -26,34 +25,47 @@ async function checkArbitrage(
   fromRouterAmount?: bigint;
   toRouterAmount?: bigint;
 }> {
-  const pancakeswapRouter = new ethers.Contract(
+  const gasPrice = await web3.eth.getGasPrice();
+  const router0 = new ethers.Contract(
     routersConfig.pancakeswap.address,
     routersConfig.pancakeswap.abi,
     provider
   );
-  const mdexRouter = new ethers.Contract(
+  const router1 = new ethers.Contract(
     routersConfig.mdex.address,
     routersConfig.mdex.abi,
     provider
   );
 
-  let [, toTokenOnPancakeswap] = await pancakeswapRouter.getAmountsOut(amount, [
+  let [, outTokenFromRouter0] = await router0.getAmountsOut(amount, [
+    fromToken,
+    toToken,
+  ]);
+  const gas0 = await router0.getAmountsOut.estimateGas(amount, [
     fromToken,
     toToken,
   ]);
   console.log(
     `${ethers.formatEther(
-      amount as ethers.BigNumberish
-    )} ETH to BUSD on PancakeSwap: ${ethers.formatEther(toTokenOnPancakeswap)}`
+      amount
+    )} token0 to token1 on router0: ${ethers.formatEther(
+      outTokenFromRouter0
+    )} with gas: ${ethers.formatEther(gas0 * gasPrice)}`
   );
-  let [, toTokenOnMdex] = await mdexRouter.getAmountsOut(amount, [
+  let [, outTokenFromRouter1] = await router1.getAmountsOut(amount, [
+    fromToken,
+    toToken,
+  ]);
+  const gas1 = await router1.getAmountsOut.estimateGas(amount, [
     fromToken,
     toToken,
   ]);
   console.log(
     `${ethers.formatEther(
-      amount as ethers.BigNumberish
-    )} ETH to BUSD on MDEX: ${ethers.formatEther(toTokenOnMdex)}`
+      amount
+    )} token0 to token1 on router1: ${ethers.formatEther(
+      outTokenFromRouter1
+    )} with gas: ${ethers.formatEther(gas1 * gasPrice)}`
   );
 
   // Calculate the expected output amount with slippage tolerance
@@ -61,19 +73,18 @@ async function checkArbitrage(
     SLIPPAGE_TOLERANCE.toString(),
     16
   );
-
-  // Calculate the estimated gas cost for the arbitrage transaction
-  const gasPrice = await web3.eth.getGasPrice();
-  const gasCost = gasPrice * BigInt(GAS_LIMIT);
   const loanFee = (amount * BigInt(0.0005 * 10000)) / BigInt(10000);
+  console.log("Loan fee:", ethers.formatEther(loanFee));
 
-  if (toTokenOnPancakeswap > toTokenOnMdex) {
-    const receivedTokenOnMdex = (toTokenOnPancakeswap * amount) / toTokenOnMdex;
+  if (outTokenFromRouter0 > outTokenFromRouter1) {
+    const receivedTokenFromRouter1 =
+      (outTokenFromRouter0 * amount) / outTokenFromRouter1;
 
     const finalTokenAmount =
-      (receivedTokenOnMdex * (ethers.WeiPerEther - slippageTolerance)) /
+      (receivedTokenFromRouter1 * (ethers.WeiPerEther - slippageTolerance)) /
       ethers.WeiPerEther;
 
+    const gasCost = gas0 * gasPrice;
     const profit = finalTokenAmount - amount - gasCost - loanFee;
 
     if (profit > 0) {
@@ -81,18 +92,19 @@ async function checkArbitrage(
         profit,
         fromRouter: routersConfig.pancakeswap.address,
         toRouter: routersConfig.mdex.address,
-        fromRouterAmount: toTokenOnPancakeswap,
-        toRouterAmount: toTokenOnMdex,
+        fromRouterAmount: outTokenFromRouter0,
+        toRouterAmount: outTokenFromRouter1,
       };
     }
-  } else if (toTokenOnMdex > toTokenOnPancakeswap) {
-    const receivedTokenOnPancakewap =
-      (toTokenOnMdex * amount) / toTokenOnPancakeswap;
+  } else if (outTokenFromRouter1 > outTokenFromRouter0) {
+    const receivedTokenFromRouter0 =
+      (outTokenFromRouter1 * amount) / outTokenFromRouter0;
 
     const finalTokenAmount =
-      (receivedTokenOnPancakewap * BigInt(1000 - SLIPPAGE_TOLERANCE * 10)) /
+      (receivedTokenFromRouter0 * BigInt(1000 - SLIPPAGE_TOLERANCE * 10)) /
       BigInt(1000);
 
+    const gasCost = gas1 * gasPrice;
     const profit = finalTokenAmount - amount - gasCost - loanFee;
 
     if (profit > 0) {
@@ -100,8 +112,8 @@ async function checkArbitrage(
         profit,
         fromRouter: routersConfig.mdex.address,
         toRouter: routersConfig.pancakeswap.address,
-        fromRouterAmount: toTokenOnMdex,
-        toRouterAmount: toTokenOnPancakeswap,
+        fromRouterAmount: outTokenFromRouter1,
+        toRouterAmount: outTokenFromRouter0,
       };
     }
   }
@@ -119,14 +131,24 @@ async function performArbitrage(
   amount0: bigint,
   amount1: bigint
 ) {
+  const gasPrice = await web3.eth.getGasPrice();
   const arbiter = new ethers.Contract(
     arbitrageConfig.bsc.address,
     arbitrageConfig.bsc.abi,
     wallet
   );
 
-  const gasLimit = 10000; //GAS_LIMIT;
-  const gasPrice = await web3.eth.getGasPrice();
+  const gasLimit = 3000000;
+
+  console.log("----------------PARAMETERS-------------------");
+  console.log("Contract address:", arbitrageConfig.bsc.address);
+  console.log("From router:", fromRouter);
+  console.log("To router:", toRouter);
+  console.log("Token0:", token0);
+  console.log("Token1:", token1);
+  console.log("Amount0:", amount0.toString());
+  console.log("Amount1:", amount1.toString());
+  console.log("---------------------------------------------");
 
   const tx = await arbiter.executeArbitrage(
     fromRouter,
@@ -153,7 +175,7 @@ async function withdrawFunds() {
     wallet
   );
 
-  const tx = await contract.withdraw(tokensConfig.bsc.ETH);
+  const tx = await contract.withdraw(tokensConfig.bsc.USDT);
 
   await tx.wait();
 
@@ -161,9 +183,10 @@ async function withdrawFunds() {
 }
 
 async function main() {
+  const gasPrice = await web3.eth.getGasPrice();
   const amount = ethers.parseEther(ETH_AMOUNT.toString());
-  const fromToken = tokensConfig.bsc.ETH;
-  const toToken = tokensConfig.bsc.BUSD;
+  const fromToken = tokensConfig.bsc.USDT;
+  const toToken = tokensConfig.bsc.WBNB;
 
   //while (true) {
   try {
@@ -172,11 +195,9 @@ async function main() {
 
     if (profit > 0) {
       console.log(
-        `Arbitrage opportunity found from ${fromRouter}(${ethers.formatEther(
-          fromRouterAmount!
-        )}) to ${toRouter}(${ethers.formatEther(
-          toRouterAmount!
-        )}) with profit of ${ethers.formatEther(profit)}`
+        `Arbitrage opportunity found with profit of ${ethers.formatEther(
+          profit
+        )}`
       );
       await performArbitrage(
         fromRouter!,
