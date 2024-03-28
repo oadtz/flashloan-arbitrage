@@ -1,6 +1,6 @@
 import { getAssetName } from "../config/assets";
 import { getRouterName } from "../config/dex";
-import { estimateSwap, getProvider } from "./provider";
+import { estimateSwap, getGasPrice, Provider } from "./provider";
 import { ethers } from "ethers";
 
 export async function checkArbitrage(
@@ -9,13 +9,14 @@ export async function checkArbitrage(
   asset1: string,
   asset2: string,
   amountIn: bigint,
-  networkProviderUrl: string
+  slippageTolerance: number,
+  provider: Provider
 ) {
   const routers = [router1, router2];
   const tokens = [asset1, asset2];
 
   console.log(
-    "👁️ Checking scenario with routers: " +
+    "✅ Checking scenario with routers: " +
       routers.map((router) => getRouterName(router)).join(" <-> ") +
       " and tokens: " +
       tokens.map((token) => getAssetName(token)).join("/")
@@ -25,55 +26,84 @@ export async function checkArbitrage(
     routers,
     tokens,
     amountIn,
-    networkProviderUrl
+    slippageTolerance,
+    provider
   );
 
-  if (opportunity.profit > 0) {
-    return opportunity;
-  }
-
-  return {
-    profit: BigInt(0),
-  };
+  return opportunity;
 }
 
 async function checkArbitrageScenario(
   routers: string[],
   assets: string[],
   amountIn: bigint,
-  networkProviderUrl: string
+  slippageTolerance: number,
+  provider: Provider
 ) {
-  const provider = getProvider(networkProviderUrl);
+  try {
+    // Get asset1 out amount from router1
+    const { amountOut: amountOut1, gas: gas1 } = await estimateSwap(
+      routers[0],
+      assets[0],
+      assets[1],
+      amountIn,
+      provider
+    );
 
-  // Get asset1 out amount from router1
-  const { amountOut: amountOut1, gas: gas1 } = await estimateSwap(
-    routers[0],
-    assets[0],
-    assets[1],
-    amountIn,
-    provider
-  );
+    console.log(
+      `Estimated ${getAssetName(assets[0])} to ${getAssetName(
+        assets[1]
+      )} on ${getRouterName(routers[0])}: ${ethers.formatEther(
+        amountIn
+      )} ${getAssetName(assets[0])} -> ${ethers.formatEther(
+        amountOut1
+      )} ${getAssetName(assets[1])} with gas: ${ethers.formatEther(
+        gas1 * (await getGasPrice(provider))
+      )}`
+    );
 
-  // Get asset2 out amount from router2
-  const { amountOut: amountOut2, gas: gas2 } = await estimateSwap(
-    routers[1],
-    assets[1],
-    assets[0],
-    amountOut1,
-    provider
-  );
+    // Get asset2 out amount from router2
+    let { amountOut: amountOut2, gas: gas2 } = await estimateSwap(
+      routers[1],
+      assets[1],
+      assets[0],
+      amountOut1,
+      provider
+    );
 
-  const profit = amountOut2 - amountIn - gas1 - gas2;
+    console.log(
+      `Estimated ${getAssetName(assets[1])} to ${getAssetName(
+        assets[0]
+      )} on ${getRouterName(routers[1])}: ${ethers.formatEther(
+        amountOut2
+      )} ${getAssetName(assets[0])} <- ${ethers.formatEther(
+        amountOut1
+      )} ${getAssetName(assets[1])} with gas: ${ethers.formatEther(
+        gas1 * (await getGasPrice(provider))
+      )}`
+    );
 
-  console.log(
-    `Arbitrage opportunity: ${ethers.formatEther(profit)} ${getAssetName(
-      assets[0]
-    )}`
-  );
+    const profit = amountOut2 - amountIn - gas1 - gas2;
 
-  if (profit > 0) {
+    console.log(
+      `Arbitrage opportunity: ${ethers.formatEther(profit)} ${getAssetName(
+        assets[0]
+      )}`
+    );
+
+    if (profit > 0) {
+      return {
+        profit,
+        fromRouter: routers[0],
+        toRouter: routers[1],
+        tokenIn: assets[0],
+        tokenOut: assets[1],
+        amountIn: amountIn,
+        amountOut: amountOut1,
+      };
+    }
     return {
-      profit,
+      profit: BigInt(0),
       fromRouter: routers[0],
       toRouter: routers[1],
       tokenIn: assets[0],
@@ -81,9 +111,17 @@ async function checkArbitrageScenario(
       amountIn: amountIn,
       amountOut: amountOut1,
     };
-  }
+  } catch (error) {
+    console.error("checkArbitrageScenarioError:", error);
 
-  return {
-    profit: BigInt(0),
-  };
+    return {
+      profit: BigInt(0),
+      fromRouter: routers[0],
+      toRouter: routers[1],
+      tokenIn: assets[0],
+      tokenOut: assets[1],
+      amountIn: amountIn,
+      amountOut: undefined,
+    };
+  }
 }

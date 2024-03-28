@@ -10,6 +10,8 @@ export const routers: Router = {
   PancakeSwap: "0x10ED43C718714eb63d5aA57B78B54704E256024E",
   BiSwap: "0x3a6d8cA21D1CF76F653A67577FA0D27453350dD8",
   MDEX: "0x7DAe51BD3E3376B8c7c4900E9107f12Be3AF1bA8",
+  ApeSwap: "0xcF0feBd3f17CEf5b47b0cD257aCf6025c5BFf3b7",
+  UniSwapV2: "0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F",
 };
 
 export function getRouterName(address: string) {
