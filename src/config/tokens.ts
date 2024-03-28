@@ -6,5 +6,9 @@ export const tokensConfig = {
   bsc: {
     USDT: "0x55d398326f99059fF775485246999027B3197955",
     WBNB: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+    ETH: "0x2170ed0880ac9a755fd29b2688956bd959f933f8",
+    LTC: "0x4338665cbb7b2485a8855a139b75d5e34ab0db94",
+    BUSD: "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+    BTCB: "0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c",
   },
 };

@@ -7,7 +7,7 @@ import { arbitrageConfig } from "./config/arbitrage";
 
 // Constants
 const SLIPPAGE_TOLERANCE = 0.5;
-const ETH_AMOUNT = 150000;
+const ETH_AMOUNT = 1000000;
 
 const provider = new ethers.JsonRpcProvider(appConfig.bscRpcUrl);
 const web3 = new Web3(new Web3.providers.HttpProvider(appConfig.bscRpcUrl));
@@ -26,6 +26,7 @@ async function checkArbitrage(
   toRouterAmount?: bigint;
 }> {
   const gasPrice = await web3.eth.getGasPrice();
+
   const router0 = new ethers.Contract(
     routersConfig.pancakeswap.address,
     routersConfig.pancakeswap.abi,

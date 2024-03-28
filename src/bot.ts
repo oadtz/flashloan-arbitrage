@@ -1,112 +1,107 @@
-import * as ccxt from "ccxt";
+import { routers } from "./config/dex";
+import { assets } from "./config/assets";
+import { checkArbitrage } from "./utils/check-arbitrage";
+import { appConfig } from "./config/app";
+import { ethers } from "ethers";
 
-interface Ticker {
-  ask: number;
-  bid: number;
-}
-
-interface Opportunity {
-  exchange1: string;
-  exchange2: string;
-  symbol: string;
-  profit: number;
-}
-
-const exchanges = [
-  new ccxt.binance(),
-  new ccxt.kraken(),
-  new ccxt.bitfinex(),
-  new ccxt.coinbasepro(),
-  new ccxt.bitmex(),
-  new ccxt.poloniex(),
-  new ccxt.kucoin(),
+const routersToCheck = [routers.PancakeSwap, routers.BiSwap, routers.MDEX];
+const assetsToCheck = [
+  {
+    token: assets.BTCB,
+    amount: 10,
+    borrowable: true,
+  },
+  {
+    token: assets.ETH,
+    amount: 100,
+    borrowable: true,
+  },
+  {
+    token: assets.WBNB,
+    amount: 1000,
+    borrowable: true,
+  },
+  {
+    token: assets.USDT,
+    amount: 100000,
+    borrowable: true,
+  },
+  {
+    token: assets.BUSD,
+    amount: 100000,
+  },
 ];
 
-const symbols = [
-  "BTC/USDT",
-  "ETH/USDT",
-  "XRP/USDT",
-  "BCH/USDT",
-  "LTC/USDT",
-  "EOS/USDT",
-  "BNB/USDT",
-  "XLM/USDT",
-  "ADA/USDT",
-  "XMR/USDT",
-  "DASH/USDT",
-  "TRX/USDT",
-  "LINK/USDT",
-  "XTZ/USDT",
-  "NEO/USDT",
-];
-const threshold = 0.01; // 1% profit threshold
+const slippageTolerance = 0.5;
+const flashLoanFee = 0.0005;
 
-async function fetchTickers(
-  exchange: ccxt.Exchange,
-  symbol: string
-): Promise<Ticker> {
-  const ticker = await exchange.fetchTicker(symbol);
-  return {
-    ask: ticker.ask || 0,
-    bid: ticker.bid || 0,
-  };
-}
+const networkProviderUrl = appConfig.bscRpcUrl;
 
-async function findOpportunities(): Promise<Opportunity[]> {
-  const opportunities: Opportunity[] = [];
+async function main() {
+  // while (true) {
 
-  for (const symbol of symbols) {
-    const tickers: Record<string, Ticker> = {};
+  for (const asset1 of assetsToCheck) {
+    for (const asset2 of assetsToCheck) {
+      if (asset1.token === asset2.token || !asset1.borrowable) {
+        continue;
+      }
 
-    for (const exchange of exchanges) {
-      const ticker = await fetchTickers(exchange, symbol);
-      tickers[exchange.id] = ticker;
-    }
+      for (const router1 of routersToCheck) {
+        for (const router2 of routersToCheck) {
+          if (router1 === router2) {
+            continue;
+          }
 
-    for (const [exchange1, ticker1] of Object.entries(tickers)) {
-      for (const [exchange2, ticker2] of Object.entries(tickers)) {
-        if (exchange1 !== exchange2) {
-          const profit = (ticker2.bid - ticker1.ask) / ticker1.ask;
-          if (profit > threshold) {
-            opportunities.push({
-              exchange1,
-              exchange2,
-              symbol,
-              profit,
-            });
+          const token1 = asset1.token;
+          const token2 = asset2.token;
+          const borrowedAmount = asset1.amount;
+
+          const opportunity = await checkArbitrage(
+            router1,
+            router2,
+            token1,
+            token2,
+            ethers.parseEther(borrowedAmount.toString()),
+            networkProviderUrl
+          );
+
+          if (opportunity.profit > 0) {
+            const finalProfit =
+              opportunity.profit -
+              ethers.parseEther(borrowedAmount.toString()) *
+                BigInt(1 - flashLoanFee);
+
+            if (finalProfit > 0) {
+              console.log(
+                `✅ Arbitrage opportunity found with profit of ${ethers.formatEther(
+                  finalProfit
+                )}`
+              );
+              console.log("Route0: ", opportunity.fromRouter);
+              console.log("Route1: ", opportunity.toRouter);
+              console.log("Token0: ", opportunity.tokenIn);
+              console.log("Token1: ", opportunity.tokenOut);
+              console.log("Amount0: ", opportunity.amountIn);
+              console.log("Amount1: ", opportunity.amountOut);
+
+              console.log("Performing arbitrage...");
+              process.exit(0);
+            } else {
+              console.log(`❌ Not an arbitrage opportunity\n\n`);
+            }
+          } else {
+            console.log(`❌ Not an arbitrage opportunity\n\n`);
           }
         }
       }
     }
   }
 
-  return opportunities;
+  //await new Promise((resolve) => setTimeout(resolve, 1000));
+  //}
 }
 
-async function main() {
-  while (true) {
-    try {
-      const opportunities = await findOpportunities();
-      if (opportunities.length > 0) {
-        console.log("Arbitrage opportunities found:");
-        opportunities.forEach((opportunity) => {
-          console.log(
-            `Exchange1: ${opportunity.exchange1}, Exchange2: ${
-              opportunity.exchange2
-            }, Symbol: ${
-              opportunity.symbol
-            }, Profit: ${opportunity.profit.toFixed(4)}`
-          );
-        });
-      } else {
-        console.log("No arbitrage opportunities found.");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for 5 seconds before the next iteration
-  }
-}
-
-main();
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
