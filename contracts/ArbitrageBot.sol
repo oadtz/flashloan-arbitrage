@@ -12,7 +12,7 @@ interface IRouter {
    function swapExactTokensForTokens(
         uint256 amountIn,
         uint256 amountOutMin,
-        address[2] calldata path,
+        address[] calldata path,
         address to,
         uint256 deadline
     ) external returns (uint256[] memory amounts);
@@ -21,34 +21,32 @@ interface IRouter {
 contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
     using SafeERC20 for IERC20;
 
-    address public immutable ROUTER0;
-    address public immutable ROUTER1;
-
-    event ArbitrageExecuted();
-    event SwapExecuted(address indexed router, address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut);
-    event FlashLoanReceived(address indexed asset, uint256 amount);
-    event FlashLoanReturned(address indexed asset, uint256 amount, uint256 premium);
+    // address public immutable ROUTER0;
+    // address public immutable ROUTER1;
 
 
-    constructor(address _addressProvider, address _router0, address _router1)
+    constructor(address _addressProvider)
         FlashLoanSimpleReceiverBase(IPoolAddressesProvider(_addressProvider))
         Ownable(msg.sender)
     {
-        ROUTER0 = _router0;
-        ROUTER1 = _router1;
+        // ROUTER0 = _router0;
+        // ROUTER1 = _router1;
     }
 
     function executeSwap(address router, address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOutMin) internal {
+        address[] memory path = new address[](2);
+        path[0] = tokenIn;
+        path[1] = tokenOut;
+
         uint256 balanceBefore = IERC20(tokenOut).balanceOf(address(this));
         safeIncreaseAllowance(IERC20(tokenIn), router, amountIn);
 
         uint256 slippageTolerance = 5; // 5% slippage tolerance
         uint256 adjustedAmountOutMin = amountOutMin * (100 - slippageTolerance) / 100;
 
-        IRouter(router).swapExactTokensForTokens(amountIn, adjustedAmountOutMin, [tokenIn, tokenOut], address(this), block.timestamp);
+        IRouter(router).swapExactTokensForTokens(amountIn, adjustedAmountOutMin, path, address(this), block.timestamp);
         uint256 balanceAfter = IERC20(tokenOut).balanceOf(address(this));
         require(balanceAfter > balanceBefore, "Swap failed");
-        emit SwapExecuted(router, tokenIn, tokenOut, amountIn, balanceAfter - balanceBefore);
     }
 
     function safeIncreaseAllowance(IERC20 token, address spender, uint256 amountNeeded) internal {
@@ -72,21 +70,14 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
         require(msg.sender == address(POOL), "FlashLoanError: Call must come from the Pool");
         require(initiator == address(this), "FlashLoanError: Initiator is not this contract");
 
-        emit FlashLoanReceived(asset, amount);
-
         (address router0, address router1, address token0, address token1, uint256 amount0, uint256 amount1) = abi.decode(params, (address, address, address, address, uint256, uint256));
 
-        require(router0 == ROUTER0 || router0 == ROUTER1, "SwapError: Invalid router0");
-        require(router1 == ROUTER0 || router1 == ROUTER1, "SwapError: Invalid router1");
+        // require(router0 == ROUTER0 || router0 == ROUTER1, "SwapError: Invalid router0");
+        // require(router1 == ROUTER0 || router1 == ROUTER1, "SwapError: Invalid router1");
         require(router0 != router1, "SwapError: Routers must be different");
 
         executeSwap(router0, token0, token1, amount0, amount1);
-        require(
-            IERC20(token1).balanceOf(address(this)) >= amount1, string(abi.encodePacked("Insufficient balance after swap for token1. Balance: ", 
-                uint2str(IERC20(token1).balanceOf(address(this))), 
-                " Required: ", uint2str(amount1)))
-        );
-        // executeSwap(router1, token1, token0, IERC20(token1).balanceOf(address(this)), amount0 + premium);
+        executeSwap(router1, token1, token0, IERC20(token1).balanceOf(address(this)), amount0 + premium);
       
         require(
             IERC20(asset).balanceOf(address(this)) >= amount + premium, 
@@ -96,8 +87,6 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
         );
       
         safeIncreaseAllowance(IERC20(asset), address(POOL), amount + premium);
-
-        emit FlashLoanReturned(asset, amount, premium);
 
         return true;
     }
@@ -110,10 +99,8 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
         uint256 amount0,
         uint256 amount1
     ) external onlyOwner {
-        emit ArbitrageExecuted();
-
-        require(router0 == ROUTER0 || router0 == ROUTER1, "InitError: Invalid router0");
-        require(router1 == ROUTER0 || router1 == ROUTER1, "InitError: Invalid router1");
+        // require(router0 == ROUTER0 || router0 == ROUTER1, "InitError: Invalid router0");
+        // require(router1 == ROUTER0 || router1 == ROUTER1, "InitError: Invalid router1");
         require(router0 != router1, "InitError: Routers must be different");
 
         bytes memory params = abi.encode(router0, router1, token0, token1, amount0, amount1);
@@ -155,5 +142,5 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
 
     receive() external payable {}
 
-    fallback() external payable {}
+    //fallback() external payable {}
 }

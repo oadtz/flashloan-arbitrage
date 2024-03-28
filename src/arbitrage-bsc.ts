@@ -7,7 +7,7 @@ import { arbitrageConfig } from "./config/arbitrage";
 
 // Constants
 const SLIPPAGE_TOLERANCE = 0.5;
-const ETH_AMOUNT = 500000;
+const ETH_AMOUNT = 150000;
 
 const provider = new ethers.JsonRpcProvider(appConfig.bscRpcUrl);
 const web3 = new Web3(new Web3.providers.HttpProvider(appConfig.bscRpcUrl));
@@ -122,8 +122,8 @@ async function checkArbitrage(
     profit: BigInt(0),
     fromRouter: routersConfig.pancakeswap.address,
     toRouter: routersConfig.mdex.address,
-    fromRouterAmount: BigInt(0),
-    toRouterAmount: BigInt(0),
+    fromRouterAmount: outTokenFromRouter0,
+    toRouterAmount: outTokenFromRouter1,
   };
 }
 
@@ -154,20 +154,20 @@ async function performArbitrage(
   console.log("Amount1:", amount1.toString());
   console.log("---------------------------------------------");
 
-  const tx = await arbiter.executeArbitrage(
-    fromRouter,
-    toRouter,
-    token0,
-    token1,
-    amount0,
-    amount1,
-    {
-      gasLimit: gasLimit,
-      gasPrice: gasPrice,
-    }
-  );
+  // const tx = await arbiter.executeArbitrage(
+  //   fromRouter,
+  //   toRouter,
+  //   token0,
+  //   token1,
+  //   amount0,
+  //   amount1,
+  //   {
+  //     gasLimit: gasLimit,
+  //     gasPrice: gasPrice,
+  //   }
+  // );
 
-  await tx.wait();
+  // await tx.wait();
 
   console.log("Arbitrage executed successfully!");
 }
