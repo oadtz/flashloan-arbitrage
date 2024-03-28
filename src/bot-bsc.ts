@@ -39,6 +39,10 @@ const assetsToCheck = [
     token: assets.CAT,
     amount: 10000000000000,
   },
+  {
+    token: assets.DOGE,
+    amount: 2000000,
+  },
 ];
 
 const slippageTolerance = 0.5;

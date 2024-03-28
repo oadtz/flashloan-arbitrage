@@ -3,7 +3,11 @@ import { assets } from "./config/assets";
 import { appConfig } from "./config/app";
 import { run } from "./utils/arbitrage";
 
-const routersToCheck = [routers.UniSwap, routers.SushiSwap];
+const routersToCheck = [
+  routers.UniSwap,
+  routers.SushiSwap,
+  routers.PanCakeSwapETH,
+];
 const assetsToCheck = [
   {
     token: assets.DAI,
@@ -14,6 +18,48 @@ const assetsToCheck = [
     token: assets.WETH,
     amount: 200,
     borrowable: true,
+  },
+  {
+    token: assets.WBTC,
+    amount: 10,
+    borrowable: true,
+  },
+  {
+    token: assets.USDC,
+    amount: 100000,
+    borrowable: true,
+  },
+  {
+    token: assets.eUSDT,
+    amount: 100000,
+    borrowable: true,
+  },
+  {
+    token: assets.LINK,
+    amount: 10000,
+    borrowable: true,
+  },
+  {
+    token: assets.rETH,
+    amount: 50,
+    borrowable: true,
+  },
+  {
+    token: assets.AAVE,
+    amount: 1000,
+    borrowable: true,
+  },
+  {
+    token: assets.AAVE,
+    amount: 20000,
+  },
+  {
+    token: assets.SHIB,
+    amount: 10000000000,
+  },
+  {
+    token: assets.FRAX,
+    amount: 100000,
   },
 ];
 
