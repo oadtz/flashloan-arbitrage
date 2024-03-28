@@ -41,7 +41,11 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
     function executeSwap(address router, address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOutMin) internal {
         uint256 balanceBefore = IERC20(tokenOut).balanceOf(address(this));
         safeIncreaseAllowance(IERC20(tokenIn), router, amountIn);
-        IRouter(router).swapExactTokensForTokens(amountIn, amountOutMin, [tokenIn, tokenOut], address(this), block.timestamp);
+
+        uint256 slippageTolerance = 5; // 5% slippage tolerance
+        uint256 adjustedAmountOutMin = amountOutMin * (100 - slippageTolerance) / 100;
+
+        IRouter(router).swapExactTokensForTokens(amountIn, adjustedAmountOutMin, [tokenIn, tokenOut], address(this), block.timestamp);
         uint256 balanceAfter = IERC20(tokenOut).balanceOf(address(this));
         require(balanceAfter > balanceBefore, "Swap failed");
         emit SwapExecuted(router, tokenIn, tokenOut, amountIn, balanceAfter - balanceBefore);
@@ -77,9 +81,19 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
         require(router0 != router1, "SwapError: Routers must be different");
 
         executeSwap(router0, token0, token1, amount0, amount1);
-        executeSwap(router1, token1, token0, IERC20(token1).balanceOf(address(this)), amount0 + premium);
+        require(
+            IERC20(token1).balanceOf(address(this)) >= amount1, string(abi.encodePacked("Insufficient balance after swap for token1. Balance: ", 
+                uint2str(IERC20(token1).balanceOf(address(this))), 
+                " Required: ", uint2str(amount1)))
+        );
+        // executeSwap(router1, token1, token0, IERC20(token1).balanceOf(address(this)), amount0 + premium);
       
-        require(IERC20(asset).balanceOf(address(this)) >= amount + premium, "Insufficient balance to repay flash loan");
+        require(
+            IERC20(asset).balanceOf(address(this)) >= amount + premium, 
+            string(abi.encodePacked("Insufficient balance to repay flash loan. Balance: ", 
+                uint2str(IERC20(asset).balanceOf(address(this))), 
+                " Required: ", uint2str(amount + premium)))
+        );
       
         safeIncreaseAllowance(IERC20(asset), address(POOL), amount + premium);
 
@@ -112,8 +126,31 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
     }
 
     function withdraw(address token) external onlyOwner {
-        uint256 balance = IERC20(token).balanceOf(address(this));
-        IERC20(token).safeTransfer(owner(), balance);
+            uint256 balance = IERC20(token).balanceOf(address(this));
+            IERC20(token).safeTransfer(owner(), balance);
+        }
+        
+    function uint2str(uint256 _num) internal pure returns (string memory) {
+        if (_num == 0) {
+            return "0";
+        }
+        uint256 j = _num;
+        uint256 len;
+        while (j != 0) {
+            len++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(len);
+        uint256 k = len;
+        while (_num != 0) {
+            k = k - 1;
+            uint8 temp = (48 + uint8(_num - _num / 10 * 10));
+            bytes1 b1 = bytes1(temp);
+            bstr[k] = b1;
+            _num /= 10;
+        }
+        
+        return string(bstr);
     }
 
     receive() external payable {}

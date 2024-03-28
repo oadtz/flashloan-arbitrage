@@ -7,7 +7,7 @@ import { arbitrageConfig } from "./config/arbitrage";
 
 // Constants
 const SLIPPAGE_TOLERANCE = 0.5;
-const ETH_AMOUNT = 1000000;
+const ETH_AMOUNT = 500000;
 
 const provider = new ethers.JsonRpcProvider(appConfig.bscRpcUrl);
 const web3 = new Web3(new Web3.providers.HttpProvider(appConfig.bscRpcUrl));
@@ -120,6 +120,10 @@ async function checkArbitrage(
 
   return {
     profit: BigInt(0),
+    fromRouter: routersConfig.pancakeswap.address,
+    toRouter: routersConfig.mdex.address,
+    fromRouterAmount: BigInt(0),
+    toRouterAmount: BigInt(0),
   };
 }
 
@@ -210,6 +214,14 @@ async function main() {
       //await withdrawFunds();
     } else {
       console.log("No arbitrage opportunity found.");
+      // await performArbitrage(
+      //   fromRouter!,
+      //   toRouter!,
+      //   fromToken,
+      //   toToken,
+      //   amount,
+      //   fromRouterAmount!
+      // );
     }
   } catch (error) {
     console.error(error);
