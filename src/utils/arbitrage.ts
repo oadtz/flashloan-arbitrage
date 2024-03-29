@@ -1,13 +1,18 @@
 import { ethers } from "ethers";
 import { checkArbitrage } from "./check-arbitrage";
-import { getProvider, toDecimals } from "./provider";
+import { Provider, getProvider, toDecimals } from "./provider";
+import {
+  addresses as arbitrageAddresses,
+  abi as arbitrageAbi,
+} from "../config/arbitrage";
 
 export async function run(
   routersToCheck: any[],
   assetsToCheck: any[],
   slippageTolerance: number,
   flashLoanFee: number,
-  networkProviderUrl: string
+  networkProviderUrl: string,
+  delay: number
 ) {
   console.log("🚀 Starting bot...");
 
@@ -66,6 +71,23 @@ export async function run(
 
                 console.log("Performing arbitrage...");
 
+                await perform(
+                  opportunity.fromRouter,
+                  opportunity.toRouter,
+                  opportunity.tokenIn,
+                  opportunity.tokenOut,
+                  opportunity.amountIn,
+                  opportunity.amountOut!,
+                  provider
+                );
+
+                console.log("🌛 Arbitrage executed successfully!");
+
+                console.log("Withdrawing funds...");
+
+                await withdrawFunds(opportunity.tokenIn, provider);
+
+                console.log("Withdrawal transaction confirmed");
                 //continue;
                 process.exit(0);
               }
@@ -73,10 +95,55 @@ export async function run(
 
             console.log(`❌ Not an arbitrage opportunity\n\n`);
 
-            await new Promise((resolve) => setTimeout(resolve, 10000));
+            await new Promise((resolve) => setTimeout(resolve, delay));
           }
         }
       }
     }
   }
+}
+
+async function perform(
+  router0: string,
+  router1: string,
+  token0: string,
+  token1: string,
+  amountToFlashLoan: bigint,
+  amountToCheck: bigint,
+  provider: Provider
+) {
+  const arbiter = new ethers.Contract(
+    arbitrageAddresses.bsc,
+    arbitrageAbi,
+    provider.wallet
+  );
+
+  const tx = await arbiter.executeArbitrage(
+    router0,
+    router1,
+    token0,
+    token1,
+    amountToFlashLoan,
+    amountToCheck,
+    {
+      gasLimit: 3000000,
+    }
+  );
+  await tx.wait();
+
+  return true;
+}
+
+async function withdrawFunds(assetToWithdraw: string, provider: Provider) {
+  const contract = new ethers.Contract(
+    arbitrageAddresses.bsc,
+    arbitrageAbi,
+    provider.wallet
+  );
+
+  const tx = await contract.withdraw(assetToWithdraw);
+
+  await tx.wait();
+
+  return true;
 }

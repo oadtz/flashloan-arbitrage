@@ -41,7 +41,9 @@ export async function toDecimals(
 ): Promise<bigint> {
   const assetContract = new Ethers.Contract(asset, assetAbi, provider.ethers);
 
-  const decimals: number = await assetContract.decimals();
+  const decimals: number = (await assetContract.decimals()) || 18;
+
+  console.log("Decimals: ", decimals);
 
   return Ethers.parseUnits(amount.toString(), decimals);
 }

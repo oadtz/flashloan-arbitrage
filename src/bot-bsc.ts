@@ -36,10 +36,6 @@ const assetsToCheck = [
     amount: 100000,
   },
   {
-    token: assets.CAT,
-    amount: 10000000000000,
-  },
-  {
     token: assets.DOGE,
     amount: 2000000,
   },
@@ -55,7 +51,8 @@ run(
   assetsToCheck,
   slippageTolerance,
   flashLoanFee,
-  networkProviderUrl
+  networkProviderUrl,
+  1
 ).catch((error) => {
   console.error(error);
   process.exit(1);

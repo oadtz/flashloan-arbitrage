@@ -3,11 +3,7 @@ import { assets } from "./config/assets";
 import { appConfig } from "./config/app";
 import { run } from "./utils/arbitrage";
 
-const routersToCheck = [
-  routers.UniSwap,
-  routers.SushiSwap,
-  routers.PanCakeSwapETH,
-];
+const routersToCheck = [routers.UniSwap, routers.SushiSwap, routers.FraxSwap];
 const assetsToCheck = [
   {
     token: assets.DAI,
@@ -73,7 +69,8 @@ run(
   assetsToCheck,
   slippageTolerance,
   flashLoanFee,
-  networkProviderUrl
+  networkProviderUrl,
+  10000
 ).catch((error) => {
   console.error(error);
   process.exit(1);

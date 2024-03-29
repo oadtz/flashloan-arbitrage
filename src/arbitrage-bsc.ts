@@ -3,7 +3,10 @@ import Web3 from "web3";
 import { appConfig } from "./config/app";
 import { tokensConfig } from "./config/tokens";
 import { routersConfig } from "./config/routers";
-import { arbitrageConfig } from "./config/arbitrage";
+import {
+  addresses as arbitrageAddresses,
+  abi as arbitrageAbi,
+} from "./config/arbitrage";
 
 // Constants
 const SLIPPAGE_TOLERANCE = 0.5;
@@ -138,15 +141,15 @@ async function performArbitrage(
 ) {
   const gasPrice = await web3.eth.getGasPrice();
   const arbiter = new ethers.Contract(
-    arbitrageConfig.bsc.address,
-    arbitrageConfig.bsc.abi,
+    arbitrageAddresses.bsc,
+    arbitrageAbi,
     wallet
   );
 
   const gasLimit = 3000000;
 
   console.log("----------------PARAMETERS-------------------");
-  console.log("Contract address:", arbitrageConfig.bsc.address);
+  console.log("Contract address:", arbitrageAddresses.bsc);
   console.log("From router:", fromRouter);
   console.log("To router:", toRouter);
   console.log("Token0:", token0);
@@ -175,8 +178,8 @@ async function performArbitrage(
 
 async function withdrawFunds() {
   const contract = new ethers.Contract(
-    arbitrageConfig.bsc.address,
-    arbitrageConfig.bsc.abi,
+    arbitrageAddresses.bsc,
+    arbitrageAbi,
     wallet
   );
 

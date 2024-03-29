@@ -70,6 +70,17 @@ async function checkArbitrageScenario(
       amountOut1,
       provider
     );
+    // let { amountOut: amountOut2, gas: gas2 } = await estimateSwap(
+    //   routers[1],
+    //   assets[0],
+    //   assets[1],
+    //   amountIn,
+    //   provider
+    // );
+    // amountOut2 =
+    //   (((amountOut1 * amountIn) / amountOut2) *
+    //     BigInt(Math.floor(0.95 * 100))) /
+    //   BigInt(100);
 
     console.log(
       `Estimated ${getAssetName(assets[1])} to ${getAssetName(
@@ -112,7 +123,7 @@ async function checkArbitrageScenario(
       amountOut: amountOut1,
     };
   } catch (error) {
-    console.error("checkArbitrageScenarioError:", error);
+    //console.error("checkArbitrageScenarioError:", error);
 
     return {
       profit: BigInt(0),
