@@ -1,10 +1,7 @@
 import { ethers } from "ethers";
 import { checkArbitrage } from "./check-arbitrage";
 import { Provider, getProvider, toDecimals } from "./provider";
-import {
-  addresses as arbitrageAddresses,
-  abi as arbitrageAbi,
-} from "../config/arbitrage";
+import { abi as arbitrageAbi } from "../config/arbitrage";
 
 export async function run(
   routersToCheck: any[],
@@ -12,6 +9,7 @@ export async function run(
   slippageTolerance: number,
   flashLoanFee: number,
   networkProviderUrl: string,
+  arbitrageContractAddress: string,
   delay: number
 ) {
   console.log("🚀 Starting bot...");
@@ -40,7 +38,7 @@ export async function run(
               router2,
               token1,
               token2,
-              await toDecimals(token1, borrowedAmount, provider),
+              await toDecimals(borrowedAmount, token1, provider),
               slippageTolerance,
               provider
             );
@@ -51,45 +49,46 @@ export async function run(
             console.log("Token1: ", opportunity.tokenOut);
             console.log("Amount0: ", opportunity.amountIn.toString());
             console.log("Amount1: ", opportunity.amountOut?.toString());
-            console.log(
-              "Fee: ",
-              (
-                (ethers.parseEther(borrowedAmount.toString()) *
-                  BigInt(Math.floor(1.0005 * 10000))) /
-                BigInt(10000)
-              ).toString()
-            );
 
+            console.log(`Opportunity: ${opportunity.profit.toString()}`);
             if (opportunity.profit > 0) {
-              const finalProfit =
-                opportunity.profit -
-                ethers.parseEther(borrowedAmount.toString()) *
-                  (BigInt(Math.floor(1.0005 * 10000)) / BigInt(10000));
+              const fee =
+                ((await toDecimals(borrowedAmount, token1, provider)) *
+                  BigInt(Math.floor(0.0005 * 10000))) /
+                BigInt(10000);
+              console.log(`Cost: ${fee.toString()}`);
+
+              const finalProfit = opportunity.profit - fee;
+
+              console.log(`Final profit: ${finalProfit.toString()}`);
 
               if (finalProfit >= 0) {
                 console.log(`🎉 Arbitrage opportunity found`);
 
                 console.log("Performing arbitrage...");
 
-                await perform(
-                  opportunity.fromRouter,
-                  opportunity.toRouter,
-                  opportunity.tokenIn,
-                  opportunity.tokenOut,
-                  opportunity.amountIn,
-                  opportunity.amountOut!,
-                  provider
-                );
+                if (
+                  await perform(
+                    opportunity.fromRouter,
+                    opportunity.toRouter,
+                    opportunity.tokenIn,
+                    opportunity.tokenOut,
+                    opportunity.amountIn,
+                    provider,
+                    arbitrageContractAddress
+                  )
+                ) {
+                  console.log("Withdrawing funds...");
 
-                console.log("🌛 Arbitrage executed successfully!");
+                  await withdrawFunds(
+                    opportunity.tokenIn,
+                    provider,
+                    arbitrageContractAddress
+                  );
+                }
 
-                console.log("Withdrawing funds...");
-
-                await withdrawFunds(opportunity.tokenIn, provider);
-
-                console.log("Withdrawal transaction confirmed");
-                //continue;
-                process.exit(0);
+                continue;
+                //process.exit(0);
               }
             }
 
@@ -109,41 +108,62 @@ async function perform(
   token0: string,
   token1: string,
   amountToFlashLoan: bigint,
-  amountToCheck: bigint,
-  provider: Provider
+  provider: Provider,
+  arbitrageContractAddress: string
 ) {
-  const arbiter = new ethers.Contract(
-    arbitrageAddresses.bsc,
-    arbitrageAbi,
-    provider.wallet
-  );
+  if (!arbitrageContractAddress) return false; // Skip arbitrage if no contract address is provided
 
-  const tx = await arbiter.executeArbitrage(
-    router0,
-    router1,
-    token0,
-    token1,
-    amountToFlashLoan,
-    amountToCheck,
-    {
-      gasLimit: 3000000,
-    }
-  );
-  await tx.wait();
+  try {
+    const arbiter = new ethers.Contract(
+      arbitrageContractAddress,
+      arbitrageAbi,
+      provider.wallet
+    );
 
-  return true;
+    const tx = await arbiter.executeArbitrage(
+      router0,
+      router1,
+      token0,
+      token1,
+      amountToFlashLoan,
+      {
+        gasLimit: 3000000,
+      }
+    );
+    await tx.wait();
+    console.log("🌛 Arbitrage executed successfully!");
+
+    return true;
+  } catch (error) {
+    console.error("Error performing arbitrage");
+    throw error;
+  }
 }
 
-async function withdrawFunds(assetToWithdraw: string, provider: Provider) {
-  const contract = new ethers.Contract(
-    arbitrageAddresses.bsc,
-    arbitrageAbi,
-    provider.wallet
-  );
+async function withdrawFunds(
+  assetToWithdraw: string,
+  provider: Provider,
+  arbitrageContractAddress: string
+) {
+  if (!arbitrageContractAddress) return false; // Skip withdrawal if no contract address is provided
 
-  const tx = await contract.withdraw(assetToWithdraw);
+  try {
+    const contract = new ethers.Contract(
+      arbitrageContractAddress,
+      arbitrageAbi,
+      provider.wallet
+    );
 
-  await tx.wait();
+    const tx = await contract.withdraw(assetToWithdraw, {
+      gasLimit: 3000000,
+    });
 
-  return true;
+    await tx.wait();
+
+    console.log("💰💰 Withdrawal transaction confirmed");
+    return true;
+  } catch (error) {
+    console.error("Error withdrawing funds");
+    throw error;
+  }
 }

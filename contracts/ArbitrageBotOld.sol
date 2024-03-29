@@ -7,9 +7,9 @@ import { IERC20 } from "@aave/core-v3/contracts/dependencies/openzeppelin/contra
 import { SafeERC20 } from "@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
+
 interface IRouter {
-    function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns (uint256[] memory amounts);
-    function swapExactTokensForTokens(
+   function swapExactTokensForTokens(
         uint256 amountIn,
         uint256 amountOutMin,
         address[] calldata path,
@@ -18,13 +18,20 @@ interface IRouter {
     ) external returns (uint256[] memory amounts);
 }
 
-contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
+contract ArbitrageBotOld is FlashLoanSimpleReceiverBase, Ownable {
     using SafeERC20 for IERC20;
+
+    // address public immutable ROUTER0;
+    // address public immutable ROUTER1;
+
 
     constructor(address _addressProvider)
         FlashLoanSimpleReceiverBase(IPoolAddressesProvider(_addressProvider))
         Ownable(msg.sender)
-    {}
+    {
+        // ROUTER0 = _router0;
+        // ROUTER1 = _router1;
+    }
 
     function executeSwap(address router, address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOutMin) internal {
         address[] memory path = new address[](2);
@@ -50,6 +57,9 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
         }
     }
 
+    /**
+        This function is called after your contract has received the flash loaned amount
+     */
     function executeOperation(
         address asset,
         uint256 amount,
@@ -60,11 +70,13 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
         require(msg.sender == address(POOL), "FlashLoanError: Call must come from the Pool");
         require(initiator == address(this), "FlashLoanError: Initiator is not this contract");
 
-        (address router0, address router1, address token0, address token1, uint256 amount0, uint256 expectedAmountOut) = abi.decode(params, (address, address, address, address, uint256, uint256));
+        (address router0, address router1, address token0, address token1, uint256 amount0, uint256 amount1) = abi.decode(params, (address, address, address, address, uint256, uint256));
 
+        // require(router0 == ROUTER0 || router0 == ROUTER1, "SwapError: Invalid router0");
+        // require(router1 == ROUTER0 || router1 == ROUTER1, "SwapError: Invalid router1");
         require(router0 != router1, "SwapError: Routers must be different");
 
-        executeSwap(router0, token0, token1, amount0, expectedAmountOut);
+        executeSwap(router0, token0, token1, amount0, amount1);
         executeSwap(router1, token1, token0, IERC20(token1).balanceOf(address(this)), amount0 + premium);
       
         require(
@@ -79,49 +91,20 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
         return true;
     }
 
-    function getAmountOut(
-        address router,
-        address tokenIn,
-        address tokenOut,
-        uint256 amountIn
-    ) internal view returns (uint256) {
-        address[] memory path = new address[](2);
-        path[0] = tokenIn;
-        path[1] = tokenOut;
-
-        uint256[] memory amounts = IRouter(router).getAmountsOut(amountIn, path);
-        return amounts[1];
-    }
-    
-    function checkArbitrage(
-        address router0,
-        address router1,
-        address token0,
-        address token1,
-        uint256 amount0
-    ) public view returns (uint256) {
-        uint256 amountOut1 = getAmountOut(router0, token0, token1, amount0);
-        uint256 amountOut2 = getAmountOut(router1, token1, token0, amountOut1);
-
-        if (amountOut2 > amount0) {
-            return amountOut2;
-        } else {
-            return 0;
-        }
-    }
-
     function executeArbitrage(
         address router0,
         address router1,
         address token0,
         address token1,
-        uint256 amount0
+        uint256 amount0,
+        uint256 amount1
     ) external onlyOwner {
-        uint256 expectedAmountOut = checkArbitrage(router0, router1, token0, token1, amount0);
+        // require(router0 == ROUTER0 || router0 == ROUTER1, "InitError: Invalid router0");
+        // require(router1 == ROUTER0 || router1 == ROUTER1, "InitError: Invalid router1");
+        require(router0 != router1, "InitError: Routers must be different");
 
-        require(expectedAmountOut > 0, "Arbitrage: No profit");
+        bytes memory params = abi.encode(router0, router1, token0, token1, amount0, amount1);
 
-        bytes memory params = abi.encode(router0, router1, token0, token1, amount0, expectedAmountOut);
         POOL.flashLoanSimple(address(this), token0, amount0, params, 0);
     }
 
@@ -130,9 +113,9 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
     }
 
     function withdraw(address token) external onlyOwner {
-        uint256 balance = IERC20(token).balanceOf(address(this));
-        IERC20(token).safeTransfer(owner(), balance);
-    }
+            uint256 balance = IERC20(token).balanceOf(address(this));
+            IERC20(token).safeTransfer(owner(), balance);
+        }
         
     function uint2str(uint256 _num) internal pure returns (string memory) {
         if (_num == 0) {
@@ -158,4 +141,6 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
     }
 
     receive() external payable {}
-}
+
+    //fallback() external payable {}
+} 

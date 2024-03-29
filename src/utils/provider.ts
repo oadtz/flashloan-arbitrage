@@ -1,5 +1,6 @@
 import { ethers as Ethers } from "ethers";
 import Web3 from "web3";
+import { BigUnit } from "bigunit";
 import { appConfig } from "../config/app";
 import { abi as routerAbi } from "../config/dex";
 import { abi as assetAbi } from "../config/assets";
@@ -35,17 +36,35 @@ export async function getGasPrice(provider: Provider): Promise<bigint> {
 }
 
 export async function toDecimals(
-  asset: string,
   amount: number,
-  provider: Provider
+  asset?: string,
+  provider?: Provider
 ): Promise<bigint> {
-  const assetContract = new Ethers.Contract(asset, assetAbi, provider.ethers);
+  let decimals = 18;
 
-  const decimals: number = (await assetContract.decimals()) || 18;
+  if (asset && provider) {
+    const assetContract = new Ethers.Contract(asset, assetAbi, provider.ethers);
 
-  console.log("Decimals: ", decimals);
+    decimals = (await assetContract.decimals()) || 18;
+  }
 
-  return Ethers.parseUnits(amount.toString(), decimals);
+  return BigInt(amount) * 10n ** BigInt(decimals);
+}
+
+export async function formatDecimals(
+  amount: bigint,
+  asset?: string,
+  provider?: Provider
+): Promise<string> {
+  let decimals = 18;
+
+  if (asset && provider) {
+    const assetContract = new Ethers.Contract(asset, assetAbi, provider.ethers);
+
+    decimals = Number(await assetContract.decimals()) || 18;
+  }
+
+  return BigUnit.from(amount, decimals).toString();
 }
 
 export async function estimateSwap(

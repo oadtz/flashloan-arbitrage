@@ -1,6 +1,11 @@
 import { getAssetName } from "../config/assets";
 import { getRouterName } from "../config/dex";
-import { estimateSwap, getGasPrice, Provider } from "./provider";
+import {
+  estimateSwap,
+  formatDecimals,
+  getGasPrice,
+  Provider,
+} from "./provider";
 import { ethers } from "ethers";
 
 export async function checkArbitrage(
@@ -42,7 +47,7 @@ async function checkArbitrageScenario(
 ) {
   try {
     // Get asset1 out amount from router1
-    const { amountOut: amountOut1, gas: gas1 } = await estimateSwap(
+    let { amountOut: amountOut1, gas: gas1 } = await estimateSwap(
       routers[0],
       assets[0],
       assets[1],
@@ -50,14 +55,20 @@ async function checkArbitrageScenario(
       provider
     );
 
+    amountOut1 = (amountOut1 * BigInt(1.05 * 100)) / BigInt(100);
+
     console.log(
       `Estimated ${getAssetName(assets[0])} to ${getAssetName(
         assets[1]
-      )} on ${getRouterName(routers[0])}: ${ethers.formatEther(
-        amountIn
-      )} ${getAssetName(assets[0])} -> ${ethers.formatEther(
-        amountOut1
-      )} ${getAssetName(assets[1])} with gas: ${ethers.formatEther(
+      )} on ${getRouterName(routers[0])}: ${await formatDecimals(
+        amountIn,
+        assets[0],
+        provider
+      )} ${getAssetName(assets[0])} -> ${await formatDecimals(
+        amountOut1,
+        assets[1],
+        provider
+      )} ${getAssetName(assets[1])} with gas: ${await formatDecimals(
         gas1 * (await getGasPrice(provider))
       )}`
     );
@@ -70,6 +81,7 @@ async function checkArbitrageScenario(
       amountOut1,
       provider
     );
+    amountOut2 = (amountOut2 * BigInt(1.05 * 100)) / BigInt(100);
     // let { amountOut: amountOut2, gas: gas2 } = await estimateSwap(
     //   routers[1],
     //   assets[0],
@@ -85,11 +97,15 @@ async function checkArbitrageScenario(
     console.log(
       `Estimated ${getAssetName(assets[1])} to ${getAssetName(
         assets[0]
-      )} on ${getRouterName(routers[1])}: ${ethers.formatEther(
-        amountOut2
-      )} ${getAssetName(assets[0])} <- ${ethers.formatEther(
-        amountOut1
-      )} ${getAssetName(assets[1])} with gas: ${ethers.formatEther(
+      )} on ${getRouterName(routers[1])}: ${await formatDecimals(
+        amountOut2,
+        assets[0],
+        provider
+      )} ${getAssetName(assets[0])} <- ${await formatDecimals(
+        amountOut1,
+        assets[1],
+        provider
+      )} ${getAssetName(assets[1])} with gas: ${await formatDecimals(
         gas1 * (await getGasPrice(provider))
       )}`
     );
@@ -97,9 +113,11 @@ async function checkArbitrageScenario(
     const profit = amountOut2 - amountIn - gas1 - gas2;
 
     console.log(
-      `Arbitrage opportunity: ${ethers.formatEther(profit)} ${getAssetName(
-        assets[0]
-      )}`
+      `Arbitrage opportunity: ${await formatDecimals(
+        profit,
+        assets[0],
+        provider
+      )} ${getAssetName(assets[0])}`
     );
 
     if (profit > 0) {

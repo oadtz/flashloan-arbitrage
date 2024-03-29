@@ -1,6 +1,9 @@
 export const addresses = {
+  localhost: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
+  sepolia: "0x201dF36dB0fFb04c4Cc99438eE1B616822B4a7c0",
   ethereum: "",
-  bsc: "0x845fDdAF5e4f1FDEB4c5002aCe6285E33d128216",
+  bsc: "0xfd3Ad5d8EDe21aA15Af2c3540c00Fe63Eb17Adb2",
+  polygon: "0x0dCEC2f2f1C9f623CB4C4C3aa6dc7557611e14be",
 };
 
 export const abi = [
@@ -9,16 +12,6 @@ export const abi = [
       {
         internalType: "address",
         name: "_addressProvider",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "_router0",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "_router1",
         type: "address",
       },
     ],
@@ -48,11 +41,6 @@ export const abi = [
     type: "error",
   },
   {
-    inputs: [],
-    name: "ReentrancyGuardReentrantCall",
-    type: "error",
-  },
-  {
     anonymous: false,
     inputs: [
       {
@@ -70,10 +58,6 @@ export const abi = [
     ],
     name: "OwnershipTransferred",
     type: "event",
-  },
-  {
-    stateMutability: "payable",
-    type: "fallback",
   },
   {
     inputs: [],
@@ -94,32 +78,6 @@ export const abi = [
     outputs: [
       {
         internalType: "contract IPool",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "ROUTER0",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "ROUTER1",
-    outputs: [
-      {
-        internalType: "address",
         name: "",
         type: "address",
       },
@@ -154,9 +112,43 @@ export const abi = [
         name: "amount0",
         type: "uint256",
       },
+    ],
+    name: "checkArbitrage",
+    outputs: [
       {
         internalType: "uint256",
-        name: "amount1",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "router0",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "router1",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "token0",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "token1",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount0",
         type: "uint256",
       },
     ],
@@ -202,6 +194,25 @@ export const abi = [
       },
     ],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_tokenAddress",
+        type: "address",
+      },
+    ],
+    name: "getBalance",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
