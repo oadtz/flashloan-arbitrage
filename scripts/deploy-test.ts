@@ -47,6 +47,9 @@ async function main() {
   // Transfer Token0 and Token1 to the Router0 contract
   await token0.transfer(router0Address, ethers.parseUnits("10000000000", 18));
   await token1.transfer(router0Address, ethers.parseUnits("10000000000", 18));
+  // Transfer Token0 and Token1 to the Router1 contract
+  await token0.transfer(router1Address, ethers.parseUnits("10000000000", 18));
+  await token1.transfer(router1Address, ethers.parseUnits("10000000000", 18));
 
   const arbitrageBot = await ethers.deployContract("ArbitrageBot", [
     poolAddress,

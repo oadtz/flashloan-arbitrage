@@ -23,14 +23,6 @@ export function getProvider(providerUrl: string): Provider {
   };
 }
 
-export async function getContract(
-  address: string,
-  abi: any,
-  provider: Provider
-): Promise<Ethers.Contract> {
-  return new Ethers.Contract(address, abi, provider.ethers);
-}
-
 export async function getGasPrice(provider: Provider): Promise<bigint> {
   return await provider.web3.eth.getGasPrice();
 }

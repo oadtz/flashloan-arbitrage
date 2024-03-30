@@ -1,7 +1,8 @@
 import { ethers } from "ethers";
-import { checkArbitrage } from "./check-arbitrage";
 import { Provider, getProvider, toDecimals } from "./provider";
 import { abi as arbitrageAbi } from "../config/arbitrage";
+import { getRouterName } from "../config/dex";
+import { getAssetName } from "../config/assets";
 
 export async function run(
   routersToCheck: any[],
@@ -17,82 +18,58 @@ export async function run(
   const provider = getProvider(networkProviderUrl);
 
   while (true) {
-    for (const asset1 of assetsToCheck) {
-      for (const asset2 of assetsToCheck) {
-        if (asset1.token === asset2.token || !asset1.borrowable) {
+    for (const {
+      token: token0,
+      amount: borrowedAmount,
+      borrowable,
+    } of assetsToCheck) {
+      for (const { token: token1 } of assetsToCheck) {
+        if (token0 === token1 || !borrowable) {
           continue;
         }
 
-        for (const router1 of routersToCheck) {
-          for (const router2 of routersToCheck) {
-            if (router1 === router2) {
+        for (const router0 of routersToCheck) {
+          for (const router1 of routersToCheck) {
+            if (router0 === router1) {
               continue;
             }
 
-            const token1 = asset1.token;
-            const token2 = asset2.token;
-            const borrowedAmount = asset1.amount;
+            const amountIn = await toDecimals(borrowedAmount, token0, provider);
+            const expactedAmountOut =
+              (amountIn * BigInt((1 + flashLoanFee) * 100_000)) /
+              BigInt(100_000);
 
-            const opportunity = await checkArbitrage(
+            console.log("Performing arbitrage...");
+            console.log(`Route0 (${getRouterName(router0)}):`, router0);
+            console.log(`Route1 (${getRouterName(router1)}): `, router1);
+            console.log(`Token0 (${getAssetName(token0)}): `, token0);
+            console.log(`Token1 (${getAssetName(token1)}): `, token1);
+            console.log("amountIn: ", amountIn.toString());
+
+            const result = await executeArbitrage(
+              router0,
               router1,
-              router2,
+              token0,
               token1,
-              token2,
-              await toDecimals(borrowedAmount, token1, provider),
-              slippageTolerance,
-              provider
+              amountIn,
+              expactedAmountOut,
+              provider,
+              arbitrageContractAddress
             );
 
-            console.log("Route0: ", opportunity.fromRouter);
-            console.log("Route1: ", opportunity.toRouter);
-            console.log("Token0: ", opportunity.tokenIn);
-            console.log("Token1: ", opportunity.tokenOut);
-            console.log("Amount0: ", opportunity.amountIn.toString());
-            console.log("Amount1: ", opportunity.amountOut?.toString());
+            if (result) {
+              console.log("Withdrawing funds...");
 
-            console.log(`Opportunity: ${opportunity.profit.toString()}`);
-            if (opportunity.profit > 0) {
-              const fee =
-                ((await toDecimals(borrowedAmount, token1, provider)) *
-                  BigInt(Math.floor(0.0005 * 10000))) /
-                BigInt(10000);
-              console.log(`Cost: ${fee.toString()}`);
-
-              const finalProfit = opportunity.profit - fee;
-
-              console.log(`Final profit: ${finalProfit.toString()}`);
-
-              if (finalProfit >= 0) {
-                console.log(`🎉 Arbitrage opportunity found`);
-
-                console.log("Performing arbitrage...");
-
-                if (
-                  await perform(
-                    opportunity.fromRouter,
-                    opportunity.toRouter,
-                    opportunity.tokenIn,
-                    opportunity.tokenOut,
-                    opportunity.amountIn,
-                    provider,
-                    arbitrageContractAddress
-                  )
-                ) {
-                  console.log("Withdrawing funds...");
-
-                  await withdrawFunds(
-                    opportunity.tokenIn,
-                    provider,
-                    arbitrageContractAddress
-                  );
-                }
-
-                continue;
-                //process.exit(0);
+              if (await withdraw(token0, provider, arbitrageContractAddress)) {
+                console.log(`🎉🎉🎉🎉🎉🎉🎉🎉 Arbitrage opportunity done\n\n`);
+              } else {
+                console.log(`❌ Error withdrawing funds\n\n`);
               }
-            }
 
-            console.log(`❌ Not an arbitrage opportunity\n\n`);
+              //process.exit(0);
+            } else {
+              console.log(`❌ Not an arbitrage opportunity\n\n`);
+            }
 
             await new Promise((resolve) => setTimeout(resolve, delay));
           }
@@ -102,15 +79,53 @@ export async function run(
   }
 }
 
-async function perform(
+async function checkArbitrage(
   router0: string,
   router1: string,
   token0: string,
   token1: string,
-  amountToFlashLoan: bigint,
+  amountIn: bigint,
   provider: Provider,
   arbitrageContractAddress: string
-) {
+): Promise<bigint> {
+  try {
+    if (arbitrageContractAddress) {
+      const arbiter = new ethers.Contract(
+        arbitrageContractAddress,
+        arbitrageAbi,
+        provider.wallet
+      );
+
+      const amountOut: bigint = await arbiter.checkArbitrage(
+        router0,
+        router1,
+        token0,
+        token1,
+        amountIn,
+        {
+          gasLimit: 3000000,
+        }
+      );
+
+      return amountOut;
+    }
+  } catch (error) {
+    console.error("Error checking arbitrage");
+  }
+
+  return BigInt(0);
+}
+
+async function executeArbitrage(
+  router0: string,
+  router1: string,
+  token0: string,
+  token1: string,
+  amountIn: bigint,
+  expactedAmountOut: bigint,
+  provider: Provider,
+  arbitrageContractAddress: string
+): Promise<boolean> {
   if (!arbitrageContractAddress) return false; // Skip arbitrage if no contract address is provided
 
   try {
@@ -125,22 +140,23 @@ async function perform(
       router1,
       token0,
       token1,
-      amountToFlashLoan,
+      amountIn,
+      expactedAmountOut,
       {
         gasLimit: 3000000,
       }
     );
+
     await tx.wait();
-    console.log("🌛 Arbitrage executed successfully!");
 
     return true;
   } catch (error) {
-    console.error("Error performing arbitrage");
-    throw error;
+    console.error("Error performing arbitrage", error);
+    return false;
   }
 }
 
-async function withdrawFunds(
+async function withdraw(
   assetToWithdraw: string,
   provider: Provider,
   arbitrageContractAddress: string
@@ -160,10 +176,9 @@ async function withdrawFunds(
 
     await tx.wait();
 
-    console.log("💰💰 Withdrawal transaction confirmed");
     return true;
   } catch (error) {
-    console.error("Error withdrawing funds");
-    throw error;
+    console.error("Error withdrawing funds", error);
+    return false;
   }
 }

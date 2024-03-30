@@ -1,6 +1,6 @@
 export const addresses = {
-  localhost: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
-  sepolia: "0x201dF36dB0fFb04c4Cc99438eE1B616822B4a7c0",
+  localhost: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
+  sepolia: "0x7B292198488E9621F10E4037c8087452B84d9Fc2",
   ethereum: "",
   bsc: "0xfd3Ad5d8EDe21aA15Af2c3540c00Fe63Eb17Adb2",
   polygon: "0x0dCEC2f2f1C9f623CB4C4C3aa6dc7557611e14be",
@@ -148,7 +148,12 @@ export const abi = [
       },
       {
         internalType: "uint256",
-        name: "amount0",
+        name: "amountIn",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "expectedAmountOut",
         type: "uint256",
       },
     ],
