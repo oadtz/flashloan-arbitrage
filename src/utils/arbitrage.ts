@@ -125,17 +125,13 @@ async function checkArbitrage(
         token0,
         token1,
         amountIn,
-        expactedAmountOut,
-        {
-          gasLimit: 3000000,
-        }
+        expactedAmountOut
       );
 
       return amountOut;
     }
   } catch (error) {
-    logger.error({ error }, "Error checking arbitrage");
-    logger.flush();
+    console.error("Error checking arbitrage", error);
   }
 
   return BigInt(0);
