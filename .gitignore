@@ -1,5 +1,6 @@
 node_modules
 .env
+error.log
 
 # Hardhat files
 /cache
