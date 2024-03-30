@@ -39,14 +39,9 @@ export async function run(
               (amountIn * BigInt((1 + flashLoanFee) * 100_000)) /
               BigInt(100_000);
 
-            console.log("Performing arbitrage...");
-            console.log(`Route0 (${getRouterName(router0)}):`, router0);
-            console.log(`Route1 (${getRouterName(router1)}): `, router1);
-            console.log(`Token0 (${getAssetName(token0)}): `, token0);
-            console.log(`Token1 (${getAssetName(token1)}): `, token1);
-            console.log("amountIn: ", amountIn.toString());
+            console.log("Checking arbitrage...");
 
-            const result = await executeArbitrage(
+            const amountOut = await checkArbitrage(
               router0,
               router1,
               token0,
@@ -57,16 +52,44 @@ export async function run(
               arbitrageContractAddress
             );
 
-            if (result) {
-              console.log("Withdrawing funds...");
+            console.log(`Route0 (${getRouterName(router0)}):`, router0);
+            console.log(`Route1 (${getRouterName(router1)}): `, router1);
+            console.log(`Token0 (${getAssetName(token0)}): `, token0);
+            console.log(`Token1 (${getAssetName(token1)}): `, token1);
+            console.log("amountIn: ", amountIn.toString());
+            console.log("amountOut: ", amountOut.toString());
 
-              if (await withdraw(token0, provider, arbitrageContractAddress)) {
-                console.log(`🎉🎉🎉🎉🎉🎉🎉🎉 Arbitrage opportunity done\n\n`);
+            if (amountOut > expactedAmountOut) {
+              console.log("✅ Arbitrage opportunity found!");
+
+              const result = await executeArbitrage(
+                router0,
+                router1,
+                token0,
+                token1,
+                amountIn,
+                expactedAmountOut,
+                provider,
+                arbitrageContractAddress
+              );
+
+              if (result) {
+                console.log("Withdrawing funds...");
+
+                if (
+                  await withdraw(token0, provider, arbitrageContractAddress)
+                ) {
+                  console.log(
+                    `🎉🎉🎉🎉🎉🎉🎉🎉 Arbitrage opportunity done\n\n`
+                  );
+                } else {
+                  console.log(`❌ Error withdrawing funds\n\n`);
+                }
+
+                //process.exit(0);
               } else {
-                console.log(`❌ Error withdrawing funds\n\n`);
+                console.log(`❌ Not an arbitrage opportunity\n\n`);
               }
-
-              //process.exit(0);
             } else {
               console.log(`❌ Not an arbitrage opportunity\n\n`);
             }
@@ -85,6 +108,7 @@ async function checkArbitrage(
   token0: string,
   token1: string,
   amountIn: bigint,
+  expactedAmountOut: bigint,
   provider: Provider,
   arbitrageContractAddress: string
 ): Promise<bigint> {
@@ -93,7 +117,7 @@ async function checkArbitrage(
       const arbiter = new ethers.Contract(
         arbitrageContractAddress,
         arbitrageAbi,
-        provider.wallet
+        provider.ethers
       );
 
       const amountOut: bigint = await arbiter.checkArbitrage(
@@ -102,6 +126,7 @@ async function checkArbitrage(
         token0,
         token1,
         amountIn,
+        expactedAmountOut,
         {
           gasLimit: 3000000,
         }

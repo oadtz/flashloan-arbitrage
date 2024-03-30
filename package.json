@@ -4,7 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "flatten": "hardhat flatten contracts/ArbitrageBot.sol > contracts/Flattened.sol.tmp",
+    "compile": "hardhat compile",
+    "deploy:localhost": "hardhat run scripts/deploy-test.ts --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deploy-sepolia.ts --network sepolia",
+    "start:localhost": "ts-node src/bot-localhost.ts",
+    "start:sepolia": "ts-node src/bot-sepolia.ts",
+    "start:bsc": "ts-node src/bot-bsc.ts"
   },
   "keywords": [],
   "author": "",

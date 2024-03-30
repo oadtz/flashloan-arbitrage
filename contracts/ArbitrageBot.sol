@@ -119,9 +119,10 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
         address router1,
         address token0,
         address token1,
-        uint256 amount0
+        uint256 amountIn,
+        uint256 expectedAmountOut
     ) public view returns (uint256) {
-        uint256 amountOut1 = getAmountOut(router0, token0, token1, amount0);
+        uint256 amountOut1 = getAmountOut(router0, token0, token1, amountIn);
         uint256 amountOut2 = getAmountOut(router1, token1, token0, amountOut1);
 
         // console.log("Checking arbitrage opportunity");
@@ -133,7 +134,7 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
         // console.log("Token 0 Amount out (Router 0 -> Router 1):", amountOut1);
         // console.log("Token 1 Amount out (Router 0 <- Router 1):", amountOut2);
 
-        if (amountOut2 > amount0) {
+        if (amountOut2 > (expectedAmountOut - amountIn)) {
             // console.log("Arbitrage opportunity found");
             // console.log("Expected profit:", amountOut2 - amount0);
             return amountOut2;
@@ -151,7 +152,7 @@ contract ArbitrageBot is FlashLoanSimpleReceiverBase, Ownable {
         uint256 amountIn,
         uint256 expectedAmountOut
     ) external onlyOwner {
-        uint256 amountOut = checkArbitrage(router0, router1, token0, token1, amountIn);
+        uint256 amountOut = checkArbitrage(router0, router1, token0, token1, amountIn, expectedAmountOut);
 
         require(amountOut > (expectedAmountOut - amountIn), "Arbitrage: No opportunity found");
 
