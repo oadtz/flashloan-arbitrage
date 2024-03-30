@@ -10,7 +10,9 @@
     "deploy:sepolia": "hardhat run scripts/deploy-sepolia.ts --network sepolia",
     "start:localhost": "ts-node src/bot-localhost.ts",
     "start:sepolia": "ts-node src/bot-sepolia.ts",
-    "start:bsc": "ts-node src/bot-bsc.ts"
+    "start:bsc": "ts-node src/bot-bsc.ts",
+    "start:polygon": "ts-node src/bot-polygon.ts",
+    "start:eth": "ts-node src/bot-eth.ts"
   },
   "keywords": [],
   "author": "",

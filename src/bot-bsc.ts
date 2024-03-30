@@ -56,7 +56,7 @@ run(
   flashLoanFee,
   networkProviderUrl,
   arbitrageContractAddress,
-  1
+  500
 ).catch((error) => {
   console.error(error);
   process.exit(1);
