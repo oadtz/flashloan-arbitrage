@@ -23,6 +23,8 @@ export async function run(
 
   const provider = getProvider(networkProviderUrl);
 
+  const nonProfitableRoutesAndAssets = [];
+
   while (true) {
     const shuffledAssets = shuffle(assetsToCheck);
     const shuffledRouters = shuffle(routersToCheck);
@@ -47,6 +49,18 @@ export async function run(
     if (router0 === router1) {
       continue;
     }
+
+    if (
+      nonProfitableRoutesAndAssets.findIndex((nonProfitable) => {
+        return (
+          nonProfitable.router0 === router0 &&
+          nonProfitable.router1 === router1 &&
+          nonProfitable.token0 === token0.address &&
+          nonProfitable.token1 === token1.address
+        );
+      }) !== -1
+    )
+      continue;
 
     const amountIn = toDecimals(borrowedAmount, token0.decimals);
     const expactedAmountOut =
@@ -101,6 +115,15 @@ export async function run(
       }
     } else {
       logger.info(`❌ Not an arbitrage opportunity\n\n`);
+
+      if (amountOut === BigInt(0)) {
+        nonProfitableRoutesAndAssets.push({
+          router0,
+          router1,
+          token0: token0.address,
+          token1: token1.address,
+        });
+      }
     }
 
     await new Promise((resolve) => setTimeout(resolve, delay));
