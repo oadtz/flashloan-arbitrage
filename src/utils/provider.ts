@@ -27,35 +27,11 @@ export async function getGasPrice(provider: Provider): Promise<bigint> {
   return await provider.web3.eth.getGasPrice();
 }
 
-export async function toDecimals(
-  amount: number,
-  asset?: string,
-  provider?: Provider
-): Promise<bigint> {
-  let decimals = 18;
-
-  if (asset && provider) {
-    const assetContract = new Ethers.Contract(asset, assetAbi, provider.ethers);
-
-    decimals = (await assetContract.decimals()) || 18;
-  }
-
+export function toDecimals(amount: number, decimals: number): bigint {
   return BigInt(amount) * 10n ** BigInt(decimals);
 }
 
-export async function formatDecimals(
-  amount: bigint,
-  asset?: string,
-  provider?: Provider
-): Promise<string> {
-  let decimals = 18;
-
-  if (asset && provider) {
-    const assetContract = new Ethers.Contract(asset, assetAbi, provider.ethers);
-
-    decimals = Number(await assetContract.decimals()) || 18;
-  }
-
+export function formatDecimals(amount: bigint, decimals: number): string {
   return BigUnit.from(amount, decimals).toString();
 }
 

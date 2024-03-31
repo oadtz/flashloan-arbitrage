@@ -1,14 +1,18 @@
 import { ethers } from "ethers";
-import { Provider, getProvider, toDecimals } from "./provider";
+import { Provider, formatDecimals, getProvider, toDecimals } from "./provider";
 import { abi as arbitrageAbi } from "../config/arbitrage";
 import { getRouterName } from "../config/dex";
-import { getAssetName } from "../config/assets";
+import { Asset, getAssetName } from "../config/assets";
 import { shuffle } from "lodash";
 import logger from "./logger";
 
 export async function run(
   routersToCheck: any[],
-  assetsToCheck: any[],
+  assetsToCheck: {
+    token: Asset;
+    amount: number;
+    borrowable?: boolean;
+  }[],
   slippageTolerance: number,
   flashLoanFee: number,
   networkProviderUrl: string,
@@ -44,7 +48,7 @@ export async function run(
       continue;
     }
 
-    const amountIn = await toDecimals(borrowedAmount, token0, provider);
+    const amountIn = toDecimals(borrowedAmount, token0.decimals);
     const expactedAmountOut =
       (amountIn * BigInt((1 + flashLoanFee) * 100_000)) / BigInt(100_000);
 
@@ -53,8 +57,8 @@ export async function run(
     const amountOut = await checkArbitrage(
       router0,
       router1,
-      token0,
-      token1,
+      token0.address,
+      token1.address,
       amountIn,
       expactedAmountOut,
       provider,
@@ -63,10 +67,10 @@ export async function run(
 
     logger.info(`Route0 (${getRouterName(router0)}): ${router0}`);
     logger.info(`Route1 (${getRouterName(router1)}): ${router1}`);
-    logger.info(`Token0 (${getAssetName(token0)}): ${token0}`);
-    logger.info(`Token1 (${getAssetName(token1)}): ${token1}`);
-    logger.info(`amountIn: ${amountIn.toString()}`);
-    logger.info(`amountOut: ${amountOut.toString()}`);
+    logger.info(`Token0 (${getAssetName(token0.address)}): ${token0.address}`);
+    logger.info(`Token1 (${getAssetName(token1.address)}): ${token1.address}`);
+    logger.info(`amountIn: ${formatDecimals(amountIn, token0.decimals)}`);
+    logger.info(`amountOut: ${formatDecimals(amountOut, token0.decimals)}`);
 
     if (amountOut > expactedAmountOut) {
       logger.info("✅ Arbitrage opportunity found!");
@@ -74,8 +78,8 @@ export async function run(
       const result = await executeArbitrage(
         router0,
         router1,
-        token0,
-        token1,
+        token0.address,
+        token1.address,
         amountIn,
         expactedAmountOut,
         provider,
@@ -85,7 +89,9 @@ export async function run(
       if (result) {
         logger.info("Withdrawing funds...");
 
-        if (await withdraw(token0, provider, arbitrageContractAddress)) {
+        if (
+          await withdraw(token0.address, provider, arbitrageContractAddress)
+        ) {
           logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Arbitrage opportunity done\n\n`);
         } else {
           logger.info(`❌ Error withdrawing funds\n\n`);
