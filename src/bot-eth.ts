@@ -4,7 +4,7 @@ import { appConfig } from "./config/app";
 import { run } from "./utils/arbitrage";
 import { addresses as arbitrageContractAddresses } from "./config/arbitrage";
 
-const routersToCheck = [routers.UniSwap, routers.SushiSwap, routers.FraxSwap];
+const routersToCheck = [routers.UniSwap, routers.SushiSwap];
 const assetsToCheck = [
   {
     token: assets.DAI,
@@ -74,7 +74,7 @@ run(
   flashLoanFee,
   networkProviderUrl,
   arbitrageContractAddress,
-  500
+  0
 ).catch((error) => {
   console.error(error);
   process.exit(1);
