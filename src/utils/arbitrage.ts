@@ -136,6 +136,127 @@ export async function run(
   }
 }
 
+export async function runV2(
+  routersToCheck: any[],
+  assetsToCheck: {
+    token: Asset;
+    amount: number;
+    borrowable?: boolean;
+  }[],
+  slippageTolerance: number,
+  flashLoanFee: number,
+  networkProviderUrl: string,
+  arbitrageContractAddress: string,
+  delay: number
+) {
+  logger.info("🚀 Starting bot...");
+
+  const provider = getProvider(networkProviderUrl);
+
+  const nonProfitableRoutesAndAssets: any[] = [];
+
+  while (true) {
+    const shuffledAssets = shuffle(assetsToCheck);
+    const shuffledRouters = shuffle(routersToCheck);
+
+    const {
+      token: token0,
+      amount: borrowedAmount,
+      borrowable,
+    } = shuffledAssets[Math.floor(Math.random() * shuffledAssets.length)];
+    const { token: token1 } =
+      shuffledAssets[Math.floor(Math.random() * shuffledAssets.length)];
+
+    if (token0 === token1 || !borrowable) {
+      continue;
+    }
+
+    const router0 =
+      shuffledRouters[Math.floor(Math.random() * shuffledRouters.length)];
+    const router1 =
+      shuffledRouters[Math.floor(Math.random() * shuffledRouters.length)];
+
+    if (router0 === router1) {
+      continue;
+    }
+
+    if (
+      nonProfitableRoutesAndAssets.findIndex((nonProfitable) => {
+        return (
+          nonProfitable.router0 === router0 &&
+          nonProfitable.router1 === router1 &&
+          nonProfitable.token0 === token0.address &&
+          nonProfitable.token1 === token1.address
+        );
+      }) !== -1
+    )
+      continue;
+
+    const randomFactor = 0.5 + Math.random() * 0.5; // Generate a random factor between 0.5 and 1
+    const amountIn =
+      (toDecimals(borrowedAmount, token0.decimals) *
+        BigInt(Math.floor(randomFactor * 100))) /
+      BigInt(100);
+    const expactedAmountOut =
+      (amountIn * BigInt((1 + flashLoanFee) * 100_000)) / BigInt(100_000);
+
+    logger.info("Started arbitrage...");
+
+    logger.info(`Route0 (${getRouterName(router0)}): ${router0}`);
+    logger.info(`Route1 (${getRouterName(router1)}): ${router1}`);
+    logger.info(`Token0 (${getAssetName(token0.address)}): ${token0.address}`);
+    logger.info(`Token1 (${getAssetName(token1.address)}): ${token1.address}`);
+    logger.info(`amountIn: ${formatDecimals(amountIn, token0.decimals)}`);
+
+    const result = await executeArbitrage(
+      router0,
+      router1,
+      token0.address,
+      token1.address,
+      amountIn,
+      expactedAmountOut,
+      provider,
+      arbitrageContractAddress
+    );
+
+    if (result) {
+      logger.info("✅ Arbitrage opportunity found!");
+      logger.info("Withdrawing funds...");
+
+      if (await withdraw(token0.address, provider, arbitrageContractAddress)) {
+        logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Arbitrage opportunity done\n\n`);
+      } else {
+        logger.info(`❌ Error withdrawing funds\n\n`);
+        process.exit(1);
+      }
+    } else {
+      const amountOut = await checkArbitrage(
+        router0,
+        router1,
+        token0.address,
+        token1.address,
+        amountIn,
+        expactedAmountOut,
+        provider,
+        arbitrageContractAddress
+      );
+      logger.info(`amountOut: ${formatDecimals(amountOut, token0.decimals)}`);
+      if (amountOut === BigInt(0)) {
+        nonProfitableRoutesAndAssets.push({
+          router0,
+          router1,
+          token0: token0.address,
+          token1: token1.address,
+        });
+      }
+
+      logger.info(`❌ Not an arbitrage opportunity\n\n`);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
+}
+
 async function checkArbitrage(
   router0: string,
   router1: string,

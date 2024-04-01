@@ -12,6 +12,10 @@ contract Router {
     event TokensSwapped(address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut);
     event TokensDeposited(address indexed token, uint256 amount);
 
+    function WETH() external pure returns (address) {
+        return address(0);
+    }
+
     function getAmountsOut(uint256 amountIn, address[] memory path) public view returns (uint256[] memory amounts) {
         require(path.length >= 2, "Router: invalid path");
         amounts = new uint256[](path.length);
@@ -69,6 +73,8 @@ contract Router {
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         emit TokensDeposited(token, amount);
     }
+
+    receive() external payable {}
 }
 
 contract Token is IERC20 {
