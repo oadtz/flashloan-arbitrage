@@ -113,9 +113,11 @@ export async function run(
           logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Arbitrage opportunity done\n\n`);
         } else {
           logger.info(`❌ Error withdrawing funds\n\n`);
+          process.exit(1);
         }
       } else {
         logger.info(`❌ Not an arbitrage opportunity\n\n`);
+        process.exit(1);
       }
     } else {
       logger.info(`❌ Not an arbitrage opportunity\n\n`);
