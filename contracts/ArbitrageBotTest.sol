@@ -11,6 +11,9 @@ contract Router {
 
     event TokensSwapped(address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut);
     event TokensDeposited(address indexed token, uint256 amount);
+    event ETHForTokensSwapped(address indexed tokenOut, uint256 amountIn, uint256 amountOut);
+    event TokensForETHSwapped(address indexed tokenIn, uint256 amountIn, uint256 amountOut);
+
 
     function WETH() external pure returns (address) {
         return address(0);
@@ -20,10 +23,27 @@ contract Router {
         require(path.length >= 2, "Router: invalid path");
         amounts = new uint256[](path.length);
         amounts[0] = amountIn;
+
         for (uint256 i = 1; i < path.length; i++) {
-            // Simulate price variation by multiplying the previous amount by a random factor
-            uint256 priceFactor = (uint256(keccak256(abi.encodePacked(block.timestamp, i))) % 100) + 90;
-            amounts[i] = (amounts[i - 1] * priceFactor) / 100;
+            address tokenOut = path[i];
+            uint256 routerBalance;
+
+            if (tokenOut == address(0)) {
+                // If the output token is the native coin (address(0)), use the contract's balance
+                routerBalance = address(this).balance;
+            } else {
+                // If the output token is an ERC20 token, use the IERC20 balanceOf function
+                routerBalance = IERC20(tokenOut).balanceOf(address(this));
+            }
+
+            if (routerBalance == 0) {
+                // If the router has no balance of the output token, return 0
+                amounts[i] = 0;
+            } else {
+                // Generate a random amount out between 1 and the router's balance
+                uint256 randomAmount = (uint256(keccak256(abi.encodePacked(block.timestamp, i))) % routerBalance) + 1;
+                amounts[i] = randomAmount;
+            }
         }
     }
 
@@ -34,7 +54,7 @@ contract Router {
         address to,
         uint256 deadline
     ) external returns (uint256[] memory amounts) {
-        // amounts = getAmountsOut(amountIn, path); // Ready check from the previous call
+        require(IERC20(path[path.length - 1]).balanceOf(address(this)) >= amountOutMin, "Router: insufficient output amount");
         amounts = new uint256[](path.length);
         amounts[0] = amountIn;
         amounts[1] = amountOutMin;
@@ -52,12 +72,64 @@ contract Router {
         
         // require(amounts[amounts.length - 1] >= minOutputAmount, "Router: insufficient output amount");
         console.log("Router: Transfering tokens to the router");
-        IERC20(path[0]).safeTransferFrom(msg.sender, address(this), amountIn); // Router pulls the tokens from the arbiter
+        IERC20(path[0]).safeTransferFrom(msg.sender, address(this), amounts[0]); // Router pulls the tokens from the arbiter
         //_swap(amounts, path, to);
         console.log("Router: Transfering tokens to the recipient");
-        IERC20(path[path.length - 1]).safeTransfer(to, amountOutMin);
+        IERC20(path[path.length - 1]).safeTransfer(to, amounts[amounts.length - 1]);
 
-        emit TokensSwapped(path[0], path[path.length - 1], amountIn, amounts[amounts.length - 1]);
+        emit TokensSwapped(path[0], path[path.length - 1], amounts[0], amounts[amounts.length - 1]);
+    }    // Simulate swapping ETH for Tokens
+    
+    function swapExactETHForTokens(
+        uint256 amountOutMin, 
+        address[] calldata path, 
+        address to, 
+        uint256 deadline
+    ) external payable returns (uint256[] memory amounts) {
+        console.log("Router: Swapping ETH for tokens");
+        require(msg.value > 0, "Router: Must send ETH to swap");
+        require(deadline >= block.timestamp, "Router: expired deadline");
+        // Simulate the exchange rate and calculate the amount of tokens to be received
+        require(IERC20(path[path.length - 1]).balanceOf(address(this)) >= amountOutMin, "Router: insufficient output amount");
+        amounts = new uint256[](path.length);
+        amounts[0] = msg.value;
+        amounts[1] = amountOutMin;
+
+        // Simulate transferring the tokens to the recipient
+        console.log("Router: Transfering tokens to the recipient");
+        IERC20(path[path.length - 1]).safeTransfer(to, amounts[amounts.length - 1]);
+
+        // Here we're simply emitting an event for simulation purposes
+        emit ETHForTokensSwapped(path[path.length - 1], amounts[0], amounts[amounts.length - 1]);
+    }
+
+    // Simulate swapping Tokens for ETH
+    function swapExactTokensForETH(
+        uint256 amountIn, 
+        uint256 amountOutMin, 
+        address[] calldata path, 
+        address to, 
+        uint256 deadline
+    ) external returns (uint256[] memory amounts) {
+        console.log("Router: Swapping tokens for ETH");
+        require(amountIn > 0, "Router: Must send tokens to swap");
+        require(deadline >= block.timestamp, "Router: expired deadline");
+        // Simulate the exchange rate and calculate the amount of ETH to be received
+        require(address(this).balance >= amountOutMin, "Router: insufficient output amount");
+        amounts = new uint256[](path.length);
+        amounts[0] = amountIn;
+        amounts[1] = amountOutMin;
+
+        // Simulate pulling the tokens from the sender
+        console.log("Router: Transfering tokens to the router");
+        IERC20(path[0]).safeTransferFrom(msg.sender, address(this), amountIn); // Router pulls the tokens from the arbiter
+        
+        // Simulate transferring ETH to the recipient
+        console.log("Router: Transfering ETH to the recipient");
+        payable(to).transfer(amountOutMin);
+
+        // Here we're simply emitting an event for simulation purposes
+        emit TokensForETHSwapped(path[0], amountIn, amounts[amounts.length - 1]);
     }
 
     function _swap(uint256[] memory amounts, address[] memory path, address _to) internal {

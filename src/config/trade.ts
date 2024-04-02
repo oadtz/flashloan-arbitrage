@@ -67,7 +67,7 @@ export const abi = [
       },
       {
         internalType: "uint256",
-        name: "gasLimit",
+        name: "gasCostLimitInWei",
         type: "uint256",
       },
     ],
@@ -176,6 +176,30 @@ export const abi = [
     inputs: [],
     name: "getETHBalance",
     outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+    ],
+    name: "getTrades",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
       {
         internalType: "uint256",
         name: "",

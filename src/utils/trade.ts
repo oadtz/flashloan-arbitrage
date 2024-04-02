@@ -22,9 +22,16 @@ export async function run(
   while (true) {
     logger.info("Checking trade opportunities...");
 
-    logger.info(`Routers: [${routersToCheck.join(", ")}]`);
+    const trades = await getTrades(
+      tokenToTrade.address,
+      provider,
+      tradeContractAddress
+    );
+
     logger.info(
-      `Token (${getAssetName(tokenToTrade.address)}): ${tokenToTrade.address}`
+      `Current _trades for ETH/${getAssetName(tokenToTrade.address)}: ${
+        trades.amoutEth
+      }:${trades.amountToken}`
     );
 
     const [direction, router, amountEth, amountToken] = await checkTrade(
@@ -35,7 +42,7 @@ export async function run(
       tradeContractAddress
     );
 
-    if (direction === "buy") {
+    if (direction === "to_token") {
       logger.info(
         `🎉 Trade opportunity found! ${direction} ${amountEth} ETH for ${amountToken} ${getAssetName(
           tokenToTrade.address
@@ -57,7 +64,7 @@ export async function run(
       } else {
         logger.info(`❌ Trading failed\n\n`);
       }
-    } else if (direction === "sell") {
+    } else if (direction === "to_eth") {
       logger.info(
         `🎉 Trade opportunity found! ${direction} ${amountToken} ${getAssetName(
           tokenToTrade.address
@@ -73,6 +80,12 @@ export async function run(
         gasLimit,
         tradeContractAddress
       );
+
+      if (result) {
+        logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done\n\n`);
+      } else {
+        logger.info(`❌ Trading failed\n\n`);
+      }
     } else {
       logger.info(`❌ Not a trade opportunity\n\n`);
     }
@@ -81,13 +94,14 @@ export async function run(
   }
 }
 
-async function checkTrade(
-  routersToCheck: string[],
-  tokenToTrade: string,
+async function getTrades(
+  tokenToCheck: string,
   provider: Provider,
-  gasLimit: bigint,
   tradeContractAddress: string
-): Promise<["buy" | "sell" | "none", string, bigint, bigint]> {
+): Promise<{
+  amoutEth: bigint;
+  amountToken: bigint;
+}> {
   try {
     if (tradeContractAddress) {
       const trader = new ethers.Contract(
@@ -96,10 +110,36 @@ async function checkTrade(
         provider.ethers
       );
 
-      const [direction, router, amountEth, amountToken] =
+      const [amoutETH, amountToken] = await trader.getTrades(tokenToCheck);
+
+      return { amoutEth: BigInt(amoutETH), amountToken: BigInt(amountToken) };
+    }
+  } catch (error) {
+    console.error("Error getting trades", error);
+  }
+
+  return { amoutEth: BigInt(0), amountToken: BigInt(0) };
+}
+
+async function checkTrade(
+  routersToCheck: string[],
+  tokenToTrade: string,
+  provider: Provider,
+  gasLimit: bigint,
+  tradeContractAddress: string
+): Promise<["to_token" | "to_eth" | "none", string, bigint, bigint]> {
+  try {
+    if (tradeContractAddress) {
+      const trader = new ethers.Contract(
+        tradeContractAddress,
+        tradeAbi,
+        provider.ethers
+      );
+
+      const [direction, router, amountETHToTrade, amountTokenToTrade] =
         await trader.checkTrade(routersToCheck, tokenToTrade, gasLimit);
 
-      return [direction, router, amountEth, amountToken];
+      return [direction, router, amountETHToTrade, amountTokenToTrade];
     }
   } catch (error) {
     console.error("Error checking trade", error);
