@@ -2,12 +2,13 @@ import { ethers } from "ethers";
 import { Asset, getAssetName } from "../config/assets";
 import { abi as tradeAbi } from "../config/trade";
 import { getRouterName } from "../config/dex";
+import { shuffle } from "lodash";
 import logger from "./logger";
-import { Provider, getGasPrice, getProvider } from "./provider";
+import { Provider, formatDecimals, getGasPrice, getProvider } from "./provider";
 
 export async function run(
   routersToCheck: string[],
-  tokenToTrade: Asset,
+  assetsToCheck: Asset[],
   slippageTolerance: number,
   gasLimit: number,
   networkProviderUrl: string,
@@ -20,6 +21,10 @@ export async function run(
   const gasPrice = await getGasPrice(provider);
 
   while (true) {
+    const shuffledAssets = shuffle(assetsToCheck);
+    const tokenToTrade =
+      shuffledAssets[Math.floor(Math.random() * shuffledAssets.length)];
+
     logger.info("Checking trade opportunities...");
 
     const trades = await getTrades(
@@ -60,9 +65,9 @@ export async function run(
       );
 
       if (result) {
-        logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done\n\n`);
+        logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
       } else {
-        logger.info(`❌ Trading failed\n\n`);
+        logger.info(`❌ Trading failed`);
       }
     } else if (direction === "to_eth") {
       logger.info(
@@ -82,16 +87,80 @@ export async function run(
       );
 
       if (result) {
-        logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done\n\n`);
+        logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
       } else {
-        logger.info(`❌ Trading failed\n\n`);
+        logger.info(`❌ Trading failed`);
       }
     } else {
-      logger.info(`❌ Not a trade opportunity\n\n`);
+      logger.info(`❌ Not a trade opportunity`);
     }
+
+    logger.info(
+      `Current ETH balance: ${formatDecimals(
+        await getETHBalance(provider, tradeContractAddress),
+        18
+      )}`
+    );
+    logger.info(
+      `Current token balance: ${formatDecimals(
+        await getTokenBalance(
+          tokenToTrade.address,
+          provider,
+          tradeContractAddress
+        ),
+        tokenToTrade.decimals
+      )}\n\n`
+    );
 
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
+}
+
+async function getTokenBalance(
+  tokenToCheck: string,
+  provider: Provider,
+  tradeContractAddress: string
+): Promise<bigint> {
+  try {
+    if (tradeContractAddress) {
+      const trader = new ethers.Contract(
+        tradeContractAddress,
+        tradeAbi,
+        provider.ethers
+      );
+
+      const balance = await trader.getTokenBalance(tokenToCheck);
+
+      return balance;
+    }
+  } catch (error) {
+    console.error("Error getting token balance", error);
+  }
+
+  return BigInt(0);
+}
+
+async function getETHBalance(
+  provider: Provider,
+  tradeContractAddress: string
+): Promise<bigint> {
+  try {
+    if (tradeContractAddress) {
+      const trader = new ethers.Contract(
+        tradeContractAddress,
+        tradeAbi,
+        provider.ethers
+      );
+
+      const balance = await trader.getETHBalance();
+
+      return balance;
+    }
+  } catch (error) {
+    console.error("Error getting ETH balance", error);
+  }
+
+  return BigInt(0);
 }
 
 async function getTrades(
@@ -115,7 +184,7 @@ async function getTrades(
       return { amoutEth: BigInt(amoutETH), amountToken: BigInt(amountToken) };
     }
   } catch (error) {
-    console.error("Error getting trades", error);
+    console.error("Error getting _trades", error);
   }
 
   return { amoutEth: BigInt(0), amountToken: BigInt(0) };

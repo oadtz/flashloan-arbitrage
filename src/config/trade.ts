@@ -1,5 +1,5 @@
 export const addresses = {
-  localhost: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
+  localhost: "0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
   sepolia: "",
   ethereum: "",
   bsc: "",
@@ -154,14 +154,8 @@ export const abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-    ],
-    name: "getBalance",
+    inputs: [],
+    name: "getETHBalance",
     outputs: [
       {
         internalType: "uint256",
@@ -173,8 +167,14 @@ export const abi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "getETHBalance",
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+    ],
+    name: "getTokenBalance",
     outputs: [
       {
         internalType: "uint256",
@@ -243,6 +243,13 @@ export const abi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "withdrawETH",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "address",
@@ -250,14 +257,7 @@ export const abi = [
         type: "address",
       },
     ],
-    name: "withdraw",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "withdrawETH",
+    name: "withdrawToken",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

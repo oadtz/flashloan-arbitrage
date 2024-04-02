@@ -249,7 +249,7 @@ contract TradeBot is Ownable {
         return (_trades[token].amountETH, _trades[token].amountToken);
     }
 
-    function getBalance(address token) external view onlyOwner returns (uint256) {
+    function getTokenBalance(address token) external view onlyOwner returns (uint256) {
         return IERC20(token).balanceOf(address(this));
     }
 
@@ -257,7 +257,7 @@ contract TradeBot is Ownable {
         return address(this).balance;
     }
 
-    function withdraw(address token) external onlyOwner {
+    function withdrawToken(address token) external onlyOwner {
         uint256 balance = IERC20(token).balanceOf(address(this));
         IERC20(token).safeTransfer(owner(), balance);
     }

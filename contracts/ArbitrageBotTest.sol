@@ -35,6 +35,8 @@ contract Router {
                 // If the output token is an ERC20 token, use the IERC20 balanceOf function
                 routerBalance = IERC20(tokenOut).balanceOf(address(this));
             }
+            console.log("Router: Balance:", routerBalance);
+            console.log("Router: Token Out:", tokenOut);
 
             if (routerBalance == 0) {
                 // If the router has no balance of the output token, return 0
