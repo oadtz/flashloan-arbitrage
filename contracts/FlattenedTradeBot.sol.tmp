@@ -800,6 +800,7 @@ contract TradeBot is Ownable {
     function withdrawToken(address token) external onlyOwner {
         uint256 balance = IERC20(token).balanceOf(address(this));
         IERC20(token).safeTransfer(owner(), balance);
+        _trades[token] = Trade(0, 0);
     }
 
     function withdrawETH() external onlyOwner {
