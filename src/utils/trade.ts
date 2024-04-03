@@ -88,10 +88,21 @@ export async function run(
     logger.info(`Amount Token: ${amountToken}`);
 
     if (direction === "eth_to_token") {
-      if (amountToken >= _trades[tokenToTrade.address].amountToken) {
+      const mAvgToken =
+        _trades[tokenToTrade.address].amountToken > 0
+          ? (amountToken + _trades[tokenToTrade.address].amountToken) /
+            BigInt(2)
+          : amountToken;
+      if (amountToken >= mAvgToken) {
         _trades[tokenToTrade.address].amountEth = amountEth;
         _trades[tokenToTrade.address].amountToken = amountToken;
 
+        logger.info(
+          `Moving average amount ${formatDecimals(
+            mAvgToken,
+            tokenToTrade.decimals
+          )}`
+        );
         logger.info(`❌ Price not good enough, waiting for better price`);
       } else {
         logger.info(
@@ -134,9 +145,16 @@ export async function run(
         }
       }
     } else if (direction === "token_to_eth") {
-      if (amountEth >= _trades[tokenToTrade.address].amountEth) {
+      const mAvgEth =
+        _trades[tokenToTrade.address].amountEth > 0
+          ? (amountEth + _trades[tokenToTrade.address].amountEth) / BigInt(2)
+          : amountEth;
+      if (amountEth >= mAvgEth) {
         _trades[tokenToTrade.address].amountEth = amountEth;
         _trades[tokenToTrade.address].amountToken = amountToken;
+
+        logger.info(`Moving average amount ${formatDecimals(mAvgEth, 18)}`);
+        logger.info(`❌ Price not good enough, waiting for better price`);
       } else {
         logger.info(
           `🎉 Trade opportunity found! ${direction} ${formatDecimals(
@@ -178,6 +196,10 @@ export async function run(
         }
       }
     } else {
+      _trades[tokenToTrade.address] = {
+        amountEth: BigInt(0),
+        amountToken: BigInt(0),
+      };
       logger.info(`❌ Not a trade opportunity`);
     }
 
