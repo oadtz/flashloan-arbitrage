@@ -131,6 +131,7 @@ export async function run(
           logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
         } else {
           logger.info(`❌ Trading failed`);
+          process.exit(1);
         }
       }
     } else if (direction === "token_to_eth") {
@@ -174,6 +175,7 @@ export async function run(
           logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
         } else {
           logger.info(`❌ Trading failed`);
+          process.exit(1);
         }
       }
     } else {
@@ -224,6 +226,7 @@ export async function withdrawTrade(
       logger.info(`🎉 Withdrawal of ${getAssetName(asset.address)} done`);
     } else {
       logger.info(`❌ Withdrawal of ${getAssetName(asset.address)} failed`);
+      process.exit(1);
     }
   }
 
@@ -233,6 +236,7 @@ export async function withdrawTrade(
     logger.info(`🎉 Withdrawal of ETH done`);
   } else {
     logger.info(`❌ Withdrawal of ETH failed`);
+    process.exit(1);
   }
 }
 
@@ -372,6 +376,10 @@ async function executeTradeETHForTokens(
     return true;
   } catch (error) {
     logger.error({ error }, "Error performing executeTradeETHForTokens");
+    logger.error(`Router: ${router}`);
+    logger.error(`Token: ${token}`);
+    logger.error(`Amount In: ${amountIn}`);
+    logger.error(`Expected Amount Out: ${expectedAmountOut}`);
     logger.flush();
     return false;
   }
@@ -412,6 +420,10 @@ async function executeTradeTokensForETH(
     return true;
   } catch (error) {
     logger.error({ error }, "Error performing executeTradeTokensForETH");
+    logger.error(`Router: ${router}`);
+    logger.error(`Token: ${token}`);
+    logger.error(`Amount In: ${amountIn}`);
+    logger.error(`Expected Amount Out: ${expectedAmountOut}`);
     logger.flush();
     return false;
   }

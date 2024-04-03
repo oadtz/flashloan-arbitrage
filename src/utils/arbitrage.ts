@@ -333,6 +333,12 @@ async function executeArbitrage(
     return true;
   } catch (error) {
     logger.error({ error }, "Error performing arbitrage");
+    logger.error(`Router0: ${router0}`);
+    logger.error(`Router1: ${router1}`);
+    logger.error(`Token0: ${token0}`);
+    logger.error(`Token1: ${token1}`);
+    logger.error(`amountIn: ${amountIn}`);
+    logger.error(`expactedAmountOut: ${expactedAmountOut}`);
     logger.flush();
     return false;
   }
