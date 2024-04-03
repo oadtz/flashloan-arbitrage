@@ -2,7 +2,7 @@ export const addresses = {
   localhost: "0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
   sepolia: "",
   ethereum: "",
-  bsc: "",
+  bsc: "0x92242E7C325A15605300b73657a2217e59B42c3F",
   polygon: "",
 };
 
@@ -122,7 +122,7 @@ export const abi = [
     ],
     name: "executeTradeETHForTokens",
     outputs: [],
-    stateMutability: "payable",
+    stateMutability: "nonpayable",
     type: "function",
   },
   {

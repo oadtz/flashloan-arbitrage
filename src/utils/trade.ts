@@ -188,7 +188,7 @@ async function getTokenBalance(
       const trader = new ethers.Contract(
         tradeContractAddress,
         tradeAbi,
-        provider.ethers
+        provider.wallet
       );
 
       const balance = await trader.getTokenBalance(tokenToCheck);
@@ -211,7 +211,7 @@ async function getETHBalance(
       const trader = new ethers.Contract(
         tradeContractAddress,
         tradeAbi,
-        provider.ethers
+        provider.wallet
       );
 
       const balance = await trader.getETHBalance();
@@ -238,7 +238,7 @@ async function getTrades(
       const trader = new ethers.Contract(
         tradeContractAddress,
         tradeAbi,
-        provider.ethers
+        provider.wallet
       );
 
       const [amoutETH, amountToken] = await trader.getTrades(tokenToCheck);
