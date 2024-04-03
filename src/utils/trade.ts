@@ -5,7 +5,6 @@ import { getRouterName } from "../config/dex";
 import { shuffle } from "lodash";
 import logger from "./logger";
 import { Provider, formatDecimals, getGasPrice, getProvider } from "./provider";
-import { token } from "../../typechain-types/@openzeppelin/contracts";
 
 export async function run(
   routersToCheck: string[],
