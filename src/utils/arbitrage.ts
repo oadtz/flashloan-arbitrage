@@ -324,7 +324,9 @@ async function executeArbitrage(
       }
     );
 
-    await tx.wait();
+    const receipt = await tx.wait();
+
+    logger.info(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {

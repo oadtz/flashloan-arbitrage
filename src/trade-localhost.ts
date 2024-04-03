@@ -8,7 +8,7 @@ const routersToCheck = [routers.Local0, routers.Local1];
 const assetsToCheck = [assets.TOKEN0, assets.TOKEN1];
 
 const slippageTolerance = 0.5;
-const gasLimit = 3000000;
+const gasLimit = 300000;
 
 const networkProviderUrl = appConfig.localhost;
 
@@ -21,7 +21,7 @@ run(
   gasLimit,
   networkProviderUrl,
   arbitrageContractAddress,
-  1000
+  5000
 ).catch((error) => {
   console.error(error);
   process.exit(1);

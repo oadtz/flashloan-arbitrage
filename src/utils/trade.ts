@@ -268,11 +268,13 @@ async function executeTradeETHForTokens(
       amountIn,
       expectedAmountOut,
       {
-        gasLimit: 3000000,
+        gasLimit: 300000,
       }
     );
 
-    await tx.wait();
+    const receipt = await tx.wait();
+
+    logger.info(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {
@@ -306,11 +308,13 @@ async function executeTradeTokensForETH(
       amountIn,
       expectedAmountOut,
       {
-        gasLimit: 3000000,
+        gasLimit: 300000,
       }
     );
 
-    await tx.wait();
+    const receipt = await tx.wait();
+
+    logger.info(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {

@@ -74,6 +74,35 @@ contract TradeBot is Ownable {
         }
     }
 
+     // function checkTrade(
+    //     address[] calldata routers,
+    //     address token,
+    //     uint256 gasCostLimitInWei
+    // ) external view returns (string memory direction, address bestRouter, uint256 amountETH, uint256 amountToken) {
+    //     uint256 currentETHBalance = address(this).balance;
+    //     uint256 currentTokenBalance = IERC20(token).balanceOf(address(this));
+ 
+    //     console.log("Current ETH balance:", currentETHBalance);
+    //     console.log("Current Token balance:", currentTokenBalance);
+
+    //     console.log("Getting best trade analysis for ETH to Token");
+    //     TradeAnalysis memory ethToToken = getBestTradeAnalysis(routers, address(0), token, gasCostLimitInWei);
+    //     console.log("Getting best trade analysis for Token to ETH");
+    //     TradeAnalysis memory tokenToETH = getBestTradeAnalysis(routers, token, address(0), gasCostLimitInWei);
+
+    //     console.log("ETH to Token best router:", ethToToken.bestRouter, "Profit:", ethToToken.profit); // Unit in Token
+    //     console.log("Token to ETH best router:", tokenToETH.bestRouter, "Profit:", tokenToETH.profit); // Unit in ETH
+
+    //     // Determine direction based on return profits
+    //     if (tokenToETH.profit > ethToToken.profit) {
+    //         return ("to_eth", tokenToETH.bestRouter, tokenToETH.amountIn, tokenToETH.amountOut);
+    //     } else if (ethToToken.profit > tokenToETH.profit) {
+    //         return ("to_token", ethToToken.bestRouter, ethToToken.amountIn, ethToToken.amountOut);
+    //     } else {
+    //         return ("none", address(0), 0, 0);
+    //     }
+    // }
+
     function getTradeAnalysis(
         address[] calldata routers,
         address tokenIn,
@@ -117,6 +146,53 @@ contract TradeBot is Ownable {
         console.log("Amount out:", tradeData.amountOut);
         console.log("Profit:", tradeData.profit);
     }
+
+
+    // function getBestTradeAnalysis(
+    //     address[] calldata routers,
+    //     address tokenIn,
+    //     address tokenOut,
+    //     uint256 gasCostLimitInWei
+    // ) internal view returns (TradeAnalysis memory analysis) {
+    //     uint256 bestProfit = 0;
+    //     uint256 currentTokenBalance = tokenIn == address(0) ? address(this).balance : IERC20(tokenIn).balanceOf(address(this));
+    //     uint256 amountIn = tokenOut == address(0) ? _trades[tokenIn].amountETH : _trades[tokenIn].amountToken;
+    //     uint256 actualAmountIn = amountIn > 0 ? min(amountIn, currentTokenBalance) : currentTokenBalance;
+    //     uint256 targetAmountOut = tokenIn == address(0) ? _trades[tokenIn].amountToken : _trades[tokenIn].amountETH;
+
+    //     for (uint256 i = 0; i < routers.length; i++) {
+    //         console.log("i:", i);
+    //         console.log("Token in:", tokenIn);
+    //         console.log("Token out:", tokenOut);
+
+    //         uint256 amountOut = actualAmountIn == 0 ? 0 : getAmountOut(routers[i], tokenIn, tokenOut, actualAmountIn);
+
+    //         console.log("Amount In:", actualAmountIn);
+    //         console.log("Amount Out:", amountOut);
+    //         console.log("Target Amount Out:", targetAmountOut);
+
+    //         if (amountOut > 0) {
+    //             uint256 profit = amountOut > targetAmountOut ? amountOut - targetAmountOut : 0;
+    //             uint256 gasCost;
+
+    //             if (tokenOut == address(0)) {
+    //                 gasCost = gasCostLimitInWei;
+    //                 console.log("Gas cost:", gasCost);
+    //             } else {
+    //                 gasCost = targetAmountOut.mul(gasCostLimitInWei).div(amountOut);
+    //                 console.log("Gas cost:", gasCost);
+    //             }
+
+    //             analysis.amountIn = actualAmountIn;
+    //             if (profit > gasCost && profit - gasCost > bestProfit) {
+    //                 analysis.bestRouter = routers[i];
+    //                 analysis.amountOut = amountOut;
+    //                 analysis.profit = profit - gasCost;
+    //                 bestProfit = profit - gasCost;
+    //             }
+    //         }
+    //     }
+    // }
 
     function executeTradeETHForTokens(
         address router,
