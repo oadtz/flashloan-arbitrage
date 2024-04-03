@@ -62,11 +62,13 @@ export async function run(
     )
       continue;
 
-    const randomFactor = 0.5 + Math.random() * 0.5; // Generate a random factor between 0.5 and 1
+    const randomFactor = slippageTolerance + Math.random() * slippageTolerance; // Generate a random factor between 0.5 and 1
     const amountIn =
-      (toDecimals(borrowedAmount, token0.decimals) *
-        BigInt(Math.floor(randomFactor * 100))) /
-      BigInt(100);
+      randomFactor > 0
+        ? (toDecimals(borrowedAmount, token0.decimals) *
+            BigInt(Math.floor(randomFactor * 100))) /
+          BigInt(100)
+        : toDecimals(borrowedAmount, token0.decimals);
     const expactedAmountOut =
       (amountIn * BigInt((1 + flashLoanFee) * 100_000)) / BigInt(100_000);
 

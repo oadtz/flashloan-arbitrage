@@ -52,7 +52,7 @@ const assetsToCheck = [
   },
 ];
 
-const slippageTolerance = 0.5;
+const slippageTolerance = 0; //0.5;
 const flashLoanFee = 0.0005;
 
 const networkProviderUrl = appConfig.polygonRpcUrl;

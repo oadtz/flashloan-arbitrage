@@ -42,7 +42,7 @@ const assetsToCheck = [
   },
 ];
 
-const slippageTolerance = 0.5;
+const slippageTolerance = 0; //0.5;
 const flashLoanFee = 0.0005;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
@@ -56,7 +56,7 @@ run(
   flashLoanFee,
   networkProviderUrl,
   arbitrageContractAddress,
-  0
+  1000
 ).catch((error) => {
   console.error(error);
   process.exit(1);

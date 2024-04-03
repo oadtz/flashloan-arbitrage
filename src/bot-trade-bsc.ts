@@ -13,7 +13,7 @@ const routersToCheck = [
 const assetsToCheck = [assets.USDT, assets.BTCB, assets.ETH];
 
 const slippageTolerance = 0.5;
-const gasLimit = 25000000;
+const gasLimit = 500000; // 25000000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
