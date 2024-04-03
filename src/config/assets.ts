@@ -17,6 +17,14 @@ export const assets: Assets = {
     address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
     decimals: 18,
   },
+  TOKEN2: {
+    address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    decimals: 18,
+  },
+  TOKEN3: {
+    address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    decimals: 18,
+  },
   // Sepolia
   TK0: { address: "0xadbA6423b6Dcf09A4CFaD205d28F67a77fD56BF5", decimals: 18 },
   TK1: { address: "0xFE2ae7FaEfeF0DEe528E4c96F9A35001dc00d2ED", decimals: 18 },

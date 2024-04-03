@@ -3,6 +3,16 @@ import { ethers } from "hardhat";
 async function main() {
   const [deployer] = await ethers.getSigners();
 
+  const weth = await ethers.deployContract("Token", [
+    "Wrapped Ether",
+    "WETH",
+    18,
+    ethers.parseUnits("200000", 18),
+  ]);
+  await weth.waitForDeployment();
+  const wethAddress = await weth.getAddress();
+  console.log("WETH deployed to:", wethAddress);
+
   const token0 = await ethers.deployContract("Token", [
     "Token0",
     "TK0",
@@ -34,6 +44,7 @@ async function main() {
   console.log("Router1 deployed to:", router1Address);
 
   // Transfer Token0 and Token1 to the Router0 contract
+  await weth.transfer(router0Address, ethers.parseUnits("300", 18));
   await token0.transfer(
     router0Address,
     ethers.parseUnits("10000000000000000", 18)
@@ -43,6 +54,7 @@ async function main() {
     ethers.parseUnits("10000000000000000", 18)
   );
   // Transfer Token0 and Token1 to the Router1 contract
+  await weth.transfer(router1Address, ethers.parseUnits("300", 18));
   await token0.transfer(
     router1Address,
     ethers.parseUnits("10000000000000000", 18)
@@ -61,7 +73,7 @@ async function main() {
     value: ethers.parseUnits("300", 18),
   });
 
-  const traderBot = await ethers.deployContract("TradeBot");
+  const traderBot = await ethers.deployContract("TradeBot", [wethAddress]);
   await traderBot.waitForDeployment();
   console.log("TradeBot deployed to:", await traderBot.getAddress());
 

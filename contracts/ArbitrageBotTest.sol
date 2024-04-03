@@ -21,6 +21,8 @@ contract Router {
 
     function getAmountsOut(uint256 amountIn, address[] memory path) public view returns (uint256[] memory amounts) {
         require(path.length >= 2, "Router: invalid path");
+        require(path[0] != path[path.length - 1], "Router: identical tokens");
+        require(path[0] != address(0) && path[path.length - 1] != address(0), "Router: ZERO_ADDRESS");
         amounts = new uint256[](path.length);
         amounts[0] = amountIn;
 

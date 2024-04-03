@@ -4,9 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "hardhat compile",
     "flatten:arbitrage": "hardhat flatten contracts/ArbitrageBot.sol > contracts/FlattenedArbitrageBot.sol.tmp",
-    "flatten:trade": "hardhat flatten contracts/TradeBot.sol > contracts/FlattenedTradeBot.sol.tmp",
-    "compile": "hardhat compile",
     "deploy:arbitrage:localhost": "hardhat run scripts/deploy-arbitrage-test.ts --network localhost",
     "deploy:arbitrage:sepolia": "hardhat run scripts/deploy-arbitrage-sepolia.ts --network sepolia",
     "start:arbitrage:localhost": "ts-node src/bot-arbitrage-localhost.ts",
@@ -14,8 +13,12 @@
     "start:arbitrage:bsc": "ts-node src/bot-arbitrage-bsc.ts",
     "start:arbitrage:polygon": "ts-node src/bot-arbitrage-polygon.ts",
     "start:arbitrage:eth": "ts-node src/bot-arbitrage-eth.ts",
+    "flatten:trade": "hardhat flatten contracts/TradeBot.sol > contracts/FlattenedTradeBot.sol.tmp",
+    "deploy:trade:localhost": "hardhat run scripts/deploy-trade-test.ts --network localhost",
     "start:trade:localhost": "ts-node src/bot-trade-localhost.ts",
-    "start:trade:bsc": "ts-node src/bot-trade-bsc.ts"
+    "start:trade:bsc": "ts-node src/bot-trade-bsc.ts",
+    "withdraw:trade:localhost": "ts-node src/withdraw-trade-localhost.ts",
+    "withdraw:trade:bsc": "ts-node src/withdraw-trade-bsc.ts"
   },
   "keywords": [],
   "author": "",

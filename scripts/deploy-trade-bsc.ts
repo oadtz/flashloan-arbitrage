@@ -1,7 +1,9 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const tradeBot = await ethers.deployContract("TradeBot");
+  const WETH_ADDRESS = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"; // WBNB
+
+  const tradeBot = await ethers.deployContract("TradeBot", [WETH_ADDRESS]);
 
   await tradeBot.waitForDeployment();
 

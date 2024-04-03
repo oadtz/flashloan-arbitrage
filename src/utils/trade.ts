@@ -77,6 +77,13 @@ export async function run(
         )} ${getAssetName(tokenToTrade.address)} on ${getRouterName(router)}`
       );
 
+      logger.info(`executeTradeETHForTokens`);
+      logger.info(`Router: ${router}`);
+      logger.info(`Token: ${tokenToTrade.address}`);
+      logger.info(`Amount ETH: ${amountEth}`);
+      logger.info(`Amount Token: ${amountToken}`);
+      logger.info(`Gas limit: ${gasLimit}`);
+
       const result = await executeTradeETHForTokens(
         router,
         tokenToTrade.address,
@@ -102,6 +109,13 @@ export async function run(
           18
         )} ETH on ${getRouterName(router)}`
       );
+
+      logger.info(`executeTradeTokensForETH`);
+      logger.info(`Router: ${router}`);
+      logger.info(`Token: ${tokenToTrade.address}`);
+      logger.info(`Amount Token: ${amountToken}`);
+      logger.info(`Amount ETH: ${amountEth}`);
+      logger.info(`Gas limit: ${gasLimit}`);
 
       const result = await executeTradeTokensForETH(
         router,
@@ -188,7 +202,7 @@ async function getTokenBalance(
       const trader = new ethers.Contract(
         tradeContractAddress,
         tradeAbi,
-        provider.wallet
+        provider.ethers
       );
 
       const balance = await trader.getTokenBalance(tokenToCheck);
@@ -211,7 +225,7 @@ async function getETHBalance(
       const trader = new ethers.Contract(
         tradeContractAddress,
         tradeAbi,
-        provider.wallet
+        provider.ethers
       );
 
       const balance = await trader.getETHBalance();
@@ -238,7 +252,7 @@ async function getTrades(
       const trader = new ethers.Contract(
         tradeContractAddress,
         tradeAbi,
-        provider.wallet
+        provider.ethers
       );
 
       const [amoutETH, amountToken] = await trader.getTrades(tokenToCheck);
@@ -303,7 +317,7 @@ async function executeTradeETHForTokens(
       amountIn,
       expectedAmountOut,
       {
-        gasLimit: 300000,
+        gasLimit: 25000000,
       }
     );
 
@@ -313,7 +327,7 @@ async function executeTradeETHForTokens(
 
     return true;
   } catch (error) {
-    logger.error({ error }, "Error performing tradeEthForTokens");
+    logger.error({ error }, "Error performing executeTradeETHForTokens");
     logger.flush();
     return false;
   }
@@ -343,7 +357,7 @@ async function executeTradeTokensForETH(
       amountIn,
       expectedAmountOut,
       {
-        gasLimit: 300000,
+        gasLimit: 25000000,
       }
     );
 
@@ -353,7 +367,7 @@ async function executeTradeTokensForETH(
 
     return true;
   } catch (error) {
-    logger.error({ error }, "Error performing tradeTokensForETH");
+    logger.error({ error }, "Error performing executeTradeTokensForETH");
     logger.flush();
     return false;
   }

@@ -1,14 +1,20 @@
 export const addresses = {
-  localhost: "0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
+  localhost: "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
   sepolia: "",
   ethereum: "",
-  bsc: "0x92242E7C325A15605300b73657a2217e59B42c3F",
+  bsc: "0x5889e41F0F05a016e32b1c1e7A22d43E00D1bCE5",
   polygon: "",
 };
 
 export const abi = [
   {
-    inputs: [],
+    inputs: [
+      {
+        internalType: "address",
+        name: "_wethAddress",
+        type: "address",
+      },
+    ],
     stateMutability: "nonpayable",
     type: "constructor",
   },
@@ -52,6 +58,19 @@ export const abi = [
     ],
     name: "OwnershipTransferred",
     type: "event",
+  },
+  {
+    inputs: [],
+    name: "WETH",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
   {
     inputs: [

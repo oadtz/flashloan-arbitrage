@@ -621,9 +621,10 @@ contract TradeBot is Ownable {
     }
 
     mapping(address => Trade) private _trades;
-    address private immutable ETH = address(0);
+    address public immutable WETH;
 
-    constructor() Ownable(msg.sender) {
+    constructor(address _wethAddress) Ownable(msg.sender) {
+        WETH = _wethAddress;
         // console.log("TradeBot deployed");
     }
 
@@ -642,13 +643,13 @@ contract TradeBot is Ownable {
     ) external view returns (string memory direction, address router, uint256 amountETH, uint256 amountToken) {
         // Calculate initial and target amounts for both sides.
         // console.log("Checking trade from ETH to Token");
-        TradeData memory ethToTokenResult = getTradeAnalysis(routers, ETH, token, gasCostLimitInWei);
+        TradeData memory ethToTokenResult = getTradeAnalysis(routers, WETH, token, gasCostLimitInWei);
         uint256 ethToTokenProfitRatio = ethToTokenResult.amountOut > 0 ? ethToTokenResult.profit.mul(100).div(ethToTokenResult.amountOut) : 0;
         // console.log("ETH to Token result:", ethToTokenResult.amountIn, ethToTokenResult.amountOut);
         // console.log("ETH to Token profit ratio:", ethToTokenProfitRatio);
 
         // console.log("Checking trade from Token to ETH");
-        TradeData memory tokenToETHResult = getTradeAnalysis(routers, token, ETH, gasCostLimitInWei);
+        TradeData memory tokenToETHResult = getTradeAnalysis(routers, token, WETH, gasCostLimitInWei);
         uint256 tokenToETHProfitRatio = tokenToETHResult.amountOut > 0 ? tokenToETHResult.profit.mul(100).div(tokenToETHResult.amountOut) : 0;
         // console.log("Token to ETH result:", tokenToETHResult.amountIn, tokenToETHResult.amountOut, tokenToETHResult.profit);
         // console.log("Token to ETH profit ratio:", tokenToETHProfitRatio);
@@ -665,35 +666,6 @@ contract TradeBot is Ownable {
         }
     }
 
-     // function checkTrade(
-    //     address[] calldata routers,
-    //     address token,
-    //     uint256 gasCostLimitInWei
-    // ) external view returns (string memory direction, address bestRouter, uint256 amountETH, uint256 amountToken) {
-    //     uint256 currentETHBalance = address(this).balance;
-    //     uint256 currentTokenBalance = IERC20(token).balanceOf(address(this));
- 
-    //     console.log("Current ETH balance:", currentETHBalance);
-    //     console.log("Current Token balance:", currentTokenBalance);
-
-    //     console.log("Getting best trade analysis for ETH to Token");
-    //     TradeAnalysis memory ethToToken = getBestTradeAnalysis(routers, address(0), token, gasCostLimitInWei);
-    //     console.log("Getting best trade analysis for Token to ETH");
-    //     TradeAnalysis memory tokenToETH = getBestTradeAnalysis(routers, token, address(0), gasCostLimitInWei);
-
-    //     console.log("ETH to Token best router:", ethToToken.bestRouter, "Profit:", ethToToken.profit); // Unit in Token
-    //     console.log("Token to ETH best router:", tokenToETH.bestRouter, "Profit:", tokenToETH.profit); // Unit in ETH
-
-    //     // Determine direction based on return profits
-    //     if (tokenToETH.profit > ethToToken.profit) {
-    //         return ("to_eth", tokenToETH.bestRouter, tokenToETH.amountIn, tokenToETH.amountOut);
-    //     } else if (ethToToken.profit > tokenToETH.profit) {
-    //         return ("to_token", ethToToken.bestRouter, ethToToken.amountIn, ethToToken.amountOut);
-    //     } else {
-    //         return ("none", address(0), 0, 0);
-    //     }
-    // }
-
     function getTradeAnalysis(
         address[] calldata routers,
         address tokenIn,
@@ -701,10 +673,10 @@ contract TradeBot is Ownable {
         uint256 gasCostLimitInWei
     ) internal view returns (TradeData memory tradeData) {
         // Calculate the actual amount in
-        uint256 currentTokenInBalance = tokenIn == ETH ? address(this).balance : IERC20(tokenIn).balanceOf(address(this));
+        uint256 currentTokenInBalance = tokenIn == WETH ? address(this).balance : IERC20(tokenIn).balanceOf(address(this));
         // console.log("Current tokenIn in balance:", currentTokenInBalance);
-        uint256 lastTradeOfTokenIn = tokenIn == ETH ? _trades[tokenOut].amountETH : _trades[tokenIn].amountToken;
-        uint256 lastTradeOfTokenOut = tokenIn == ETH ? _trades[tokenOut].amountToken : _trades[tokenIn].amountETH;
+        uint256 lastTradeOfTokenIn = tokenIn == WETH ? _trades[tokenOut].amountETH : _trades[tokenIn].amountToken;
+        uint256 lastTradeOfTokenOut = tokenIn == WETH ? _trades[tokenOut].amountToken : _trades[tokenIn].amountETH;
         uint256 expectedAmountOut = tradeData.amountIn <= lastTradeOfTokenIn ? lastTradeOfTokenOut : 0;
 
         // Find the best router
@@ -725,7 +697,7 @@ contract TradeBot is Ownable {
                     tradeData.amountOut = amountOut;
 
                     // Calculate the profit
-                    uint256 gasCostLimit = tokenOut == ETH ? gasCostLimitInWei : gasCostLimitInWei.mul(amountOut).div(tradeData.amountIn);
+                    uint256 gasCostLimit = tokenOut == WETH ? gasCostLimitInWei : gasCostLimitInWei.mul(amountOut).div(tradeData.amountIn);
                     // console.log("Gas cost limit for router:", i, gasCostLimit);
                     tradeData.profit = amountOut > gasCostLimit + expectedAmountOut ? amountOut.sub(gasCostLimit).sub(expectedAmountOut) : 0;
                     // console.log("Profit (actual):", tradeData.profit);
@@ -738,52 +710,6 @@ contract TradeBot is Ownable {
         // console.log("Profit:", tradeData.profit);
     }
 
-
-    // function getBestTradeAnalysis(
-    //     address[] calldata routers,
-    //     address tokenIn,
-    //     address tokenOut,
-    //     uint256 gasCostLimitInWei
-    // ) internal view returns (TradeAnalysis memory analysis) {
-    //     uint256 bestProfit = 0;
-    //     uint256 currentTokenBalance = tokenIn == address(0) ? address(this).balance : IERC20(tokenIn).balanceOf(address(this));
-    //     uint256 amountIn = tokenOut == address(0) ? _trades[tokenIn].amountETH : _trades[tokenIn].amountToken;
-    //     uint256 actualAmountIn = amountIn > 0 ? min(amountIn, currentTokenBalance) : currentTokenBalance;
-    //     uint256 targetAmountOut = tokenIn == address(0) ? _trades[tokenIn].amountToken : _trades[tokenIn].amountETH;
-
-    //     for (uint256 i = 0; i < routers.length; i++) {
-    //         console.log("i:", i);
-    //         console.log("Token in:", tokenIn);
-    //         console.log("Token out:", tokenOut);
-
-    //         uint256 amountOut = actualAmountIn == 0 ? 0 : getAmountOut(routers[i], tokenIn, tokenOut, actualAmountIn);
-
-    //         console.log("Amount In:", actualAmountIn);
-    //         console.log("Amount Out:", amountOut);
-    //         console.log("Target Amount Out:", targetAmountOut);
-
-    //         if (amountOut > 0) {
-    //             uint256 profit = amountOut > targetAmountOut ? amountOut - targetAmountOut : 0;
-    //             uint256 gasCost;
-
-    //             if (tokenOut == address(0)) {
-    //                 gasCost = gasCostLimitInWei;
-    //                 console.log("Gas cost:", gasCost);
-    //             } else {
-    //                 gasCost = targetAmountOut.mul(gasCostLimitInWei).div(amountOut);
-    //                 console.log("Gas cost:", gasCost);
-    //             }
-
-    //             analysis.amountIn = actualAmountIn;
-    //             if (profit > gasCost && profit - gasCost > bestProfit) {
-    //                 analysis.bestRouter = routers[i];
-    //                 analysis.amountOut = amountOut;
-    //                 analysis.profit = profit - gasCost;
-    //                 bestProfit = profit - gasCost;
-    //             }
-    //         }
-    //     }
-    // }
 
     function executeTradeETHForTokens(
         address router,
@@ -801,7 +727,7 @@ contract TradeBot is Ownable {
         require(address(this).balance >= amountIn, "Insufficient contract ETH balance");
 
         address[] memory path = new address[](2);
-        path[0] = address(0);
+        path[0] = WETH;
         path[1] = token;
 
         uint256 balanceBefore = IERC20(token).balanceOf(address(this));
@@ -829,7 +755,7 @@ contract TradeBot is Ownable {
 
         address[] memory path = new address[](2);
         path[0] = token;
-        path[1] = address(0);
+        path[1] = WETH;
 
         safeIncreaseAllowance(IERC20(token), router, amountIn);
 
@@ -845,82 +771,29 @@ contract TradeBot is Ownable {
 
     function getAmountOut(address router, address tokenIn, address tokenOut, uint256 amountIn) internal view returns (uint256) {
         address[] memory path;
-        if (tokenIn == address(0)) {
+        if (tokenIn == WETH) {
             path = new address[](2);
-            path[0] = address(0);
+            path[0] = WETH;
             path[1] = tokenOut;
-        } else if (tokenOut == address(0)) {
+        } else if (tokenOut == WETH) {
             path = new address[](2);
             path[0] = tokenIn;
-            path[1] = address(0);
-        } else {
-            path = new address[](3);
-            path[0] = tokenIn;
-            path[1] = address(0);
-            path[2] = tokenOut;
-        }
+            path[1] = WETH;
+        } 
 
         uint256[] memory amounts = IRouter(router).getAmountsOut(amountIn, path);
         return amounts[amounts.length - 1];
     }
 
-    function getBestRouterTokenToETH(address[] calldata routers, address token, uint256 amountIn) internal view returns (address, uint256) {
-        address bestRouter;
-        uint256 bestAmountOut;
-
-        for (uint256 i = 0; i < routers.length; i++) {
-            // console.log ("i:", i);
-            // console.log("Router:", routers[i]);
-            // console.log("Token:", token);
-            // console.log("Amount in:", amountIn);
-
-            uint256 amountOut = getAmountOut(routers[i], token, address(0), amountIn);
-            if (amountOut > bestAmountOut) {
-                // console.log("Found better router:", routers[i]);
-                bestRouter = routers[i];
-                bestAmountOut = amountOut;
-            }
-        }
-
-        // console.log("Best router:", bestRouter);
-        // console.log("Best amount out:", bestAmountOut);
-
-        return (bestRouter, bestAmountOut);
-    }
-
-    function getBestRouterETHToToken(address[] calldata routers, address token, uint256 amountIn) internal view returns (address, uint256) {
-        address bestRouter;
-        uint256 bestAmountOut;
-
-        for (uint256 i = 0; i < routers.length; i++) {
-            // console.log ("i:", i);
-            // console.log("Router:", routers[i]);
-            // console.log("Token:", token);
-            // console.log("Amount in:", amountIn);
-            uint256 amountOut = getAmountOut(routers[i], address(0), token, amountIn);
-
-            if (amountOut > bestAmountOut) {
-                // console.log("Found better router:", routers[i]);
-                bestRouter = routers[i];
-                bestAmountOut = amountOut;
-            }
-        }
-
-        // console.log("Best router:", bestRouter);
-        // console.log("Best amount out:", bestAmountOut);
-
-        return (bestRouter, bestAmountOut);
-    }
-
-    function getTrades(address token) external view onlyOwner returns (uint256, uint256) {
+    function getTrades(address token) external view returns (uint256, uint256) {
         return (_trades[token].amountETH, _trades[token].amountToken);
     }
 
-    function getTokenBalance(address token) external view onlyOwner returns (uint256) {
+    function getTokenBalance(address token) external view returns (uint256) {
         return IERC20(token).balanceOf(address(this));
     }
 
-    function getETHBalance() external view onlyOwner returns (uint256) {
+    function getETHBalance() external view returns (uint256) {
         return address(this).balance;
     }
 
