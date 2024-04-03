@@ -10,7 +10,7 @@ const routersToCheck = [
   routers.MDEX,
   routers.ApeSwap,
 ];
-const assetsToCheck = [assets.USDT, assets.BTCB, assets.ETH];
+const assetsToCheck = [assets.USDT];
 
 const slippageTolerance = 0.5;
 const gasLimit = 500000; // 25000000;
