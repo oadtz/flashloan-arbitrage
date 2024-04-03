@@ -5,6 +5,7 @@ import { getRouterName } from "../config/dex";
 import { shuffle } from "lodash";
 import logger from "./logger";
 import { Provider, formatDecimals, getGasPrice, getProvider } from "./provider";
+import { token } from "../../typechain-types/@openzeppelin/contracts";
 
 export async function run(
   routersToCheck: string[],
@@ -18,6 +19,21 @@ export async function run(
   logger.info("🚀 Starting bot...");
 
   const provider = getProvider(networkProviderUrl);
+
+  const _trades: Record<
+    string,
+    {
+      amountEth: bigint;
+      amountToken: bigint;
+    }
+  > = {};
+
+  assetsToCheck.forEach((asset) => {
+    _trades[asset.address] = {
+      amountEth: BigInt(0),
+      amountToken: BigInt(0),
+    };
+  });
 
   while (true) {
     const shuffledAssets = shuffle(assetsToCheck);
@@ -66,71 +82,99 @@ export async function run(
       tradeContractAddress
     );
 
+    logger.info(`Result from checkTrade`);
+    logger.info(`Direction: ${direction}`);
+    logger.info(`Router: ${router}`);
+    logger.info(`Amount ETH: ${amountEth}`);
+    logger.info(`Amount Token: ${amountToken}`);
+
     if (direction === "eth_to_token") {
-      logger.info(
-        `🎉 Trade opportunity found! ${direction} ${formatDecimals(
-          amountEth,
-          18
-        )} ETH for ${formatDecimals(
-          amountToken,
-          tokenToTrade.decimals
-        )} ${getAssetName(tokenToTrade.address)} on ${getRouterName(router)}`
-      );
+      if (amountToken >= _trades[tokenToTrade.address].amountToken) {
+        _trades[tokenToTrade.address].amountEth = amountEth;
+        _trades[tokenToTrade.address].amountToken = amountToken;
 
-      logger.info(`executeTradeETHForTokens`);
-      logger.info(`Router: ${router}`);
-      logger.info(`Token: ${tokenToTrade.address}`);
-      logger.info(`Amount ETH: ${amountEth}`);
-      logger.info(`Amount Token: ${amountToken}`);
-      logger.info(`Gas limit: ${gasLimit}`);
-
-      const result = await executeTradeETHForTokens(
-        router,
-        tokenToTrade.address,
-        amountEth,
-        amountToken,
-        provider,
-        gasLimit,
-        tradeContractAddress
-      );
-
-      if (result) {
-        logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
+        logger.info(`❌ Price not good enough, waiting for better price`);
       } else {
-        logger.info(`❌ Trading failed`);
+        logger.info(
+          `🎉 Trade opportunity found! ${direction} ${formatDecimals(
+            amountEth,
+            18
+          )} ETH for ${formatDecimals(
+            amountToken,
+            tokenToTrade.decimals
+          )} ${getAssetName(tokenToTrade.address)} on ${getRouterName(router)}`
+        );
+
+        logger.info(`executeTradeETHForTokens`);
+        logger.info(`Router: ${router}`);
+        logger.info(`Token: ${tokenToTrade.address}`);
+        logger.info(`Amount ETH: ${amountEth}`);
+        logger.info(`Amount Token: ${amountToken}`);
+        logger.info(`Gas limit: ${gasLimit}`);
+
+        const result = await executeTradeETHForTokens(
+          router,
+          tokenToTrade.address,
+          amountEth,
+          amountToken,
+          provider,
+          gasLimit,
+          tradeContractAddress
+        );
+
+        if (result) {
+          _trades[tokenToTrade.address] = {
+            amountEth: BigInt(0),
+            amountToken: BigInt(0),
+          };
+
+          logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
+        } else {
+          logger.info(`❌ Trading failed`);
+        }
       }
     } else if (direction === "token_to_eth") {
-      logger.info(
-        `🎉 Trade opportunity found! ${direction} ${formatDecimals(
-          amountToken,
-          tokenToTrade.decimals
-        )} ${getAssetName(tokenToTrade.address)} for ${formatDecimals(
-          amountEth,
-          18
-        )} ETH on ${getRouterName(router)}`
-      );
-
-      logger.info(`executeTradeTokensForETH`);
-      logger.info(`Router: ${router}`);
-      logger.info(`Token: ${tokenToTrade.address}`);
-      logger.info(`Amount Token: ${amountToken}`);
-      logger.info(`Amount ETH: ${amountEth}`);
-      logger.info(`Gas limit: ${gasLimit}`);
-
-      const result = await executeTradeTokensForETH(
-        router,
-        tokenToTrade.address,
-        amountToken,
-        amountEth,
-        provider,
-        gasLimit,
-        tradeContractAddress
-      );
-
-      if (result) {
-        logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
+      if (amountEth >= _trades[tokenToTrade.address].amountEth) {
+        _trades[tokenToTrade.address].amountEth = amountEth;
+        _trades[tokenToTrade.address].amountToken = amountToken;
       } else {
-        logger.info(`❌ Trading failed`);
+        logger.info(
+          `🎉 Trade opportunity found! ${direction} ${formatDecimals(
+            amountToken,
+            tokenToTrade.decimals
+          )} ${getAssetName(tokenToTrade.address)} for ${formatDecimals(
+            amountEth,
+            18
+          )} ETH on ${getRouterName(router)}`
+        );
+
+        logger.info(`executeTradeTokensForETH`);
+        logger.info(`Router: ${router}`);
+        logger.info(`Token: ${tokenToTrade.address}`);
+        logger.info(`Amount Token: ${amountToken}`);
+        logger.info(`Amount ETH: ${amountEth}`);
+        logger.info(`Gas limit: ${gasLimit}`);
+
+        const result = await executeTradeTokensForETH(
+          router,
+          tokenToTrade.address,
+          amountToken,
+          amountEth,
+          provider,
+          gasLimit,
+          tradeContractAddress
+        );
+
+        if (result) {
+          _trades[tokenToTrade.address] = {
+            amountEth: BigInt(0),
+            amountToken: BigInt(0),
+          };
+
+          logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
+        } else {
+          logger.info(`❌ Trading failed`);
+        }
       }
     } else {
       logger.info(`❌ Not a trade opportunity`);
