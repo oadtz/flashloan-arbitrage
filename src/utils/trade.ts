@@ -143,6 +143,41 @@ export async function run(
   }
 }
 
+export async function withdrawTrade(
+  assetsToWithdraw: Asset[],
+  networkProviderUrl: string,
+  gasLimit: number,
+  tradeContractAddress: string
+) {
+  let result: boolean = false;
+  logger.info("🚀 Starting withdrawal...");
+
+  const provider = getProvider(networkProviderUrl);
+
+  for (const asset of assetsToWithdraw) {
+    result = await withdrawToken(
+      asset.address,
+      provider,
+      gasLimit,
+      tradeContractAddress
+    );
+
+    if (result) {
+      logger.info(`🎉 Withdrawal of ${getAssetName(asset.address)} done`);
+    } else {
+      logger.info(`❌ Withdrawal of ${getAssetName(asset.address)} failed`);
+    }
+  }
+
+  result = await withdrawETH(provider, gasLimit, tradeContractAddress);
+
+  if (result) {
+    logger.info(`🎉 Withdrawal of ETH done`);
+  } else {
+    logger.info(`❌ Withdrawal of ETH failed`);
+  }
+}
+
 async function getTokenBalance(
   tokenToCheck: string,
   provider: Provider,
@@ -324,10 +359,9 @@ async function executeTradeTokensForETH(
   }
 }
 
-export async function withdraw(
-  token: string,
+export async function withdrawETH(
   provider: Provider,
-  gasLimit: bigint,
+  gasLimit: number,
   tradeContractAddress: string
 ) {
   if (!tradeContractAddress) return false; // Skip withdrawal if no contract address is provided
@@ -339,15 +373,48 @@ export async function withdraw(
       provider.wallet
     );
 
-    const tx = await contract.withdraw(token, {
+    const tx = await contract.withdrawETH({
       gasLimit,
     });
 
-    await tx.wait();
+    const receipt = await tx.wait();
+
+    logger.info(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {
-    logger.error({ error }, "Error withdrawing funds");
+    logger.error({ error }, "Error withdrawing ETH");
+    logger.flush();
+    return false;
+  }
+}
+
+export async function withdrawToken(
+  token: string,
+  provider: Provider,
+  gasLimit: number,
+  tradeContractAddress: string
+) {
+  if (!tradeContractAddress) return false; // Skip withdrawal if no contract address is provided
+
+  try {
+    const contract = new ethers.Contract(
+      tradeContractAddress,
+      tradeAbi,
+      provider.wallet
+    );
+
+    const tx = await contract.withdrawToken(token, {
+      gasLimit,
+    });
+
+    const receipt = await tx.wait();
+
+    logger.info(`Gas used: ${receipt.gasUsed.toString()}`);
+
+    return true;
+  } catch (error) {
+    logger.error({ error }, "Error withdrawing tokens");
     logger.flush();
     return false;
   }
