@@ -43,7 +43,16 @@ contract Router {
                 amounts[i] = 0;
             } else {
                 // Generate a random amount out between 1 and the router's balance
-                uint256 randomAmount = (uint256(keccak256(abi.encodePacked(block.timestamp, i))) % routerBalance) + 1;
+                uint256 randomAmount;
+                if (tokenOut == address(0)) {
+                    // If the output token is WETH, generate a random amount between 1 and 10
+                    uint256 minAmount = 1e18; // 1 WETH
+                    uint256 maxAmount = 10e18; // 10 WETH
+                    randomAmount = (uint256(keccak256(abi.encodePacked(block.timestamp, i))) % (maxAmount - minAmount + 1)) + minAmount;
+                } else {
+                    // For other tokens, generate a random amount between 1 and the router's balance
+                    randomAmount = (uint256(keccak256(abi.encodePacked(block.timestamp, i))) % routerBalance) + 1;
+                }
                 amounts[i] = randomAmount;
             }
         }

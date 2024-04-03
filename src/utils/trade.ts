@@ -18,7 +18,6 @@ export async function run(
   logger.info("🚀 Starting bot...");
 
   const provider = getProvider(networkProviderUrl);
-  const gasPrice = await getGasPrice(provider);
 
   while (true) {
     const shuffledAssets = shuffle(assetsToCheck);
@@ -34,11 +33,31 @@ export async function run(
     );
 
     logger.info(
-      `Current _trades for ETH/${getAssetName(tokenToTrade.address)}: ${
-        trades.amoutEth
-      }:${trades.amountToken}`
+      `Current _trades for ETH/${getAssetName(
+        tokenToTrade.address
+      )}: ${formatDecimals(trades.amoutEth, 18)}:${formatDecimals(
+        trades.amountToken,
+        tokenToTrade.decimals
+      )}`
+    );
+    logger.info(
+      `Current ETH balance: ${formatDecimals(
+        await getETHBalance(provider, tradeContractAddress),
+        18
+      )}`
+    );
+    logger.info(
+      `Current token balance: ${formatDecimals(
+        await getTokenBalance(
+          tokenToTrade.address,
+          provider,
+          tradeContractAddress
+        ),
+        tokenToTrade.decimals
+      )}`
     );
 
+    const gasPrice = await getGasPrice(provider);
     const [direction, router, amountEth, amountToken] = await checkTrade(
       routersToCheck,
       tokenToTrade.address,
@@ -47,11 +66,15 @@ export async function run(
       tradeContractAddress
     );
 
-    if (direction === "to_token") {
+    if (direction === "eth_to_token") {
       logger.info(
-        `🎉 Trade opportunity found! ${direction} ${amountEth} ETH for ${amountToken} ${getAssetName(
-          tokenToTrade.address
-        )} on ${getRouterName(router)}`
+        `🎉 Trade opportunity found! ${direction} ${formatDecimals(
+          amountEth,
+          18
+        )} ETH for ${formatDecimals(
+          amountToken,
+          tokenToTrade.decimals
+        )} ${getAssetName(tokenToTrade.address)} on ${getRouterName(router)}`
       );
 
       const result = await executeTradeETHForTokens(
@@ -69,11 +92,15 @@ export async function run(
       } else {
         logger.info(`❌ Trading failed`);
       }
-    } else if (direction === "to_eth") {
+    } else if (direction === "token_to_eth") {
       logger.info(
-        `🎉 Trade opportunity found! ${direction} ${amountToken} ${getAssetName(
-          tokenToTrade.address
-        )} for ${amountEth} ETH on ${getRouterName(router)}`
+        `🎉 Trade opportunity found! ${direction} ${formatDecimals(
+          amountToken,
+          tokenToTrade.decimals
+        )} ${getAssetName(tokenToTrade.address)} for ${formatDecimals(
+          amountEth,
+          18
+        )} ETH on ${getRouterName(router)}`
       );
 
       const result = await executeTradeTokensForETH(
@@ -96,13 +123,13 @@ export async function run(
     }
 
     logger.info(
-      `Current ETH balance: ${formatDecimals(
+      `After ETH balance: ${formatDecimals(
         await getETHBalance(provider, tradeContractAddress),
         18
       )}`
     );
     logger.info(
-      `Current token balance: ${formatDecimals(
+      `After token balance: ${formatDecimals(
         await getTokenBalance(
           tokenToTrade.address,
           provider,
@@ -196,7 +223,7 @@ async function checkTrade(
   provider: Provider,
   gasLimit: bigint,
   tradeContractAddress: string
-): Promise<["to_token" | "to_eth" | "none", string, bigint, bigint]> {
+): Promise<["eth_to_token" | "token_to_eth" | "none", string, bigint, bigint]> {
   try {
     if (tradeContractAddress) {
       const trader = new ethers.Contract(
@@ -241,7 +268,7 @@ async function executeTradeETHForTokens(
       amountIn,
       expectedAmountOut,
       {
-        gasLimit,
+        gasLimit: 3000000,
       }
     );
 
@@ -279,7 +306,7 @@ async function executeTradeTokensForETH(
       amountIn,
       expectedAmountOut,
       {
-        gasLimit,
+        gasLimit: 3000000,
       }
     );
 

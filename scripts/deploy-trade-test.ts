@@ -54,11 +54,11 @@ async function main() {
 
   await deployer.sendTransaction({
     to: router0Address,
-    value: ethers.parseUnits("100", 18),
+    value: ethers.parseUnits("3000", 18),
   });
   await deployer.sendTransaction({
     to: router1Address,
-    value: ethers.parseUnits("100", 18),
+    value: ethers.parseUnits("3000", 18),
   });
 
   const traderBot = await ethers.deployContract("TradeBot");
