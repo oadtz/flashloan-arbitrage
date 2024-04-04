@@ -95,8 +95,8 @@ export async function run(
 
       const sellSignal = isSellSignal(
         _trades[tokenToTrade.address].tokenData,
-        5,
-        10,
+        20,
+        50,
         14,
         70,
         14,
@@ -160,8 +160,8 @@ export async function run(
       );
       const sellSignal = isSellSignal(
         _trades[tokenToTrade.address].ethData,
-        5,
-        10,
+        20,
+        50,
         14,
         70,
         14,

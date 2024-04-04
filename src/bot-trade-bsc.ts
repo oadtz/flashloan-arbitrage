@@ -4,12 +4,7 @@ import { appConfig } from "./config/app";
 import { run } from "./utils/trade";
 import { addresses as tradeContractAddresses } from "./config/trade";
 
-const routersToCheck = [
-  routers.PancakeSwap,
-  routers.BiSwap,
-  routers.MDEX,
-  routers.ApeSwap,
-];
+const routersToCheck = [routers.PancakeSwap];
 const assetsToCheck = [assets.USDT];
 
 const slippageTolerance = 0.5;
