@@ -13,6 +13,7 @@ export async function run(
   gasLimit: number,
   networkProviderUrl: string,
   tradeContractAddress: string,
+  movingAvarageCheck: boolean,
   delay: number
 ) {
   logger.info("🚀 Starting bot...");
@@ -93,7 +94,7 @@ export async function run(
           ? (amountToken + _trades[tokenToTrade.address].amountToken) /
             BigInt(2)
           : amountToken;
-      if (amountToken >= mAvgToken) {
+      if (movingAvarageCheck && amountToken >= mAvgToken) {
         _trades[tokenToTrade.address].amountEth = amountEth;
         _trades[tokenToTrade.address].amountToken = amountToken;
 
@@ -126,7 +127,9 @@ export async function run(
           router,
           tokenToTrade.address,
           amountEth,
-          amountToken,
+          amountToken -
+            (amountToken * BigInt(Math.floor(slippageTolerance * 10000))) /
+              BigInt(1000000),
           provider,
           gasLimit,
           tradeContractAddress
@@ -149,7 +152,7 @@ export async function run(
         _trades[tokenToTrade.address].amountEth > 0
           ? (amountEth + _trades[tokenToTrade.address].amountEth) / BigInt(2)
           : amountEth;
-      if (amountEth >= mAvgEth) {
+      if (movingAvarageCheck && amountEth >= mAvgEth) {
         _trades[tokenToTrade.address].amountEth = amountEth;
         _trades[tokenToTrade.address].amountToken = amountToken;
 
@@ -177,7 +180,9 @@ export async function run(
           router,
           tokenToTrade.address,
           amountToken,
-          amountEth,
+          amountEth -
+            (amountEth * BigInt(Math.floor(slippageTolerance * 10000))) /
+              BigInt(1000000),
           provider,
           gasLimit,
           tradeContractAddress
@@ -441,7 +446,7 @@ async function executeTradeTokensForETH(
     return true;
   } catch (error) {
     logger.error({ error }, "Error performing executeTradeTokensForETH");
-    logger.error(`Router: ${router}`);
+    logger.error(`Router (${getRouterName(router)}): ${router}`);
     logger.error(`Token: ${token}`);
     logger.error(`Amount In: ${amountIn}`);
     logger.error(`Expected Amount Out: ${expectedAmountOut}`);
@@ -465,7 +470,7 @@ export async function withdrawETH(
     );
 
     const tx = await contract.withdrawETH({
-      gasLimit,
+      gasLimit: 3000000,
     });
 
     const receipt = await tx.wait();
@@ -496,7 +501,7 @@ export async function withdrawToken(
     );
 
     const tx = await contract.withdrawToken(token, {
-      gasLimit,
+      gasLimit: 3000000,
     });
 
     const receipt = await tx.wait();

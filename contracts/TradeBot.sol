@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IERC20 } from "@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol";
-import { SafeERC20 } from "@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeERC20.sol";
-import { SafeMath } from "@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeMath.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 // import "hardhat/console.sol";
 
@@ -15,7 +14,6 @@ interface IRouter {
 
 contract TradeBot is Ownable {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
 
     struct Trade {
         uint256 amountETH;
@@ -40,8 +38,8 @@ contract TradeBot is Ownable {
     function safeIncreaseAllowance(IERC20 token, address spender, uint256 amountNeeded) internal {
         uint256 currentAllowance = token.allowance(address(this), spender);
         if(currentAllowance < amountNeeded) {
-            token.safeApprove(spender, 0);
-            token.safeApprove(spender, type(uint256).max);
+            token.approve(spender, 0);
+            token.approve(spender, type(uint256).max);
         }
     }
 
@@ -53,13 +51,13 @@ contract TradeBot is Ownable {
         // Calculate initial and target amounts for both sides.
         // console.log("Checking trade from ETH to Token");
         TradeData memory ethToTokenResult = getTradeAnalysis(routers, WETH, token, gasCostLimitInWei);
-        uint256 ethToTokenProfitRatio = ethToTokenResult.amountOut > 0 ? ethToTokenResult.profit.mul(100).div(ethToTokenResult.amountOut) : 0;
+        uint256 ethToTokenProfitRatio = ethToTokenResult.amountOut > 0 ? (ethToTokenResult.profit * 100) / ethToTokenResult.amountOut : 0;
         // console.log("ETH to Token result:", ethToTokenResult.amountIn, ethToTokenResult.amountOut);
         // console.log("ETH to Token profit ratio:", ethToTokenProfitRatio);
 
         // console.log("Checking trade from Token to ETH");
         TradeData memory tokenToETHResult = getTradeAnalysis(routers, token, WETH, gasCostLimitInWei);
-        uint256 tokenToETHProfitRatio = tokenToETHResult.amountOut > 0 ? tokenToETHResult.profit.mul(100).div(tokenToETHResult.amountOut) : 0;
+        uint256 tokenToETHProfitRatio = tokenToETHResult.amountOut > 0 ? (tokenToETHResult.profit * 100) / tokenToETHResult.amountOut : 0;
         // console.log("Token to ETH result:", tokenToETHResult.amountIn, tokenToETHResult.amountOut, tokenToETHResult.profit);
         // console.log("Token to ETH profit ratio:", tokenToETHProfitRatio);
 
@@ -86,7 +84,7 @@ contract TradeBot is Ownable {
         // console.log("Current tokenIn in balance:", currentTokenInBalance);
         uint256 lastTradeOfTokenIn = tokenIn == WETH ? _trades[tokenOut].amountETH : _trades[tokenIn].amountToken;
         uint256 lastTradeOfTokenOut = tokenIn == WETH ? _trades[tokenOut].amountToken : _trades[tokenIn].amountETH;
-        uint256 expectedAmountOut = tradeData.amountIn <= lastTradeOfTokenIn ? lastTradeOfTokenOut : 0;
+        uint256 expectedAmountOut = currentTokenInBalance >= lastTradeOfTokenIn ? lastTradeOfTokenOut : 0;
 
         // Find the best router
         tradeData.bestRouter = address(0);
@@ -106,9 +104,9 @@ contract TradeBot is Ownable {
                     tradeData.amountOut = amountOut;
 
                     // Calculate the profit
-                    uint256 gasCostLimit = tokenOut == WETH ? gasCostLimitInWei : gasCostLimitInWei.mul(amountOut).div(tradeData.amountIn);
+                    uint256 gasCostLimit = tokenOut == WETH ? gasCostLimitInWei : (gasCostLimitInWei * amountOut) / tradeData.amountIn;
                     // console.log("Gas cost limit for router:", i, gasCostLimit);
-                    tradeData.profit = amountOut > gasCostLimit + expectedAmountOut ? amountOut.sub(gasCostLimit).sub(expectedAmountOut) : 0;
+                    tradeData.profit = amountOut > gasCostLimit + expectedAmountOut ? amountOut - gasCostLimit - expectedAmountOut : 0;
                     // console.log("Profit (actual):", tradeData.profit);
                 }
             }
@@ -194,6 +192,10 @@ contract TradeBot is Ownable {
         return amounts[amounts.length - 1];
     }
 
+    function min(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a < b ? a : b;
+    }
+
     function getTrades(address token) external view returns (uint256, uint256) {
         return (_trades[token].amountETH, _trades[token].amountToken);
     }
@@ -209,7 +211,6 @@ contract TradeBot is Ownable {
     function withdrawToken(address token) external onlyOwner {
         uint256 balance = IERC20(token).balanceOf(address(this));
         IERC20(token).safeTransfer(owner(), balance);
-        _trades[token] = Trade(0, 0);
     }
 
     function withdrawETH() external onlyOwner {
@@ -217,9 +218,13 @@ contract TradeBot is Ownable {
         payable(owner()).transfer(balance);
     }
 
-    function min(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a < b ? a : b;
+    function depositToken(address token, uint256 amount) external {
+        safeIncreaseAllowance(IERC20(token), address(this), amount);
+        
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
     }
+
+    function depositETH() external payable {}
 
     receive() external payable {}
 }

@@ -13,7 +13,7 @@ const routersToCheck = [
 const assetsToCheck = [assets.USDT];
 
 const slippageTolerance = 0.5;
-const gasLimit = 500000; // 25000000;
+const gasLimit = 3000000; // 25000000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
@@ -26,6 +26,7 @@ run(
   gasLimit,
   networkProviderUrl,
   tradeContractAddress,
+  true,
   10000
 ).catch((error) => {
   console.error(error);

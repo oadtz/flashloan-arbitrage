@@ -21,6 +21,7 @@ run(
   gasLimit,
   networkProviderUrl,
   tradeContractAddress,
+  false,
   5000
 ).catch((error) => {
   console.error(error);

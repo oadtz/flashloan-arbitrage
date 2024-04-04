@@ -2,7 +2,7 @@ export const addresses = {
   localhost: "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
   sepolia: "",
   ethereum: "",
-  bsc: "0xE93D7665538Fbe61e460C45FdC5Fbb51e4F9359A",
+  bsc: "0xacD8cE13EEF69D71757fbc1Bd1B09B62264a7b2C",
   polygon: "",
 };
 
@@ -17,6 +17,33 @@ export const abi = [
     ],
     stateMutability: "nonpayable",
     type: "constructor",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "target",
+        type: "address",
+      },
+    ],
+    name: "AddressEmptyCode",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+    ],
+    name: "AddressInsufficientBalance",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "FailedInnerCall",
+    type: "error",
   },
   {
     inputs: [
@@ -38,6 +65,17 @@ export const abi = [
       },
     ],
     name: "OwnableUnauthorizedAccount",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+    ],
+    name: "SafeERC20FailedOperation",
     type: "error",
   },
   {
@@ -114,6 +152,31 @@ export const abi = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "depositETH",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "depositToken",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
