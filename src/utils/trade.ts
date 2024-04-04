@@ -86,7 +86,7 @@ export async function run(
     logger.info(`Amount Token: ${amountToken}`);
 
     if (direction === "eth_to_token") {
-      if (_trades[tokenToTrade.address].tokenData.length > 1000)
+      if (_trades[tokenToTrade.address].tokenData.length > 500)
         _trades[tokenToTrade.address].tokenData.shift();
 
       _trades[tokenToTrade.address].tokenData.push(
@@ -95,8 +95,8 @@ export async function run(
 
       const sellSignal = isSellSignal(
         _trades[tokenToTrade.address].tokenData,
-        20,
-        50,
+        10,
+        30,
         14,
         70,
         14,
@@ -152,7 +152,7 @@ export async function run(
         }
       }
     } else if (direction === "token_to_eth") {
-      if (_trades[tokenToTrade.address].ethData.length > 1000)
+      if (_trades[tokenToTrade.address].ethData.length > 500)
         _trades[tokenToTrade.address].ethData.shift();
 
       _trades[tokenToTrade.address].ethData.push(
@@ -160,8 +160,8 @@ export async function run(
       );
       const sellSignal = isSellSignal(
         _trades[tokenToTrade.address].ethData,
-        20,
-        50,
+        10,
+        30,
         14,
         70,
         14,
