@@ -5,6 +5,7 @@ import { getRouterName } from "../config/dex";
 import { shuffle } from "lodash";
 import logger from "./logger";
 import { Provider, formatDecimals, getGasPrice, getProvider } from "./provider";
+import { isSellSignal } from "./is-sell-signal";
 
 export async function run(
   routersToCheck: string[],
@@ -20,18 +21,14 @@ export async function run(
 
   const provider = getProvider(networkProviderUrl);
 
-  const _trades: Record<
-    string,
-    { amountEth: bigint; amountToken: bigint; emaETH: bigint; emaToken: bigint }
-  > = {};
+  const _trades: Record<string, { ethData: number[]; tokenData: number[] }> =
+    {};
   const smoothingFactor = BigInt(2);
 
   assetsToCheck.forEach((asset) => {
     _trades[asset.address] = {
-      amountEth: BigInt(0),
-      amountToken: BigInt(0),
-      emaETH: BigInt(0),
-      emaToken: BigInt(0),
+      ethData: [],
+      tokenData: [],
     };
   });
 
@@ -89,26 +86,29 @@ export async function run(
     logger.info(`Amount Token: ${amountToken}`);
 
     if (direction === "eth_to_token") {
-      let ema: bigint;
-      if (_trades[tokenToTrade.address]?.emaToken) {
-        ema =
-          (amountToken * smoothingFactor +
-            _trades[tokenToTrade.address].emaToken *
-              (BigInt(3) - smoothingFactor)) /
-          BigInt(3);
-      } else {
-        ema = amountToken;
-      }
+      if (_trades[tokenToTrade.address].tokenData.length > 1000)
+        _trades[tokenToTrade.address].tokenData.shift();
+
+      _trades[tokenToTrade.address].tokenData.push(
+        Number(formatDecimals(amountToken, tokenToTrade.decimals))
+      );
+
+      const sellSignal = isSellSignal(
+        _trades[tokenToTrade.address].tokenData,
+        5,
+        10,
+        14,
+        70,
+        14,
+        80
+      );
 
       logger.info(
-        `Latest Amount: ${formatDecimals(amountToken, tokenToTrade.decimals)}`
+        `Amount to trade: ${formatDecimals(amountToken, tokenToTrade.decimals)}`
       );
-      logger.info(`EMA: ${formatDecimals(ema, tokenToTrade.decimals)}`);
-      if (movingAvarageCheck && amountToken >= ema) {
-        _trades[tokenToTrade.address].amountEth = amountEth;
-        _trades[tokenToTrade.address].amountToken = amountToken;
-
-        logger.info(`❌ Price not good enough, waiting for better price`);
+      logger.info(`Sell Signal: ${sellSignal}`);
+      if (movingAvarageCheck && !sellSignal) {
+        logger.warn(`❌ Price not good enough, waiting for better price`);
       } else {
         logger.info(
           `🎉 Trade opportunity found! ${direction} ${formatDecimals(
@@ -141,37 +141,37 @@ export async function run(
 
         if (result) {
           _trades[tokenToTrade.address] = {
-            amountEth: BigInt(0),
-            amountToken: BigInt(0),
-            emaETH: BigInt(0),
-            emaToken: BigInt(0),
+            ethData: [],
+            tokenData: [],
           };
 
           logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
         } else {
-          logger.info(`❌ Trading failed`);
+          logger.error(`❌ Trading failed`);
           process.exit(1);
         }
       }
     } else if (direction === "token_to_eth") {
-      let ema: bigint;
-      if (_trades[tokenToTrade.address]?.emaETH) {
-        ema =
-          (amountEth * smoothingFactor +
-            _trades[tokenToTrade.address].emaETH *
-              (BigInt(3) - smoothingFactor)) /
-          BigInt(3);
-      } else {
-        ema = amountEth;
-      }
+      if (_trades[tokenToTrade.address].ethData.length > 1000)
+        _trades[tokenToTrade.address].ethData.shift();
 
-      logger.info(`Latest Amount: ${formatDecimals(amountEth, 18)}`);
-      logger.info(`EMA: ${formatDecimals(ema, tokenToTrade.decimals)}`);
-      if (movingAvarageCheck && amountEth >= ema) {
-        _trades[tokenToTrade.address].amountEth = amountEth;
-        _trades[tokenToTrade.address].amountToken = amountToken;
+      _trades[tokenToTrade.address].ethData.push(
+        Number(formatDecimals(amountEth, 18))
+      );
+      const sellSignal = isSellSignal(
+        _trades[tokenToTrade.address].ethData,
+        5,
+        10,
+        14,
+        70,
+        14,
+        80
+      );
 
-        logger.info(`❌ Price not good enough, waiting for better price`);
+      logger.info(`Amount to trade: ${formatDecimals(amountEth, 18)}`);
+      logger.info(`Sell Signal: ${sellSignal}`);
+      if (movingAvarageCheck && !sellSignal) {
+        logger.warn(`❌ Price not good enough, waiting for better price`);
       } else {
         logger.info(
           `🎉 Trade opportunity found! ${direction} ${formatDecimals(
@@ -204,26 +204,22 @@ export async function run(
 
         if (result) {
           _trades[tokenToTrade.address] = {
-            amountEth: BigInt(0),
-            amountToken: BigInt(0),
-            emaETH: BigInt(0),
-            emaToken: BigInt(0),
+            ethData: [],
+            tokenData: [],
           };
 
           logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
         } else {
-          logger.info(`❌ Trading failed`);
+          logger.error(`❌ Trading failed`);
           process.exit(1);
         }
       }
     } else {
       _trades[tokenToTrade.address] = {
-        amountEth: BigInt(0),
-        amountToken: BigInt(0),
-        emaETH: BigInt(0),
-        emaToken: BigInt(0),
+        ethData: [],
+        tokenData: [],
       };
-      logger.info(`❌ Not a trade opportunity`);
+      logger.warn(`❌ Not a trade opportunity`);
     }
 
     logger.info(
@@ -269,7 +265,7 @@ export async function withdrawTrade(
     if (result) {
       logger.info(`🎉 Withdrawal of ${getAssetName(asset.address)} done`);
     } else {
-      logger.info(`❌ Withdrawal of ${getAssetName(asset.address)} failed`);
+      logger.error(`❌ Withdrawal of ${getAssetName(asset.address)} failed`);
       process.exit(1);
     }
   }
@@ -279,7 +275,7 @@ export async function withdrawTrade(
   if (result) {
     logger.info(`🎉 Withdrawal of ETH done`);
   } else {
-    logger.info(`❌ Withdrawal of ETH failed`);
+    logger.error(`❌ Withdrawal of ETH failed`);
     process.exit(1);
   }
 }

@@ -83,8 +83,9 @@ contract TradeBot is Ownable {
         uint256 currentTokenInBalance = tokenIn == WETH ? address(this).balance : IERC20(tokenIn).balanceOf(address(this));
         // console.log("Current tokenIn in balance:", currentTokenInBalance);
         uint256 lastTradeOfTokenIn = tokenIn == WETH ? _trades[tokenOut].amountETH : _trades[tokenIn].amountToken;
-        uint256 lastTradeOfTokenOut = tokenIn == WETH ? _trades[tokenOut].amountToken : _trades[tokenIn].amountETH;
-        uint256 expectedAmountOut = currentTokenInBalance >= lastTradeOfTokenIn ? lastTradeOfTokenOut : 0;
+        // uint256 lastTradeOfTokenOut = tokenIn == WETH ? _trades[tokenOut].amountToken : _trades[tokenIn].amountETH;
+        // uint256 expectedAmountOut = currentTokenInBalance >= lastTradeOfTokenIn ? lastTradeOfTokenOut : 0;
+        uint256 expectedAmountOut = 0;
 
         // Find the best router
         tradeData.bestRouter = address(0);
@@ -219,7 +220,7 @@ contract TradeBot is Ownable {
     }
 
     function depositToken(address token, uint256 amount) external {
-        safeIncreaseAllowance(IERC20(token), address(this), amount);
+        safeIncreaseAllowance(IERC20(token), msg.sender, amount);
         
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
     }

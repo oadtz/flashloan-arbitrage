@@ -1645,8 +1645,6 @@ library console {
 
 // Original license: SPDX_License_Identifier: MIT
 pragma solidity ^0.8.20;
-
-
 contract Token is IERC20 {
     string public name;
     string public symbol;

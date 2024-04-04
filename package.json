@@ -41,6 +41,7 @@
     "lodash": "^4.17.21",
     "pino": "^8.19.0",
     "pino-pretty": "^11.0.0",
+    "technicalindicators": "^3.1.0",
     "web3": "^4.7.0"
   }
 }
