@@ -22,16 +22,16 @@ export async function run(
 
   const _trades: Record<
     string,
-    {
-      amountEth: bigint;
-      amountToken: bigint;
-    }
+    { amountEth: bigint; amountToken: bigint; emaETH: bigint; emaToken: bigint }
   > = {};
+  const smoothingFactor = BigInt(2);
 
   assetsToCheck.forEach((asset) => {
     _trades[asset.address] = {
       amountEth: BigInt(0),
       amountToken: BigInt(0),
+      emaETH: BigInt(0),
+      emaToken: BigInt(0),
     };
   });
 
@@ -89,21 +89,25 @@ export async function run(
     logger.info(`Amount Token: ${amountToken}`);
 
     if (direction === "eth_to_token") {
-      const mAvgToken =
-        _trades[tokenToTrade.address].amountToken > 0
-          ? (amountToken + _trades[tokenToTrade.address].amountToken) /
-            BigInt(2)
-          : amountToken;
-      if (movingAvarageCheck && amountToken >= mAvgToken) {
+      let ema: bigint;
+      if (_trades[tokenToTrade.address]?.emaToken) {
+        ema =
+          (amountToken * smoothingFactor +
+            _trades[tokenToTrade.address].emaToken *
+              (BigInt(3) - smoothingFactor)) /
+          BigInt(3);
+      } else {
+        ema = amountToken;
+      }
+
+      logger.info(
+        `Latest Amount: ${formatDecimals(amountToken, tokenToTrade.decimals)}`
+      );
+      logger.info(`EMA: ${formatDecimals(ema, tokenToTrade.decimals)}`);
+      if (movingAvarageCheck && amountToken >= ema) {
         _trades[tokenToTrade.address].amountEth = amountEth;
         _trades[tokenToTrade.address].amountToken = amountToken;
 
-        logger.info(
-          `Moving average amount ${formatDecimals(
-            mAvgToken,
-            tokenToTrade.decimals
-          )}`
-        );
         logger.info(`❌ Price not good enough, waiting for better price`);
       } else {
         logger.info(
@@ -139,6 +143,8 @@ export async function run(
           _trades[tokenToTrade.address] = {
             amountEth: BigInt(0),
             amountToken: BigInt(0),
+            emaETH: BigInt(0),
+            emaToken: BigInt(0),
           };
 
           logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
@@ -148,15 +154,23 @@ export async function run(
         }
       }
     } else if (direction === "token_to_eth") {
-      const mAvgEth =
-        _trades[tokenToTrade.address].amountEth > 0
-          ? (amountEth + _trades[tokenToTrade.address].amountEth) / BigInt(2)
-          : amountEth;
-      if (movingAvarageCheck && amountEth >= mAvgEth) {
+      let ema: bigint;
+      if (_trades[tokenToTrade.address]?.emaETH) {
+        ema =
+          (amountEth * smoothingFactor +
+            _trades[tokenToTrade.address].emaETH *
+              (BigInt(3) - smoothingFactor)) /
+          BigInt(3);
+      } else {
+        ema = amountEth;
+      }
+
+      logger.info(`Latest Amount: ${formatDecimals(amountEth, 18)}`);
+      logger.info(`EMA: ${formatDecimals(ema, tokenToTrade.decimals)}`);
+      if (movingAvarageCheck && amountEth >= ema) {
         _trades[tokenToTrade.address].amountEth = amountEth;
         _trades[tokenToTrade.address].amountToken = amountToken;
 
-        logger.info(`Moving average amount ${formatDecimals(mAvgEth, 18)}`);
         logger.info(`❌ Price not good enough, waiting for better price`);
       } else {
         logger.info(
@@ -192,6 +206,8 @@ export async function run(
           _trades[tokenToTrade.address] = {
             amountEth: BigInt(0),
             amountToken: BigInt(0),
+            emaETH: BigInt(0),
+            emaToken: BigInt(0),
           };
 
           logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
@@ -204,6 +220,8 @@ export async function run(
       _trades[tokenToTrade.address] = {
         amountEth: BigInt(0),
         amountToken: BigInt(0),
+        emaETH: BigInt(0),
+        emaToken: BigInt(0),
       };
       logger.info(`❌ Not a trade opportunity`);
     }
