@@ -93,6 +93,10 @@ export async function run(
         Number(formatDecimals(amountToken, tokenToTrade.decimals))
       );
 
+      logger.info(
+        `Data Points: ${_trades[tokenToTrade.address].tokenData.length}`
+      );
+
       const sellSignal = isSellSignal(_trades[tokenToTrade.address].tokenData);
 
       logger.info(
@@ -150,6 +154,11 @@ export async function run(
       _trades[tokenToTrade.address].ethData.push(
         Number(formatDecimals(amountEth, 18))
       );
+
+      logger.info(
+        `Data Points: ${_trades[tokenToTrade.address].ethData.length}`
+      );
+
       const sellSignal = isSellSignal(_trades[tokenToTrade.address].ethData);
 
       logger.info(`Amount to trade: ${formatDecimals(amountEth, 18)}`);
