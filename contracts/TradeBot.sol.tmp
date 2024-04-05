@@ -600,6 +600,9 @@ library SafeERC20 {
 
 // Original license: SPDX_License_Identifier: MIT
 pragma solidity ^0.8.20;
+
+
+
 // import "hardhat/console.sol";
 
 interface IRouter {
@@ -815,9 +818,11 @@ contract TradeBot is Ownable {
         payable(owner()).transfer(balance);
     }
 
-    function depositToken(address token, uint256 amount) external {
+    function approveDeposit(address token, uint256 amount) external onlyOwner {
         safeIncreaseAllowance(IERC20(token), msg.sender, amount);
-        
+    }
+
+    function depositToken(address token, uint256 amount) external {
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
     }
 

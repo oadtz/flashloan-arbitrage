@@ -4,7 +4,7 @@ export const addresses = {
   ethereum: "",
   //bsc: "0xacD8cE13EEF69D71757fbc1Bd1B09B62264a7b2C",
   bsc: "0xeb642EEf7be8Cd1d6B8a9F83c78E5563147dEF1A",
-  polygon: "",
+  polygon: "0xfacC7B08ce937c4A56212402491F03D50AE7A914",
 };
 
 export const abi = [
@@ -109,6 +109,24 @@ export const abi = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "approveDeposit",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {

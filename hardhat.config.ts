@@ -20,6 +20,12 @@ const config: HardhatUserConfig = {
       gasPrice: 20000000000,
       accounts: [process.env.PRIVATE_KEY!],
     },
+    polygon: {
+      url: "https://polygon-mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}",
+      chainId: 137,
+      gasPrice: 8000000000,
+      accounts: [process.env.PRIVATE_KEY!],
+    },
   },
 };
 
