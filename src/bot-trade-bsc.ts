@@ -22,7 +22,7 @@ run(
   networkProviderUrl,
   tradeContractAddress,
   true,
-  60000
+  10000
 ).catch((error) => {
   console.error(error);
   process.exit(1);
