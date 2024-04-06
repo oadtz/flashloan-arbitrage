@@ -14,21 +14,22 @@ export async function run(
   gasLimit: number,
   networkProviderUrl: string,
   tradeContractAddress: string,
-  movingAvarageCheck: boolean,
+  checkSellSignal: boolean,
   delay: number
 ) {
-  logger.info("🚀 Starting bot...");
+  logger.debug("🚀 Starting bot...");
 
   const provider = getProvider(networkProviderUrl);
 
-  const _trades: Record<string, { ethData: number[]; tokenData: number[] }> =
-    {};
-  const smoothingFactor = BigInt(2);
+  const _trades: Record<
+    string,
+    { ethPrices: number[]; tokenPrices: number[] }
+  > = {};
 
   assetsToCheck.forEach((asset) => {
     _trades[asset.address] = {
-      ethData: [],
-      tokenData: [],
+      ethPrices: [],
+      tokenPrices: [],
     };
   });
 
@@ -37,7 +38,7 @@ export async function run(
     const tokenToTrade =
       shuffledAssets[Math.floor(Math.random() * shuffledAssets.length)];
 
-    logger.info("Checking trade opportunities...");
+    logger.debug("Checking trade opportunities...");
 
     const trades = await getTrades(
       tokenToTrade.address,
@@ -45,7 +46,7 @@ export async function run(
       tradeContractAddress
     );
 
-    logger.info(
+    logger.debug(
       `Current _trades for ETH/${getAssetName(
         tokenToTrade.address
       )}: ${formatDecimals(trades.amoutEth, 18)}:${formatDecimals(
@@ -53,13 +54,13 @@ export async function run(
         tokenToTrade.decimals
       )}`
     );
-    logger.info(
+    logger.debug(
       `Current ETH balance: ${formatDecimals(
         await getETHBalance(provider, tradeContractAddress),
         18
       )}`
     );
-    logger.info(
+    logger.debug(
       `Current token balance: ${formatDecimals(
         await getTokenBalance(
           tokenToTrade.address,
@@ -79,34 +80,43 @@ export async function run(
       tradeContractAddress
     );
 
-    logger.info(`Result from checkTrade`);
-    logger.info(`Direction: ${direction}`);
-    logger.info(`Router: ${router}`);
-    logger.info(`Amount ETH: ${amountEth}`);
-    logger.info(`Amount Token: ${amountToken}`);
+    logger.debug(`Result from checkTrade`);
+    logger.debug(`Direction: ${direction}`);
+    logger.debug(`Router: ${router}`);
+    logger.debug(`Amount ETH: ${amountEth}`);
+    logger.debug(`Amount Token: ${amountToken}`);
 
     if (direction === "eth_to_token") {
-      if (_trades[tokenToTrade.address].tokenData.length > 500)
-        _trades[tokenToTrade.address].tokenData.shift();
+      if (_trades[tokenToTrade.address].tokenPrices.length > 500)
+        _trades[tokenToTrade.address].tokenPrices.shift();
 
-      _trades[tokenToTrade.address].tokenData.push(
-        Number(formatDecimals(amountToken, tokenToTrade.decimals))
+      _trades[tokenToTrade.address].tokenPrices.push(
+        +formatDecimals(amountToken, tokenToTrade.decimals) /
+          +formatDecimals(amountEth, 18)
       );
 
-      logger.info(
-        `Data Points: ${_trades[tokenToTrade.address].tokenData.length}`
+      logger.debug(
+        `Data Points: ${_trades[tokenToTrade.address].tokenPrices.length}`
       );
 
-      const sellSignal = isSellSignal(_trades[tokenToTrade.address].tokenData);
+      const sellSignal = isSellSignal(
+        _trades[tokenToTrade.address].tokenPrices
+      );
 
-      logger.info(
+      logger.debug(
         `Amount to trade: ${formatDecimals(amountToken, tokenToTrade.decimals)}`
       );
-      logger.info(`Sell Signal: ${sellSignal}`);
-      if (movingAvarageCheck && !sellSignal) {
+      logger.debug(
+        `Price: ${
+          +formatDecimals(amountToken, tokenToTrade.decimals) /
+          +formatDecimals(amountEth, 18)
+        } ${getAssetName(tokenToTrade.address)}/ETH`
+      );
+      logger.debug(`Sell Signal: ${sellSignal}`);
+      if (checkSellSignal && !sellSignal) {
         logger.warn(`❌ Price not good enough, waiting for better price`);
       } else {
-        logger.info(
+        logger.debug(
           `🎉 Trade opportunity found! ${direction} ${formatDecimals(
             amountEth,
             18
@@ -116,12 +126,12 @@ export async function run(
           )} ${getAssetName(tokenToTrade.address)} on ${getRouterName(router)}`
         );
 
-        logger.info(`executeTradeETHForTokens`);
-        logger.info(`Router: ${router}`);
-        logger.info(`Token: ${tokenToTrade.address}`);
-        logger.info(`Amount ETH: ${amountEth}`);
-        logger.info(`Amount Token: ${amountToken}`);
-        logger.info(`Gas limit: ${gasLimit}`);
+        logger.debug(`executeTradeETHForTokens`);
+        logger.debug(`Router: ${router}`);
+        logger.debug(`Token: ${tokenToTrade.address}`);
+        logger.debug(`Amount ETH: ${amountEth}`);
+        logger.debug(`Amount Token: ${amountToken}`);
+        logger.debug(`Gas limit: ${gasLimit}`);
 
         const result = await executeTradeETHForTokens(
           router,
@@ -136,37 +146,44 @@ export async function run(
         );
 
         if (result) {
-          _trades[tokenToTrade.address] = {
-            ethData: [],
-            tokenData: [],
-          };
+          // _trades[tokenToTrade.address] = {
+          //   ethData: [],
+          //   tokenData: [],
+          // };
 
-          logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
+          logger.debug(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
         } else {
-          logger.error(`❌ Trading failed`);
+          `❌ Trading failed`;
           process.exit(1);
         }
       }
     } else if (direction === "token_to_eth") {
-      if (_trades[tokenToTrade.address].ethData.length > 500)
-        _trades[tokenToTrade.address].ethData.shift();
+      if (_trades[tokenToTrade.address].ethPrices.length > 500)
+        _trades[tokenToTrade.address].ethPrices.shift();
 
-      _trades[tokenToTrade.address].ethData.push(
-        Number(formatDecimals(amountEth, 18))
+      _trades[tokenToTrade.address].ethPrices.push(
+        +formatDecimals(amountEth, 18) /
+          +formatDecimals(amountToken, tokenToTrade.decimals)
       );
 
-      logger.info(
-        `Data Points: ${_trades[tokenToTrade.address].ethData.length}`
+      logger.debug(
+        `Data Points: ${_trades[tokenToTrade.address].ethPrices.length}`
       );
 
-      const sellSignal = isSellSignal(_trades[tokenToTrade.address].ethData);
+      const sellSignal = isSellSignal(_trades[tokenToTrade.address].ethPrices);
 
-      logger.info(`Amount to trade: ${formatDecimals(amountEth, 18)}`);
-      logger.info(`Sell Signal: ${sellSignal}`);
-      if (movingAvarageCheck && !sellSignal) {
+      logger.debug(`Amount to trade: ${formatDecimals(amountEth, 18)}`);
+      logger.debug(
+        `Price: ${
+          +formatDecimals(amountEth, 18) /
+          +formatDecimals(amountToken, tokenToTrade.decimals)
+        } ETH/${getAssetName(tokenToTrade.address)}`
+      );
+      logger.debug(`Sell Signal: ${sellSignal}`);
+      if (checkSellSignal && !sellSignal) {
         logger.warn(`❌ Price not good enough, waiting for better price`);
       } else {
-        logger.info(
+        logger.debug(
           `🎉 Trade opportunity found! ${direction} ${formatDecimals(
             amountToken,
             tokenToTrade.decimals
@@ -176,12 +193,12 @@ export async function run(
           )} ETH on ${getRouterName(router)}`
         );
 
-        logger.info(`executeTradeTokensForETH`);
-        logger.info(`Router: ${router}`);
-        logger.info(`Token: ${tokenToTrade.address}`);
-        logger.info(`Amount Token: ${amountToken}`);
-        logger.info(`Amount ETH: ${amountEth}`);
-        logger.info(`Gas limit: ${gasLimit}`);
+        logger.debug(`executeTradeTokensForETH`);
+        logger.debug(`Router: ${router}`);
+        logger.debug(`Token: ${tokenToTrade.address}`);
+        logger.debug(`Amount Token: ${amountToken}`);
+        logger.debug(`Amount ETH: ${amountEth}`);
+        logger.debug(`Gas limit: ${gasLimit}`);
 
         const result = await executeTradeTokensForETH(
           router,
@@ -196,32 +213,32 @@ export async function run(
         );
 
         if (result) {
-          _trades[tokenToTrade.address] = {
-            ethData: [],
-            tokenData: [],
-          };
+          // _trades[tokenToTrade.address] = {
+          //   ethData: [],
+          //   tokenData: [],
+          // };
 
-          logger.info(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
+          logger.debug(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
         } else {
-          logger.error(`❌ Trading failed`);
+          logger.fatal(`❌ Trading failed`);
           process.exit(1);
         }
       }
     } else {
       _trades[tokenToTrade.address] = {
-        ethData: [],
-        tokenData: [],
+        ethPrices: [],
+        tokenPrices: [],
       };
       logger.warn(`❌ Not a trade opportunity`);
     }
 
-    logger.info(
+    logger.debug(
       `After ETH balance: ${formatDecimals(
         await getETHBalance(provider, tradeContractAddress),
         18
       )}`
     );
-    logger.info(
+    logger.debug(
       `After token balance: ${formatDecimals(
         await getTokenBalance(
           tokenToTrade.address,
@@ -243,7 +260,7 @@ export async function withdrawTrade(
   tradeContractAddress: string
 ) {
   let result: boolean = false;
-  logger.info("🚀 Starting withdrawal...");
+  logger.debug("🚀 Starting withdrawal...");
 
   const provider = getProvider(networkProviderUrl);
 
@@ -256,9 +273,16 @@ export async function withdrawTrade(
     );
 
     if (result) {
-      logger.info(`🎉 Withdrawal of ${getAssetName(asset.address)} done`);
+      await resetTokenTrade(
+        asset.address,
+        provider,
+        gasLimit,
+        tradeContractAddress
+      );
+
+      logger.debug(`🎉 Withdrawal of ${getAssetName(asset.address)} done`);
     } else {
-      logger.error(`❌ Withdrawal of ${getAssetName(asset.address)} failed`);
+      logger.fatal(`❌ Withdrawal of ${getAssetName(asset.address)} failed`);
       process.exit(1);
     }
   }
@@ -266,9 +290,9 @@ export async function withdrawTrade(
   result = await withdrawETH(provider, gasLimit, tradeContractAddress);
 
   if (result) {
-    logger.info(`🎉 Withdrawal of ETH done`);
+    logger.debug(`🎉 Withdrawal of ETH done`);
   } else {
-    logger.error(`❌ Withdrawal of ETH failed`);
+    logger.fatal(`❌ Withdrawal of ETH failed`);
     process.exit(1);
   }
 }
@@ -404,15 +428,15 @@ async function executeTradeETHForTokens(
 
     const receipt = await tx.wait();
 
-    logger.info(`Gas used: ${receipt.gasUsed.toString()}`);
+    logger.debug(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {
-    logger.error({ error }, "Error performing executeTradeETHForTokens");
-    logger.error(`Router: ${router}`);
-    logger.error(`Token: ${token}`);
-    logger.error(`Amount In: ${amountIn}`);
-    logger.error(`Expected Amount Out: ${expectedAmountOut}`);
+    logger.fatal({ error }, "Error performing executeTradeETHForTokens");
+    logger.fatal(`Router: ${router}`);
+    logger.fatal(`Token: ${token}`);
+    logger.fatal(`Amount In: ${amountIn}`);
+    logger.fatal(`Expected Amount Out: ${expectedAmountOut}`);
     logger.flush();
     return false;
   }
@@ -448,15 +472,15 @@ async function executeTradeTokensForETH(
 
     const receipt = await tx.wait();
 
-    logger.info(`Gas used: ${receipt.gasUsed.toString()}`);
+    logger.debug(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {
-    logger.error({ error }, "Error performing executeTradeTokensForETH");
-    logger.error(`Router (${getRouterName(router)}): ${router}`);
-    logger.error(`Token: ${token}`);
-    logger.error(`Amount In: ${amountIn}`);
-    logger.error(`Expected Amount Out: ${expectedAmountOut}`);
+    logger.fatal({ error }, "Error performing executeTradeTokensForETH");
+    logger.fatal(`Router (${getRouterName(router)}): ${router}`);
+    logger.fatal(`Token: ${token}`);
+    logger.fatal(`Amount In: ${amountIn}`);
+    logger.fatal(`Expected Amount Out: ${expectedAmountOut}`);
     logger.flush();
     return false;
   }
@@ -482,11 +506,11 @@ export async function withdrawETH(
 
     const receipt = await tx.wait();
 
-    logger.info(`Gas used: ${receipt.gasUsed.toString()}`);
+    logger.debug(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {
-    logger.error({ error }, "Error withdrawing ETH");
+    logger.fatal({ error }, "Error withdrawing ETH");
     logger.flush();
     return false;
   }
@@ -513,11 +537,42 @@ export async function withdrawToken(
 
     const receipt = await tx.wait();
 
-    logger.info(`Gas used: ${receipt.gasUsed.toString()}`);
+    logger.debug(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {
-    logger.error({ error }, "Error withdrawing tokens");
+    logger.fatal({ error }, "Error withdrawing tokens");
+    logger.flush();
+    return false;
+  }
+}
+
+export async function resetTokenTrade(
+  token: string,
+  provider: Provider,
+  gasLimit: number,
+  tradeContractAddress: string
+) {
+  if (!tradeContractAddress) return false; // Skip resetting if no contract address is provided
+
+  try {
+    const contract = new ethers.Contract(
+      tradeContractAddress,
+      tradeAbi,
+      provider.wallet
+    );
+
+    const tx = await contract.resetTokenTrade(token, {
+      gasLimit: 3000000,
+    });
+
+    const receipt = await tx.wait();
+
+    logger.debug(`Gas used: ${receipt.gasUsed.toString()}`);
+
+    return true;
+  } catch (error) {
+    logger.fatal({ error }, "Error reset token trades");
     logger.flush();
     return false;
   }

@@ -16,13 +16,19 @@ async function processLineByLine() {
 
   const prices: number[] = [];
 
+  let i = 0;
   for await (const line of rl) {
     const data: DataPoint = JSON.parse(line);
+    console.log(i++, data.price);
     if (data.price !== undefined) {
-      if (prices.length > 500) prices.shift();
+      try {
+        if (prices.length > 500) prices.shift();
 
-      prices.push(data.price);
-      isSellSignal(prices);
+        prices.push(data.price);
+        isSellSignal(prices);
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 }

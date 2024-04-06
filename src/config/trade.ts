@@ -2,9 +2,8 @@ export const addresses = {
   localhost: "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
   sepolia: "",
   ethereum: "",
-  //bsc: "0xacD8cE13EEF69D71757fbc1Bd1B09B62264a7b2C",
-  bsc: "0x7B59596a70f66b577616f8713426ACec6a82c587",
-  polygon: "0xfacC7B08ce937c4A56212402491F03D50AE7A914",
+  bsc: "0x49231586D9B9940b153F6d550F3371E643924eB1",
+  polygon: "",
 };
 
 export const abi = [
@@ -114,24 +113,6 @@ export const abi = [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "approveDeposit",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "address[]",
         name: "routers",
         type: "address[]",
@@ -178,24 +159,6 @@ export const abi = [
     name: "depositETH",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "depositToken",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -326,6 +289,19 @@ export const abi = [
   {
     inputs: [],
     name: "renounceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+    ],
+    name: "resetTokenTrade",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

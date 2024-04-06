@@ -219,12 +219,8 @@ contract TradeBot is Ownable {
         payable(owner()).transfer(balance);
     }
 
-    function approveDeposit(address token, uint256 amount) external onlyOwner {
-        safeIncreaseAllowance(IERC20(token), msg.sender, amount);
-    }
-
-    function depositToken(address token, uint256 amount) external {
-        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+    function resetTokenTrade(address token) external onlyOwner {
+        _trades[token] = Trade(0, 0);
     }
 
     function depositETH() external payable {}

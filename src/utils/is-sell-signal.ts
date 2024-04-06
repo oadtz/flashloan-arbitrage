@@ -6,6 +6,7 @@ import {
   SMA,
   EMA,
   StochasticRSI,
+  ADX,
 } from "technicalindicators";
 
 export function isSellSignal(data: number[]): boolean {
@@ -22,20 +23,23 @@ export function isSellSignal(data: number[]): boolean {
   const stochRsiKPeriod = 3;
   const stochRsiDPeriod = 3;
   const stochRsiOverbought = 80;
+  const adxPeriod = 14;
+  const adxThreshold = 25;
 
-  if (
-    data.length <
-    Math.max(
-      rsiPeriod,
-      macdSlowPeriod + macdSignalPeriod,
-      bbPeriod,
-      longTermMA,
-      stochRsiPeriod + stochRsiKPeriod + stochRsiDPeriod - 2
-    )
-  ) {
-    // Not enough data points to calculate the required indicators
-    return false;
-  }
+  // if (
+  //   data.length <
+  //   Math.max(
+  //     rsiPeriod,
+  //     macdSlowPeriod + macdSignalPeriod,
+  //     bbPeriod,
+  //     longTermMA,
+  //     stochRsiPeriod + stochRsiKPeriod + stochRsiDPeriod - 2,
+  //     adxPeriod
+  //   )
+  // ) {
+  //   // Not enough data points to calculate the required indicators
+  //   return false;
+  // }
 
   const rsi = RSI.calculate({ values: data, period: rsiPeriod });
   const macd = MACD.calculate({
@@ -62,18 +66,25 @@ export function isSellSignal(data: number[]): boolean {
     kPeriod: stochRsiKPeriod,
     dPeriod: stochRsiDPeriod,
   });
+  const adx = ADX.calculate({
+    high: data,
+    low: data,
+    close: data,
+    period: adxPeriod,
+  });
 
   const latestPrice = data[data.length - 1];
   const latestRsi = rsi[rsi.length - 1];
   const latestMacd = macd[macd.length - 1]?.MACD || 0;
   const latestMacdSignal = macd[macd.length - 1]?.signal || 0;
-  const latestBbUpper = bb[bb.length - 1].upper;
+  const latestBbUpper = bb[bb.length - 1]?.upper || 0;
   const latestSma50 = sma50[sma50.length - 1];
   const latestSma200 = sma200[sma200.length - 1];
   const latestEma50 = ema50[ema50.length - 1];
   const latestEma200 = ema200[ema200.length - 1];
   const latestStochRsiK = stochRsi[stochRsi.length - 1]?.k || 0;
   const latestStochRsiD = stochRsi[stochRsi.length - 1]?.d || 0;
+  const latestAdx = adx[adx.length - 1]?.adx || 0;
 
   // RSI Overbought
   const isRsiOverbought = latestRsi > rsiOverbought;
@@ -94,6 +105,9 @@ export function isSellSignal(data: number[]): boolean {
     latestStochRsiD > stochRsiOverbought &&
     latestStochRsiK > latestStochRsiD;
 
+  // ADX Trend Strength
+  const isStrongTrend = latestAdx > adxThreshold;
+
   // Combine multiple sell signals
   const isSellSignal =
     //isRsiOverbought &&
@@ -101,23 +115,24 @@ export function isSellSignal(data: number[]): boolean {
     isBbOverbought &&
     //isMacdBearish &&
     //(isShortTermBelowLongTermSMA || isShortTermBelowLongTermEMA) &&
+    //isStrongTrend &&
     true;
 
-  logger.error({
-    price: latestPrice,
-    rsi: latestRsi,
-    macd: latestMacd,
-    macdSignal: latestMacdSignal,
-    bbUpper: latestBbUpper,
-    sma50: latestSma50,
-    sma200: latestSma200,
-    ema50: latestEma50,
-    ema200: latestEma200,
-    stochRsiK: latestStochRsiK,
-    stochRsiD: latestStochRsiD,
-    sell: isSellSignal,
-  });
-  logger.flush();
+  // logger.info({
+  //   price: latestPrice,
+  //   rsi: latestRsi,
+  //   macd: latestMacd,
+  //   macdSignal: latestMacdSignal,
+  //   bbUpper: latestBbUpper,
+  //   sma50: latestSma50,
+  //   sma200: latestSma200,
+  //   ema50: latestEma50,
+  //   ema200: latestEma200,
+  //   stochRsiK: latestStochRsiK,
+  //   stochRsiD: latestStochRsiD,
+  //   adx: latestAdx,
+  //   sell: isSellSignal,
+  // });
 
   return isSellSignal;
 }
