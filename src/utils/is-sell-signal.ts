@@ -1,43 +1,44 @@
-import { EMA, RSI, BollingerBands, MACD } from "technicalindicators";
 import logger from "./logger";
+import {
+  RSI,
+  MACD,
+  BollingerBands,
+  SMA,
+  EMA,
+  StochasticRSI,
+} from "technicalindicators";
 
 export function isSellSignal(data: number[]): boolean {
-  const shortPeriod: number = 12;
-  const longPeriod: number = 26;
-  const rsiPeriod: number = 14;
-  const bbPeriod: number = 20;
-  const bbStdDev: number = 2;
-  const macdFastPeriod: number = 12;
-  const macdSlowPeriod: number = 26;
-  const macdSignalPeriod: number = 9;
-  const supportLevel: number = 0.03; // Adjust this value based on your analysis
-  const shortEMAPeriod: number = 10;
-  const longEMAPeriod: number = 30;
+  const rsiPeriod = 14;
+  const rsiOverbought = 70;
+  const macdFastPeriod = 12;
+  const macdSlowPeriod = 26;
+  const macdSignalPeriod = 9;
+  const bbPeriod = 20;
+  const bbStdDev = 2;
+  const shortTermMA = 50;
+  const longTermMA = 200;
+  const stochRsiPeriod = 14;
+  const stochRsiKPeriod = 3;
+  const stochRsiDPeriod = 3;
+  const stochRsiOverbought = 80;
 
-  logger.info(`Data: ${JSON.stringify(data)}`);
   if (
     data.length <
     Math.max(
-      longPeriod,
       rsiPeriod,
-      bbPeriod,
       macdSlowPeriod + macdSignalPeriod,
-      longEMAPeriod
+      bbPeriod,
+      longTermMA,
+      stochRsiPeriod + stochRsiKPeriod + stochRsiDPeriod - 2
     )
   ) {
-    logger.warn("Insufficient data points for indicator calculations");
+    // Not enough data points to calculate the required indicators
     return false;
   }
 
-  const shortEMA = EMA.calculate({ period: shortPeriod, values: data });
-  const longEMA = EMA.calculate({ period: longPeriod, values: data });
-  const rsiValues = RSI.calculate({ period: rsiPeriod, values: data });
-  const bbValues = BollingerBands.calculate({
-    period: bbPeriod,
-    values: data,
-    stdDev: bbStdDev,
-  });
-  const macdValues = MACD.calculate({
+  const rsi = RSI.calculate({ values: data, period: rsiPeriod });
+  const macd = MACD.calculate({
     values: data,
     fastPeriod: macdFastPeriod,
     slowPeriod: macdSlowPeriod,
@@ -45,60 +46,78 @@ export function isSellSignal(data: number[]): boolean {
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   });
+  const bb = BollingerBands.calculate({
+    values: data,
+    period: bbPeriod,
+    stdDev: bbStdDev,
+  });
+  const sma50 = SMA.calculate({ values: data, period: shortTermMA });
+  const sma200 = SMA.calculate({ values: data, period: longTermMA });
+  const ema50 = EMA.calculate({ values: data, period: shortTermMA });
+  const ema200 = EMA.calculate({ values: data, period: longTermMA });
+  const stochRsi = StochasticRSI.calculate({
+    values: data,
+    rsiPeriod: stochRsiPeriod,
+    stochasticPeriod: stochRsiPeriod,
+    kPeriod: stochRsiKPeriod,
+    dPeriod: stochRsiDPeriod,
+  });
 
-  const latestShortEMA = shortEMA[shortEMA.length - 1];
-  const latestLongEMA = longEMA[longEMA.length - 1];
-  const latestRSI = rsiValues[rsiValues.length - 1] || 0;
-  const latestBBUpper = bbValues[bbValues.length - 1]?.upper || 0;
-  const latestBBLower = bbValues[bbValues.length - 1]?.lower || 0;
   const latestPrice = data[data.length - 1];
-  const latestMacd = macdValues[macdValues.length - 1]?.MACD || 0;
-  const latestMacdSignal = macdValues[macdValues.length - 1]?.signal || 0;
+  const latestRsi = rsi[rsi.length - 1];
+  const latestMacd = macd[macd.length - 1]?.MACD || 0;
+  const latestMacdSignal = macd[macd.length - 1]?.signal || 0;
+  const latestBbUpper = bb[bb.length - 1].upper;
+  const latestSma50 = sma50[sma50.length - 1];
+  const latestSma200 = sma200[sma200.length - 1];
+  const latestEma50 = ema50[ema50.length - 1];
+  const latestEma200 = ema200[ema200.length - 1];
+  const latestStochRsiK = stochRsi[stochRsi.length - 1]?.k || 0;
+  const latestStochRsiD = stochRsi[stochRsi.length - 1]?.d || 0;
 
-  const isEmaCrossoverSell = latestShortEMA < latestLongEMA;
-  const isRsiOverbought = latestRSI > 70;
-  const isPriceNearBBUpper = latestPrice > latestBBUpper * 0.95;
-  const isMacdBearishCrossover = latestMacd < latestMacdSignal;
+  // RSI Overbought
+  const isRsiOverbought = latestRsi > rsiOverbought;
 
-  // Check for potential bullish reversal signals
-  const recentRSI = rsiValues.slice(-rsiPeriod);
-  const recentPrices = data.slice(-rsiPeriod);
-  const isBullishRSIDivergence =
-    recentPrices[0] < recentPrices[recentPrices.length - 1] &&
-    recentRSI[0] > recentRSI[recentRSI.length - 1];
+  // MACD Crossover
+  const isMacdBearish = latestMacd < latestMacdSignal;
 
-  const isPriceAtSupport = latestPrice <= supportLevel;
+  // Bollinger Bands Overbought
+  const isBbOverbought = latestPrice > latestBbUpper;
 
-  const shortEMARecent = EMA.calculate({
-    period: shortEMAPeriod,
-    values: data.slice(-shortEMAPeriod),
+  // Moving Average Crossover
+  const isShortTermBelowLongTermSMA = latestSma50 < latestSma200;
+  const isShortTermBelowLongTermEMA = latestEma50 < latestEma200;
+
+  // Stochastic RSI Overbought
+  const isStochRsiOverbought =
+    latestStochRsiK > stochRsiOverbought &&
+    latestStochRsiD > stochRsiOverbought &&
+    latestStochRsiK > latestStochRsiD;
+
+  // Combine multiple sell signals
+  const isSellSignal =
+    //isRsiOverbought &&
+    isStochRsiOverbought &&
+    isBbOverbought &&
+    //isMacdBearish &&
+    //(isShortTermBelowLongTermSMA || isShortTermBelowLongTermEMA) &&
+    true;
+
+  logger.error({
+    price: latestPrice,
+    rsi: latestRsi,
+    macd: latestMacd,
+    macdSignal: latestMacdSignal,
+    bbUpper: latestBbUpper,
+    sma50: latestSma50,
+    sma200: latestSma200,
+    ema50: latestEma50,
+    ema200: latestEma200,
+    stochRsiK: latestStochRsiK,
+    stochRsiD: latestStochRsiD,
+    sell: isSellSignal,
   });
-  const longEMARecent = EMA.calculate({
-    period: longEMAPeriod,
-    values: data.slice(-longEMAPeriod),
-  });
-  const isBullishEMACrossover =
-    shortEMARecent[shortEMARecent.length - 1] >
-    longEMARecent[longEMARecent.length - 1];
+  logger.flush();
 
-  const isBullishReversal =
-    isBullishRSIDivergence || isPriceAtSupport || isBullishEMACrossover;
-
-  logger.info(`Short EMA: ${latestShortEMA}`);
-  logger.info(`Long EMA: ${latestLongEMA}`);
-  logger.info(`RSI: ${latestRSI}`);
-  logger.info(`Bollinger Bands Upper: ${latestBBUpper}`);
-  logger.info(`Bollinger Bands Lower: ${latestBBLower}`);
-  logger.info(`Latest Price: ${latestPrice}`);
-  logger.info(`MACD: ${latestMacd}`);
-  logger.info(`MACD Signal: ${latestMacdSignal}`);
-  logger.info(`Bullish RSI Divergence: ${isBullishRSIDivergence}`);
-  logger.info(`Price at Support: ${isPriceAtSupport}`);
-  logger.info(`Bullish EMA Crossover: ${isBullishEMACrossover}`);
-  logger.info(`Bullish Reversal: ${isBullishReversal}`);
-
-  return (
-    (isEmaCrossoverSell && isRsiOverbought && isPriceNearBBUpper) ||
-    (isMacdBearishCrossover && !isBullishReversal)
-  );
+  return isSellSignal;
 }
