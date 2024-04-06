@@ -86,15 +86,25 @@ export async function run(
     logger.debug(`Amount ETH: ${amountEth}`);
     logger.debug(`Amount Token: ${amountToken}`);
 
+    // Calculate Token Price
+    if (_trades[tokenToTrade.address].tokenPrices.length > 500)
+      _trades[tokenToTrade.address].tokenPrices.shift();
+
+    _trades[tokenToTrade.address].tokenPrices.push(
+      +formatDecimals(amountToken, tokenToTrade.decimals) /
+        +formatDecimals(amountEth, 18)
+    );
+
+    // Calculate ETH Price
+    if (_trades[tokenToTrade.address].ethPrices.length > 500)
+      _trades[tokenToTrade.address].ethPrices.shift();
+
+    _trades[tokenToTrade.address].ethPrices.push(
+      +formatDecimals(amountEth, 18) /
+        +formatDecimals(amountToken, tokenToTrade.decimals)
+    );
+
     if (direction === "eth_to_token") {
-      if (_trades[tokenToTrade.address].tokenPrices.length > 500)
-        _trades[tokenToTrade.address].tokenPrices.shift();
-
-      _trades[tokenToTrade.address].tokenPrices.push(
-        +formatDecimals(amountToken, tokenToTrade.decimals) /
-          +formatDecimals(amountEth, 18)
-      );
-
       logger.debug(
         `Data Points: ${_trades[tokenToTrade.address].tokenPrices.length}`
       );
@@ -158,14 +168,6 @@ export async function run(
         }
       }
     } else if (direction === "token_to_eth") {
-      if (_trades[tokenToTrade.address].ethPrices.length > 500)
-        _trades[tokenToTrade.address].ethPrices.shift();
-
-      _trades[tokenToTrade.address].ethPrices.push(
-        +formatDecimals(amountEth, 18) /
-          +formatDecimals(amountToken, tokenToTrade.decimals)
-      );
-
       logger.debug(
         `Data Points: ${_trades[tokenToTrade.address].ethPrices.length}`
       );
