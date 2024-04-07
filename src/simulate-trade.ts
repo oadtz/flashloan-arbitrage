@@ -76,12 +76,13 @@ export async function run(
     routersToCheck: string[],
     token: string,
     gasCostLimitInWei: bigint
-  ): Promise<[string, string, bigint, bigint]> {
+  ): Promise<[string, string, bigint, bigint, number]> {
     let direction = "none";
     let amountEth = BigInt(0);
     let amountToken = BigInt(0);
     let profitInEth = BigInt(0);
     let profitInToken = BigInt(0);
+    let baseLinePrice = 0;
 
     const router = new ethers.Contract(
       routersToCheck[0],
@@ -146,6 +147,14 @@ export async function run(
         amountToken > gasCostLimit ? amountToken - gasCostLimit : BigInt(0);
     }
 
+    const baseLineAmounts = await router.getAmountsOut(toDecimals(1, 18), [
+      "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      token,
+    ]);
+    baseLinePrice =
+      +formatDecimals(baseLineAmounts[1], assetsToCheck[0].decimals) /
+      +formatDecimals(baseLineAmounts[0], 18);
+
     if (profitInEth > profitInToken) {
       direction = "token_to_eth";
     } else if (profitInToken > profitInEth) {
@@ -154,7 +163,13 @@ export async function run(
       direction = "none";
     }
 
-    return [direction, routersToCheck[0], amountEth, amountToken];
+    return [
+      direction,
+      routersToCheck[0],
+      amountEth,
+      amountToken,
+      baseLinePrice,
+    ];
   }
 
   async function executeTradeETHForTokens(
@@ -311,11 +326,12 @@ export async function run(
     );
 
     const gasPrice = await getGasPrice(provider);
-    const [direction, router, amountEth, amountToken] = await checkTrade(
-      routersToCheck,
-      tokenToTrade.address,
-      BigInt(gasLimit) * gasPrice
-    );
+    const [direction, router, amountEth, amountToken, baseLinePrice] =
+      await checkTrade(
+        routersToCheck,
+        tokenToTrade.address,
+        BigInt(gasLimit) * gasPrice
+      );
 
     console.log(`Result from checkTrade`);
     console.log(`Direction: ${direction}`);
@@ -362,10 +378,8 @@ export async function run(
       console.log(`Sell Signal: ${sellSignal}`);
 
       logger.warn({
-        price:
-          _trades[tokenToTrade.address].tokenPrices[
-            _trades[tokenToTrade.address].tokenPrices.length - 1
-          ],
+        token: "ETH",
+        price: baseLinePrice,
         sell: sellSignal,
       });
       logger.flush();
@@ -401,7 +415,10 @@ export async function run(
         const result = await executeTradeETHForTokens(
           tokenToTrade.address,
           amountEth,
-          trades.amountToken
+          // trades.amountToken // For price safe guard
+          amountToken -
+            (amountToken * BigInt(Math.floor(slippageTolerance * 10000))) /
+              BigInt(1000000)
         );
 
         if (result) {
@@ -433,10 +450,8 @@ export async function run(
       console.log(`Sell Signal: ${sellSignal}`);
 
       logger.warn({
-        price:
-          _trades[tokenToTrade.address].tokenPrices[
-            _trades[tokenToTrade.address].tokenPrices.length - 1
-          ],
+        token: getAssetName(tokenToTrade.address),
+        price: baseLinePrice,
         sell: sellSignal,
       });
       logger.flush();
@@ -472,7 +487,10 @@ export async function run(
         const result = await executeTradeTokensForETH(
           tokenToTrade.address,
           amountToken,
-          trades.amountETH
+          // trades.amountETH // For price safe guard
+          amountEth -
+            (amountEth * BigInt(Math.floor(slippageTolerance * 10000))) /
+              BigInt(1000000)
         );
 
         if (result) {
