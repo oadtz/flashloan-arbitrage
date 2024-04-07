@@ -49,7 +49,7 @@ export async function run(
     logger.debug(
       `Current _trades for ETH/${getAssetName(
         tokenToTrade.address
-      )}: ${formatDecimals(trades.amoutEth, 18)}:${formatDecimals(
+      )}: ${formatDecimals(trades.amountETH, 18)}:${formatDecimals(
         trades.amountToken,
         tokenToTrade.decimals
       )}`
@@ -125,7 +125,10 @@ export async function run(
       logger.debug(`Sell Signal: ${sellSignal}`);
       if (
         (checkSellSignal && !sellSignal) ||
-        trades.amountToken >= amountToken
+        trades.amountToken +
+          (amountToken * BigInt(Math.floor(slippageTolerance * 10000))) /
+            BigInt(1000000) >=
+          amountToken
       ) {
         logger.warn(`❌ Price not good enough, waiting for better price`);
       } else {
@@ -150,9 +153,7 @@ export async function run(
           router,
           tokenToTrade.address,
           amountEth,
-          amountToken -
-            (amountToken * BigInt(Math.floor(slippageTolerance * 10000))) /
-              BigInt(1000000),
+          trades.amountToken,
           provider,
           gasLimit,
           tradeContractAddress
@@ -185,7 +186,14 @@ export async function run(
         } ETH/${getAssetName(tokenToTrade.address)}`
       );
       logger.debug(`Sell Signal: ${sellSignal}`);
-      if ((checkSellSignal && !sellSignal) || trades.amoutEth >= amountEth) {
+
+      if (
+        (checkSellSignal && !sellSignal) ||
+        trades.amountETH +
+          (amountEth * BigInt(Math.floor(slippageTolerance * 10000))) /
+            BigInt(1000000) >=
+          amountEth
+      ) {
         logger.warn(`❌ Price not good enough, waiting for better price`);
       } else {
         logger.debug(
@@ -209,9 +217,7 @@ export async function run(
           router,
           tokenToTrade.address,
           amountToken,
-          amountEth -
-            (amountEth * BigInt(Math.floor(slippageTolerance * 10000))) /
-              BigInt(1000000),
+          trades.amountETH,
           provider,
           gasLimit,
           tradeContractAddress
@@ -354,7 +360,7 @@ async function getTrades(
   provider: Provider,
   tradeContractAddress: string
 ): Promise<{
-  amoutEth: bigint;
+  amountETH: bigint;
   amountToken: bigint;
 }> {
   try {
@@ -365,15 +371,15 @@ async function getTrades(
         provider.ethers
       );
 
-      const [amoutETH, amountToken] = await trader.getTrades(tokenToCheck);
+      const [amountETH, amountToken] = await trader.getTrades(tokenToCheck);
 
-      return { amoutEth: BigInt(amoutETH), amountToken: BigInt(amountToken) };
+      return { amountETH: BigInt(amountETH), amountToken: BigInt(amountToken) };
     }
   } catch (error) {
     console.error("Error getting _trades", error);
   }
 
-  return { amoutEth: BigInt(0), amountToken: BigInt(0) };
+  return { amountETH: BigInt(0), amountToken: BigInt(0) };
 }
 
 async function checkTrade(

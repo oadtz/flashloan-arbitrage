@@ -25,7 +25,7 @@ export const routers: Router = {
   ApeSwap: "0xcF0feBd3f17CEf5b47b0cD257aCf6025c5BFf3b7",
   UniSwapV2: "0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F",
   // Polygon
-  UniSwapPolygon: "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff",
+  //UniSwapPolygon: "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff",
   QuickSwap: "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff",
   SushiSwapPolygon: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
 };

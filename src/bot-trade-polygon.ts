@@ -4,7 +4,7 @@ import { appConfig } from "./config/app";
 import { run } from "./utils/trade";
 import { addresses as tradeContractAddresses } from "./config/trade";
 
-const routersToCheck = [routers.UniSwapPolygon];
+const routersToCheck = [routers.QuickSwap, routers.SushiSwapPolygon];
 const assetsToCheck = [assets.pUSDT, assets.pWETH, assets.pWBTC];
 
 const slippageTolerance = 0.5;
