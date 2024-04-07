@@ -15,6 +15,12 @@ import { isSellSignal } from "./utils/is-sell-signal";
 const assetsToCheck = [assets.eUSDT];
 const routersToCheck = [routers.UniSwap];
 
+const slippageTolerance = 0.5;
+const gasLimit = 3000000; // 25000000;
+const delay = 30000;
+
+const networkProviderUrl = appConfig.ethereumRpcUrl;
+
 export async function run(
   routersToCheck: string[],
   assetsToCheck: Asset[],
@@ -69,11 +75,13 @@ export async function run(
   async function checkTrade(
     routersToCheck: string[],
     token: string,
-    gasLimit: bigint
+    gasCostLimitInWei: bigint
   ): Promise<[string, string, bigint, bigint]> {
     let direction = "none";
     let amountEth = BigInt(0);
     let amountToken = BigInt(0);
+    let profitInEth = BigInt(0);
+    let profitInToken = BigInt(0);
 
     const router = new ethers.Contract(
       routersToCheck[0],
@@ -108,9 +116,7 @@ export async function run(
       provider.ethers
     );
 
-    if (_balances[token] > _balances.eth) {
-      direction = "token_to_eth";
-
+    if (_balances[token] > 0) {
       const amounts = await router.getAmountsOut(_balances[token], [
         token,
         "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -118,9 +124,14 @@ export async function run(
 
       amountToken = amounts[0];
       amountEth = amounts[1];
-    } else {
-      direction = "eth_to_token";
 
+      const gasCostLimit = gasCostLimitInWei;
+
+      profitInEth =
+        amountEth > gasCostLimit ? amountEth - gasCostLimit : BigInt(0);
+    }
+
+    if (_balances.eth > 0) {
       const amounts = await router.getAmountsOut(_balances.eth, [
         "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
         token,
@@ -128,12 +139,29 @@ export async function run(
 
       amountEth = amounts[0];
       amountToken = amounts[1];
+
+      const gasCostLimit = (gasCostLimitInWei * amountToken) / amountEth;
+
+      profitInToken =
+        amountToken > gasCostLimit ? amountToken - gasCostLimit : BigInt(0);
+    }
+
+    if (profitInEth > profitInToken) {
+      direction = "token_to_eth";
+    } else if (profitInToken > profitInEth) {
+      direction = "eth_to_token";
+    } else {
+      direction = "none";
     }
 
     return [direction, routersToCheck[0], amountEth, amountToken];
   }
 
-  async function executeTradeETHForTokens(token: string, amountEth: bigint) {
+  async function executeTradeETHForTokens(
+    token: string,
+    amountEth: bigint,
+    expectAmountToken: bigint
+  ) {
     const router = new ethers.Contract(
       routersToCheck[0],
       [
@@ -177,10 +205,27 @@ export async function run(
     _trades[token].amountETH = amounts[0];
     _trades[token].amountToken = amounts[1];
 
+    if (_trades[token].amountToken < expectAmountToken) {
+      logger.error(
+        { error: "INSUFFICIENT_OUTPUT_AMOUNT" },
+        "Error performing executeTradeETHForTokens"
+      );
+      logger.error(`Router: ${router}`);
+      logger.error(`Token: ${token}`);
+      logger.error(`Amount In: ${_trades[token].amountETH}`);
+      logger.error(`Expected Amount Out: ${_trades[token].amountToken}`);
+      logger.flush();
+      return false;
+    }
+
     return true;
   }
 
-  async function executeTradeTokensForETH(token: string, amountToken: bigint) {
+  async function executeTradeTokensForETH(
+    token: string,
+    amountToken: bigint,
+    expectAmountEth: bigint
+  ) {
     const router = new ethers.Contract(
       routersToCheck[0],
       [
@@ -223,6 +268,19 @@ export async function run(
     _balances.eth = amounts[1];
     _trades[token].amountToken = amounts[0];
     _trades[token].amountETH = amounts[1];
+
+    if (_trades[token].amountETH < expectAmountEth) {
+      logger.error(
+        { error: "INSUFFICIENT_OUTPUT_AMOUNT" },
+        "Error performing executeTradeTokensForETH"
+      );
+      logger.error(`Router: ${router}`);
+      logger.error(`Token: ${token}`);
+      logger.error(`Amount In: ${_trades[token].amountToken}`);
+      logger.error(`Expected Amount Out: ${_trades[token].amountETH}`);
+      logger.flush();
+      return false;
+    }
 
     return true;
   }
@@ -342,7 +400,8 @@ export async function run(
 
         const result = await executeTradeETHForTokens(
           tokenToTrade.address,
-          amountEth
+          amountEth,
+          trades.amountToken
         );
 
         if (result) {
@@ -412,7 +471,8 @@ export async function run(
 
         const result = await executeTradeTokensForETH(
           tokenToTrade.address,
-          amountToken
+          amountToken,
+          trades.amountETH
         );
 
         if (result) {
@@ -452,11 +512,11 @@ export async function run(
 run(
   routersToCheck,
   assetsToCheck,
-  0.5,
-  3000000,
-  appConfig.ethereumRpcUrl,
+  slippageTolerance,
+  gasLimit,
+  networkProviderUrl,
   true,
-  30000
+  delay
 ).catch((error) => {
   console.error(error);
   process.exit(1);

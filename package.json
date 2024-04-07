@@ -26,7 +26,8 @@
     "start:trade:polygon": "ts-node src/bot-trade-polygon.ts",
     "withdraw:trade:localhost": "ts-node src/withdraw-trade-localhost.ts",
     "withdraw:trade:bsc": "ts-node src/withdraw-trade-bsc.ts",
-    "withdraw:trade:polygon": "ts-node src/withdraw-trade-polygon.ts"
+    "withdraw:trade:polygon": "ts-node src/withdraw-trade-polygon.ts",
+    "simulate:trade": "ts-node src/simulate-trade.ts"
   },
   "keywords": [],
   "author": "",
