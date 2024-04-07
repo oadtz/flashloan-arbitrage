@@ -378,9 +378,18 @@ export async function run(
       console.log(`Sell Signal: ${sellSignal}`);
 
       logger.warn({
-        token: "ETH",
-        price: baseLinePrice,
-        sell: sellSignal,
+        price0:
+          _trades[tokenToTrade.address].tokenPrices[
+            _trades[tokenToTrade.address].tokenPrices.length - 1
+          ],
+        price1:
+          _trades[tokenToTrade.address].ethPrices[
+            _trades[tokenToTrade.address].ethPrices.length - 1
+          ],
+        price2: baseLinePrice,
+        price3: 1 / baseLinePrice,
+        sellOnETH: sellSignal,
+        sellOnToken: false,
       });
       logger.flush();
 
@@ -451,8 +460,18 @@ export async function run(
 
       logger.warn({
         token: getAssetName(tokenToTrade.address),
-        price: baseLinePrice,
-        sell: sellSignal,
+        price0:
+          _trades[tokenToTrade.address].tokenPrices[
+            _trades[tokenToTrade.address].tokenPrices.length - 1
+          ],
+        price1:
+          _trades[tokenToTrade.address].ethPrices[
+            _trades[tokenToTrade.address].ethPrices.length - 1
+          ],
+        price2: baseLinePrice,
+        price3: 1 / baseLinePrice,
+        sellOnETH: false,
+        sellOnToken: sellSignal,
       });
       logger.flush();
 
