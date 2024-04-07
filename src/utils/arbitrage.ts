@@ -19,7 +19,7 @@ export async function run(
   arbitrageContractAddress: string,
   delay: number
 ) {
-  logger.debug("🚀 Starting bot...");
+  console.log("🚀 Starting bot...");
 
   const provider = getProvider(networkProviderUrl);
 
@@ -72,7 +72,7 @@ export async function run(
     const expactedAmountOut =
       (amountIn * BigInt((1 + flashLoanFee) * 100_000)) / BigInt(100_000);
 
-    logger.debug("Checking arbitrage...");
+    console.log("Checking arbitrage...");
 
     const amountOut = await checkArbitrage(
       router0,
@@ -85,15 +85,15 @@ export async function run(
       arbitrageContractAddress
     );
 
-    logger.debug(`Route0 (${getRouterName(router0)}): ${router0}`);
-    logger.debug(`Route1 (${getRouterName(router1)}): ${router1}`);
-    logger.debug(`Token0 (${getAssetName(token0.address)}): ${token0.address}`);
-    logger.debug(`Token1 (${getAssetName(token1.address)}): ${token1.address}`);
-    logger.debug(`amountIn: ${formatDecimals(amountIn, token0.decimals)}`);
-    logger.debug(`amountOut: ${formatDecimals(amountOut, token0.decimals)}`);
+    console.log(`Route0 (${getRouterName(router0)}): ${router0}`);
+    console.log(`Route1 (${getRouterName(router1)}): ${router1}`);
+    console.log(`Token0 (${getAssetName(token0.address)}): ${token0.address}`);
+    console.log(`Token1 (${getAssetName(token1.address)}): ${token1.address}`);
+    console.log(`amountIn: ${formatDecimals(amountIn, token0.decimals)}`);
+    console.log(`amountOut: ${formatDecimals(amountOut, token0.decimals)}`);
 
     if (amountOut > expactedAmountOut) {
-      logger.debug("✅ Arbitrage opportunity found!");
+      console.log("✅ Arbitrage opportunity found!");
 
       const result = await executeArbitrage(
         router0,
@@ -107,22 +107,22 @@ export async function run(
       );
 
       if (result) {
-        logger.debug("Withdrawing funds...");
+        console.log("Withdrawing funds...");
 
         if (
           await withdraw(token0.address, provider, arbitrageContractAddress)
         ) {
-          logger.debug(`🎉🎉🎉🎉🎉🎉🎉🎉 Arbitrage opportunity done\n\n`);
+          console.log(`🎉🎉🎉🎉🎉🎉🎉🎉 Arbitrage opportunity done\n\n`);
         } else {
-          logger.debug(`❌ Error withdrawing funds\n\n`);
+          console.log(`❌ Error withdrawing funds\n\n`);
           process.exit(1);
         }
       } else {
-        logger.debug(`❌ Not an arbitrage opportunity\n\n`);
+        console.log(`❌ Not an arbitrage opportunity\n\n`);
         process.exit(1);
       }
     } else {
-      logger.debug(`❌ Not an arbitrage opportunity\n\n`);
+      console.log(`❌ Not an arbitrage opportunity\n\n`);
 
       if (amountOut === BigInt(0)) {
         nonProfitableRoutesAndAssets.push({
@@ -151,7 +151,7 @@ export async function runV2(
   arbitrageContractAddress: string,
   delay: number
 ) {
-  logger.debug("🚀 Starting bot...");
+  console.log("🚀 Starting bot...");
 
   const provider = getProvider(networkProviderUrl);
 
@@ -202,13 +202,13 @@ export async function runV2(
     const expactedAmountOut =
       (amountIn * BigInt((1 + flashLoanFee) * 100_000)) / BigInt(100_000);
 
-    logger.debug("Started arbitrage...");
+    console.log("Started arbitrage...");
 
-    logger.debug(`Route0 (${getRouterName(router0)}): ${router0}`);
-    logger.debug(`Route1 (${getRouterName(router1)}): ${router1}`);
-    logger.debug(`Token0 (${getAssetName(token0.address)}): ${token0.address}`);
-    logger.debug(`Token1 (${getAssetName(token1.address)}): ${token1.address}`);
-    logger.debug(`amountIn: ${formatDecimals(amountIn, token0.decimals)}`);
+    console.log(`Route0 (${getRouterName(router0)}): ${router0}`);
+    console.log(`Route1 (${getRouterName(router1)}): ${router1}`);
+    console.log(`Token0 (${getAssetName(token0.address)}): ${token0.address}`);
+    console.log(`Token1 (${getAssetName(token1.address)}): ${token1.address}`);
+    console.log(`amountIn: ${formatDecimals(amountIn, token0.decimals)}`);
 
     const result = await executeArbitrage(
       router0,
@@ -222,13 +222,13 @@ export async function runV2(
     );
 
     if (result) {
-      logger.debug("✅ Arbitrage opportunity found!");
-      logger.debug("Withdrawing funds...");
+      console.log("✅ Arbitrage opportunity found!");
+      console.log("Withdrawing funds...");
 
       if (await withdraw(token0.address, provider, arbitrageContractAddress)) {
-        logger.debug(`🎉🎉🎉🎉🎉🎉🎉🎉 Arbitrage opportunity done\n\n`);
+        console.log(`🎉🎉🎉🎉🎉🎉🎉🎉 Arbitrage opportunity done\n\n`);
       } else {
-        logger.debug(`❌ Error withdrawing funds\n\n`);
+        console.log(`❌ Error withdrawing funds\n\n`);
         process.exit(1);
       }
     } else {
@@ -242,7 +242,7 @@ export async function runV2(
         provider,
         arbitrageContractAddress
       );
-      logger.debug(`amountOut: ${formatDecimals(amountOut, token0.decimals)}`);
+      console.log(`amountOut: ${formatDecimals(amountOut, token0.decimals)}`);
       if (amountOut === BigInt(0)) {
         nonProfitableRoutesAndAssets.push({
           router0,
@@ -252,7 +252,7 @@ export async function runV2(
         });
       }
 
-      logger.debug(`❌ Not an arbitrage opportunity\n\n`);
+      console.log(`❌ Not an arbitrage opportunity\n\n`);
     }
 
     await new Promise((resolve) => setTimeout(resolve, delay));
@@ -328,17 +328,17 @@ async function executeArbitrage(
 
     const receipt = await tx.wait();
 
-    logger.debug(`Gas used: ${receipt.gasUsed.toString()}`);
+    console.log(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {
-    logger.fatal({ error }, "Error performing arbitrage");
-    logger.fatal(`Router0: ${router0}`);
-    logger.fatal(`Router1: ${router1}`);
-    logger.fatal(`Token0: ${token0}`);
-    logger.fatal(`Token1: ${token1}`);
-    logger.fatal(`amountIn: ${amountIn}`);
-    logger.fatal(`expactedAmountOut: ${expactedAmountOut}`);
+    logger.error({ error }, "Error performing arbitrage");
+    logger.error(`Router0: ${router0}`);
+    logger.error(`Router1: ${router1}`);
+    logger.error(`Token0: ${token0}`);
+    logger.error(`Token1: ${token1}`);
+    logger.error(`amountIn: ${amountIn}`);
+    logger.error(`expactedAmountOut: ${expactedAmountOut}`);
     logger.flush();
     return false;
   }
@@ -366,7 +366,7 @@ async function withdraw(
 
     return true;
   } catch (error) {
-    logger.fatal({ error }, "Error withdrawing funds");
+    logger.error({ error }, "Error withdrawing funds");
     logger.flush();
     return false;
   }

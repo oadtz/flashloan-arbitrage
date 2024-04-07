@@ -5,12 +5,12 @@ import pinoPretty from "pino-pretty";
 const errorFile = "./error.log";
 const errorFileStream = fs.createWriteStream(errorFile, { flags: "a" });
 
-const debugFile = "./price.log";
+const debugFile = "./debug.log";
 const debugFileStream = fs.createWriteStream(debugFile, { flags: "a" });
 
 const streams = [
   {
-    level: "debug",
+    level: "info",
     stream: pinoPretty({
       colorize: true,
       translateTime: "yyyy-mm-dd HH:MM:ss.l",
@@ -18,21 +18,21 @@ const streams = [
     }),
   },
   {
-    level: "fatal",
+    level: "warn",
+    stream: pino.multistream([{ stream: debugFileStream }]),
+  },
+  {
+    level: "error",
     stream: pino.multistream([
       { stream: process.stdout },
       { stream: errorFileStream },
     ]),
   },
-  {
-    level: "info",
-    stream: pino.multistream([{ stream: debugFileStream }]),
-  },
 ];
 
 const logger = pino(
   {
-    level: "trace",
+    level: "info",
   },
   pino.multistream(streams)
 );

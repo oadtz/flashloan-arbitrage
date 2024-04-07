@@ -17,7 +17,7 @@ export async function run(
   checkSellSignal: boolean,
   delay: number
 ) {
-  logger.debug("🚀 Starting bot...");
+  console.log("🚀 Starting bot...");
 
   const provider = getProvider(networkProviderUrl);
 
@@ -38,7 +38,7 @@ export async function run(
     const tokenToTrade =
       shuffledAssets[Math.floor(Math.random() * shuffledAssets.length)];
 
-    logger.debug("Checking trade opportunities...");
+    console.log("Checking trade opportunities...");
 
     const trades = await getTrades(
       tokenToTrade.address,
@@ -46,7 +46,7 @@ export async function run(
       tradeContractAddress
     );
 
-    logger.debug(
+    console.log(
       `Current _trades for ETH/${getAssetName(
         tokenToTrade.address
       )}: ${formatDecimals(trades.amountETH, 18)}:${formatDecimals(
@@ -54,13 +54,13 @@ export async function run(
         tokenToTrade.decimals
       )}`
     );
-    logger.debug(
+    console.log(
       `Current ETH balance: ${formatDecimals(
         await getETHBalance(provider, tradeContractAddress),
         18
       )}`
     );
-    logger.debug(
+    console.log(
       `Current token balance: ${formatDecimals(
         await getTokenBalance(
           tokenToTrade.address,
@@ -80,11 +80,11 @@ export async function run(
       tradeContractAddress
     );
 
-    logger.debug(`Result from checkTrade`);
-    logger.debug(`Direction: ${direction}`);
-    logger.debug(`Router: ${router}`);
-    logger.debug(`Amount ETH: ${amountEth}`);
-    logger.debug(`Amount Token: ${amountToken}`);
+    console.log(`Result from checkTrade`);
+    console.log(`Direction: ${direction}`);
+    console.log(`Router: ${router}`);
+    console.log(`Amount ETH: ${amountEth}`);
+    console.log(`Amount Token: ${amountToken}`);
 
     // Calculate Token Price
     if (_trades[tokenToTrade.address].tokenPrices.length > 500)
@@ -105,7 +105,7 @@ export async function run(
     );
 
     if (direction === "eth_to_token") {
-      logger.debug(
+      console.log(
         `Data Points: ${_trades[tokenToTrade.address].tokenPrices.length}`
       );
 
@@ -113,16 +113,16 @@ export async function run(
         _trades[tokenToTrade.address].tokenPrices
       );
 
-      logger.debug(
+      console.log(
         `Amount to trade: ${formatDecimals(amountToken, tokenToTrade.decimals)}`
       );
-      logger.debug(
+      console.log(
         `Price: ${
           +formatDecimals(amountToken, tokenToTrade.decimals) /
           +formatDecimals(amountEth, 18)
         } ${getAssetName(tokenToTrade.address)}/ETH`
       );
-      logger.debug(`Sell Signal: ${sellSignal}`);
+      console.log(`Sell Signal: ${sellSignal}`);
       if (
         (checkSellSignal && !sellSignal) ||
         trades.amountToken +
@@ -130,9 +130,9 @@ export async function run(
             BigInt(1000000) >=
           amountToken
       ) {
-        logger.warn(`❌ Price not good enough, waiting for better price`);
+        console.warn(`❌ Price not good enough, waiting for better price`);
       } else {
-        logger.debug(
+        console.log(
           `🎉 Trade opportunity found! ${direction} ${formatDecimals(
             amountEth,
             18
@@ -142,12 +142,12 @@ export async function run(
           )} ${getAssetName(tokenToTrade.address)} on ${getRouterName(router)}`
         );
 
-        logger.debug(`executeTradeETHForTokens`);
-        logger.debug(`Router: ${router}`);
-        logger.debug(`Token: ${tokenToTrade.address}`);
-        logger.debug(`Amount ETH: ${amountEth}`);
-        logger.debug(`Amount Token: ${amountToken}`);
-        logger.debug(`Gas limit: ${gasLimit}`);
+        console.log(`executeTradeETHForTokens`);
+        console.log(`Router: ${router}`);
+        console.log(`Token: ${tokenToTrade.address}`);
+        console.log(`Amount ETH: ${amountEth}`);
+        console.log(`Amount Token: ${amountToken}`);
+        console.log(`Gas limit: ${gasLimit}`);
 
         const result = await executeTradeETHForTokens(
           router,
@@ -165,27 +165,27 @@ export async function run(
           //   tokenData: [],
           // };
 
-          logger.debug(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
+          console.log(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
         } else {
           `❌ Trading failed`;
           process.exit(1);
         }
       }
     } else if (direction === "token_to_eth") {
-      logger.debug(
+      console.log(
         `Data Points: ${_trades[tokenToTrade.address].ethPrices.length}`
       );
 
       const sellSignal = isSellSignal(_trades[tokenToTrade.address].ethPrices);
 
-      logger.debug(`Amount to trade: ${formatDecimals(amountEth, 18)}`);
-      logger.debug(
+      console.log(`Amount to trade: ${formatDecimals(amountEth, 18)}`);
+      console.log(
         `Price: ${
           +formatDecimals(amountEth, 18) /
           +formatDecimals(amountToken, tokenToTrade.decimals)
         } ETH/${getAssetName(tokenToTrade.address)}`
       );
-      logger.debug(`Sell Signal: ${sellSignal}`);
+      console.log(`Sell Signal: ${sellSignal}`);
 
       if (
         (checkSellSignal && !sellSignal) ||
@@ -194,9 +194,9 @@ export async function run(
             BigInt(1000000) >=
           amountEth
       ) {
-        logger.warn(`❌ Price not good enough, waiting for better price`);
+        console.warn(`❌ Price not good enough, waiting for better price`);
       } else {
-        logger.debug(
+        console.log(
           `🎉 Trade opportunity found! ${direction} ${formatDecimals(
             amountToken,
             tokenToTrade.decimals
@@ -206,12 +206,12 @@ export async function run(
           )} ETH on ${getRouterName(router)}`
         );
 
-        logger.debug(`executeTradeTokensForETH`);
-        logger.debug(`Router: ${router}`);
-        logger.debug(`Token: ${tokenToTrade.address}`);
-        logger.debug(`Amount Token: ${amountToken}`);
-        logger.debug(`Amount ETH: ${amountEth}`);
-        logger.debug(`Gas limit: ${gasLimit}`);
+        console.log(`executeTradeTokensForETH`);
+        console.log(`Router: ${router}`);
+        console.log(`Token: ${tokenToTrade.address}`);
+        console.log(`Amount Token: ${amountToken}`);
+        console.log(`Amount ETH: ${amountEth}`);
+        console.log(`Gas limit: ${gasLimit}`);
 
         const result = await executeTradeTokensForETH(
           router,
@@ -229,9 +229,9 @@ export async function run(
           //   tokenData: [],
           // };
 
-          logger.debug(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
+          console.log(`🎉🎉🎉🎉🎉🎉🎉🎉 Trading done`);
         } else {
-          logger.fatal(`❌ Trading failed`);
+          console.error(`❌ Trading failed`);
           process.exit(1);
         }
       }
@@ -240,16 +240,16 @@ export async function run(
         ethPrices: [],
         tokenPrices: [],
       };
-      logger.warn(`❌ Not a trade opportunity`);
+      console.warn(`❌ Not a trade opportunity`);
     }
 
-    logger.debug(
+    console.log(
       `After ETH balance: ${formatDecimals(
         await getETHBalance(provider, tradeContractAddress),
         18
       )}`
     );
-    logger.debug(
+    console.log(
       `After token balance: ${formatDecimals(
         await getTokenBalance(
           tokenToTrade.address,
@@ -271,7 +271,7 @@ export async function withdrawTrade(
   tradeContractAddress: string
 ) {
   let result: boolean = false;
-  logger.debug("🚀 Starting withdrawal...");
+  console.log("🚀 Starting withdrawal...");
 
   const provider = getProvider(networkProviderUrl);
 
@@ -291,9 +291,9 @@ export async function withdrawTrade(
         tradeContractAddress
       );
 
-      logger.debug(`🎉 Withdrawal of ${getAssetName(asset.address)} done`);
+      console.log(`🎉 Withdrawal of ${getAssetName(asset.address)} done`);
     } else {
-      logger.fatal(`❌ Withdrawal of ${getAssetName(asset.address)} failed`);
+      console.error(`❌ Withdrawal of ${getAssetName(asset.address)} failed`);
       process.exit(1);
     }
   }
@@ -301,9 +301,9 @@ export async function withdrawTrade(
   result = await withdrawETH(provider, gasLimit, tradeContractAddress);
 
   if (result) {
-    logger.debug(`🎉 Withdrawal of ETH done`);
+    console.log(`🎉 Withdrawal of ETH done`);
   } else {
-    logger.fatal(`❌ Withdrawal of ETH failed`);
+    console.error(`❌ Withdrawal of ETH failed`);
     process.exit(1);
   }
 }
@@ -439,15 +439,15 @@ async function executeTradeETHForTokens(
 
     const receipt = await tx.wait();
 
-    logger.debug(`Gas used: ${receipt.gasUsed.toString()}`);
+    console.log(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {
-    logger.fatal({ error }, "Error performing executeTradeETHForTokens");
-    logger.fatal(`Router: ${router}`);
-    logger.fatal(`Token: ${token}`);
-    logger.fatal(`Amount In: ${amountIn}`);
-    logger.fatal(`Expected Amount Out: ${expectedAmountOut}`);
+    logger.error({ error }, "Error performing executeTradeETHForTokens");
+    logger.error(`Router: ${router}`);
+    logger.error(`Token: ${token}`);
+    logger.error(`Amount In: ${amountIn}`);
+    logger.error(`Expected Amount Out: ${expectedAmountOut}`);
     logger.flush();
     return false;
   }
@@ -483,15 +483,15 @@ async function executeTradeTokensForETH(
 
     const receipt = await tx.wait();
 
-    logger.debug(`Gas used: ${receipt.gasUsed.toString()}`);
+    console.log(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {
-    logger.fatal({ error }, "Error performing executeTradeTokensForETH");
-    logger.fatal(`Router (${getRouterName(router)}): ${router}`);
-    logger.fatal(`Token: ${token}`);
-    logger.fatal(`Amount In: ${amountIn}`);
-    logger.fatal(`Expected Amount Out: ${expectedAmountOut}`);
+    logger.error({ error }, "Error performing executeTradeTokensForETH");
+    logger.error(`Router (${getRouterName(router)}): ${router}`);
+    logger.error(`Token: ${token}`);
+    logger.error(`Amount In: ${amountIn}`);
+    logger.error(`Expected Amount Out: ${expectedAmountOut}`);
     logger.flush();
     return false;
   }
@@ -517,11 +517,11 @@ export async function withdrawETH(
 
     const receipt = await tx.wait();
 
-    logger.debug(`Gas used: ${receipt.gasUsed.toString()}`);
+    console.log(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {
-    logger.fatal({ error }, "Error withdrawing ETH");
+    logger.error({ error }, "Error withdrawing ETH");
     logger.flush();
     return false;
   }
@@ -548,11 +548,11 @@ export async function withdrawToken(
 
     const receipt = await tx.wait();
 
-    logger.debug(`Gas used: ${receipt.gasUsed.toString()}`);
+    console.log(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {
-    logger.fatal({ error }, "Error withdrawing tokens");
+    logger.error({ error }, "Error withdrawing tokens");
     logger.flush();
     return false;
   }
@@ -579,11 +579,11 @@ export async function resetTokenTrade(
 
     const receipt = await tx.wait();
 
-    logger.debug(`Gas used: ${receipt.gasUsed.toString()}`);
+    console.log(`Gas used: ${receipt.gasUsed.toString()}`);
 
     return true;
   } catch (error) {
-    logger.fatal({ error }, "Error reset token trades");
+    logger.error({ error }, "Error reset token trades");
     logger.flush();
     return false;
   }
