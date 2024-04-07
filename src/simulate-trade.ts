@@ -72,8 +72,8 @@ export async function run(
     gasLimit: bigint
   ): Promise<[string, string, bigint, bigint]> {
     let direction = "none";
-    let amountIn = BigInt(0);
-    let amountOut = BigInt(0);
+    let amountEth = BigInt(0);
+    let amountToken = BigInt(0);
 
     const router = new ethers.Contract(
       routersToCheck[0],
@@ -116,8 +116,8 @@ export async function run(
         "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       ]);
 
-      amountIn = amounts[0];
-      amountOut = amounts[1];
+      amountToken = amounts[0];
+      amountEth = amounts[1];
     } else {
       direction = "eth_to_token";
 
@@ -126,11 +126,11 @@ export async function run(
         token,
       ]);
 
-      amountIn = amounts[0];
-      amountOut = amounts[1];
+      amountEth = amounts[0];
+      amountToken = amounts[1];
     }
 
-    return [direction, routersToCheck[0], amountIn, amountOut];
+    return [direction, routersToCheck[0], amountEth, amountToken];
   }
 
   async function executeTradeETHForTokens(token: string, amountEth: bigint) {
