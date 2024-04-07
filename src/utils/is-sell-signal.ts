@@ -115,7 +115,7 @@ export function isSellSignal(data: number[]): boolean {
     isBbOverbought &&
     //isMacdBearish &&
     //(isShortTermBelowLongTermSMA || isShortTermBelowLongTermEMA) &&
-    isStrongTrend &&
+    //isStrongTrend &&
     true;
 
   // logger.info({

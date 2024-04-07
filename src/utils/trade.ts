@@ -125,7 +125,7 @@ export async function run(
       logger.debug(`Sell Signal: ${sellSignal}`);
       if (
         (checkSellSignal && !sellSignal) ||
-        trades.amountToken <= amountToken
+        trades.amountToken >= amountToken
       ) {
         logger.warn(`❌ Price not good enough, waiting for better price`);
       } else {
@@ -185,7 +185,7 @@ export async function run(
         } ETH/${getAssetName(tokenToTrade.address)}`
       );
       logger.debug(`Sell Signal: ${sellSignal}`);
-      if ((checkSellSignal && !sellSignal) || trades.amoutEth <= amountEth) {
+      if ((checkSellSignal && !sellSignal) || trades.amoutEth >= amountEth) {
         logger.warn(`❌ Price not good enough, waiting for better price`);
       } else {
         logger.debug(
