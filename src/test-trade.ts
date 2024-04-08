@@ -1,9 +1,10 @@
 import * as fs from "fs";
 import * as readline from "readline";
 import { isSellSignal } from "./utils/is-sell-signal";
+import logger from "./utils/logger";
 
 interface DataPoint {
-  price?: number;
+  price2?: number;
 }
 
 async function processLineByLine() {
@@ -19,13 +20,18 @@ async function processLineByLine() {
   let i = 0;
   for await (const line of rl) {
     const data: DataPoint = JSON.parse(line);
-    console.log(i++, data.price);
-    if (data.price !== undefined) {
+    console.log(i++, data.price2);
+    if (data.price2 !== undefined) {
       try {
         if (prices.length > 500) prices.shift();
 
-        prices.push(data.price);
-        isSellSignal(prices);
+        prices.push(data.price2);
+        const sell = isSellSignal(prices);
+
+        logger.error({
+          price: prices[prices.length - 1],
+          sell,
+        });
       } catch (error) {
         console.error(error);
       }
