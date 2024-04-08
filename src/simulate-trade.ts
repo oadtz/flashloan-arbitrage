@@ -343,19 +343,21 @@ export async function run(
     if (_trades[tokenToTrade.address].tokenPrices.length > 500)
       _trades[tokenToTrade.address].tokenPrices.shift();
 
-    _trades[tokenToTrade.address].tokenPrices.push(
-      +formatDecimals(amountToken, tokenToTrade.decimals) /
-        +formatDecimals(amountEth, 18)
-    );
+    _trades[tokenToTrade.address].tokenPrices.push(baseLinePrice);
+    // _trades[tokenToTrade.address].tokenPrices.push(
+    //   +formatDecimals(amountToken, tokenToTrade.decimals) /
+    //     +formatDecimals(amountEth, 18)
+    // );
 
     // Calculate ETH Price
     if (_trades[tokenToTrade.address].ethPrices.length > 500)
       _trades[tokenToTrade.address].ethPrices.shift();
 
-    _trades[tokenToTrade.address].ethPrices.push(
-      +formatDecimals(amountEth, 18) /
-        +formatDecimals(amountToken, tokenToTrade.decimals)
-    );
+    _trades[tokenToTrade.address].ethPrices.push(1 / baseLinePrice);
+    // _trades[tokenToTrade.address].ethPrices.push(
+    //   +formatDecimals(amountEth, 18) /
+    //     +formatDecimals(amountToken, tokenToTrade.decimals)
+    // );
 
     if (direction === "eth_to_token") {
       console.log(
@@ -379,13 +381,11 @@ export async function run(
 
       logger.warn({
         price0:
-          _trades[tokenToTrade.address].tokenPrices[
-            _trades[tokenToTrade.address].tokenPrices.length - 1
-          ],
+          +formatDecimals(amountToken, tokenToTrade.decimals) /
+          +formatDecimals(amountEth, 18),
         price1:
-          _trades[tokenToTrade.address].ethPrices[
-            _trades[tokenToTrade.address].ethPrices.length - 1
-          ],
+          +formatDecimals(amountEth, 18) /
+          +formatDecimals(amountToken, tokenToTrade.decimals),
         price2: baseLinePrice,
         price3: 1 / baseLinePrice,
         sellOnETH: sellSignal,
@@ -459,15 +459,12 @@ export async function run(
       console.log(`Sell Signal: ${sellSignal}`);
 
       logger.warn({
-        token: getAssetName(tokenToTrade.address),
         price0:
-          _trades[tokenToTrade.address].tokenPrices[
-            _trades[tokenToTrade.address].tokenPrices.length - 1
-          ],
+          +formatDecimals(amountToken, tokenToTrade.decimals) /
+          +formatDecimals(amountEth, 18),
         price1:
-          _trades[tokenToTrade.address].ethPrices[
-            _trades[tokenToTrade.address].ethPrices.length - 1
-          ],
+          +formatDecimals(amountEth, 18) /
+          +formatDecimals(amountToken, tokenToTrade.decimals),
         price2: baseLinePrice,
         price3: 1 / baseLinePrice,
         sellOnETH: false,
