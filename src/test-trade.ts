@@ -21,12 +21,12 @@ async function processLineByLine() {
       try {
         if (prices.length > 500) prices.shift();
 
-        prices.push(1 / data.price2);
+        prices.push(data.price2);
         const { sell } = isSellSignal(prices);
         const { buy } = isBuySignal(prices);
 
         const result = {
-          price: 1 / data.price2,
+          price: data.price2,
           sell,
           buy,
           // ...indicators,

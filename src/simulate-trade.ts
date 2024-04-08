@@ -17,7 +17,7 @@ const routersToCheck = [routers.UniSwap];
 
 const slippageTolerance = 0.5;
 const gasLimit = 3000000; // 25000000;
-const delay = 30000;
+const delay = 300000;
 
 const networkProviderUrl = appConfig.ethereumRpcUrl;
 
