@@ -10,7 +10,7 @@ import {
 } from "./utils/provider";
 import { appConfig } from "./config/app";
 import _, { shuffle } from "lodash";
-import { isSellSignal } from "./utils/is-sell-signal";
+import { isSellSignal } from "./utils/trade-analysis";
 
 const assetsToCheck = [assets.eUSDT];
 const routersToCheck = [routers.UniSwap];
@@ -343,28 +343,28 @@ export async function run(
     if (_trades[tokenToTrade.address].tokenPrices.length > 500)
       _trades[tokenToTrade.address].tokenPrices.shift();
 
-    // _trades[tokenToTrade.address].tokenPrices.push(baseLinePrice);
-    _trades[tokenToTrade.address].tokenPrices.push(
-      +formatDecimals(amountToken, tokenToTrade.decimals) /
-        +formatDecimals(amountEth, 18)
-    );
+    _trades[tokenToTrade.address].tokenPrices.push(baseLinePrice);
+    // _trades[tokenToTrade.address].tokenPrices.push(
+    //   +formatDecimals(amountToken, tokenToTrade.decimals) /
+    //     +formatDecimals(amountEth, 18)
+    // );
 
     // Calculate ETH Price
     if (_trades[tokenToTrade.address].ethPrices.length > 500)
       _trades[tokenToTrade.address].ethPrices.shift();
 
-    // _trades[tokenToTrade.address].ethPrices.push(1 / baseLinePrice);
-    _trades[tokenToTrade.address].ethPrices.push(
-      +formatDecimals(amountEth, 18) /
-        +formatDecimals(amountToken, tokenToTrade.decimals)
-    );
+    _trades[tokenToTrade.address].ethPrices.push(1 / baseLinePrice);
+    // _trades[tokenToTrade.address].ethPrices.push(
+    //   +formatDecimals(amountEth, 18) /
+    //     +formatDecimals(amountToken, tokenToTrade.decimals)
+    // );
 
     if (direction === "eth_to_token") {
       console.log(
         `Data Points: ${_trades[tokenToTrade.address].tokenPrices.length}`
       );
 
-      const sellSignal = isSellSignal(
+      const { sell: sellSignal } = isSellSignal(
         _trades[tokenToTrade.address].tokenPrices
       );
 
@@ -447,7 +447,9 @@ export async function run(
         `Data Points: ${_trades[tokenToTrade.address].ethPrices.length}`
       );
 
-      const sellSignal = isSellSignal(_trades[tokenToTrade.address].ethPrices);
+      const { sell: sellSignal } = isSellSignal(
+        _trades[tokenToTrade.address].ethPrices
+      );
 
       console.log(`Amount to trade: ${formatDecimals(amountEth, 18)}`);
       console.log(

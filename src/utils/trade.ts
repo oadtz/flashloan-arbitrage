@@ -5,7 +5,7 @@ import { getRouterName } from "../config/dex";
 import { shuffle } from "lodash";
 import logger from "./logger";
 import { Provider, formatDecimals, getGasPrice, getProvider } from "./provider";
-import { isSellSignal } from "./is-sell-signal";
+import { isSellSignal } from "./trade-analysis";
 
 export async function run(
   routersToCheck: string[],
@@ -109,7 +109,7 @@ export async function run(
         `Data Points: ${_trades[tokenToTrade.address].tokenPrices.length}`
       );
 
-      const sellSignal = isSellSignal(
+      const { sell: sellSignal } = isSellSignal(
         _trades[tokenToTrade.address].tokenPrices
       );
 
@@ -176,7 +176,9 @@ export async function run(
         `Data Points: ${_trades[tokenToTrade.address].ethPrices.length}`
       );
 
-      const sellSignal = isSellSignal(_trades[tokenToTrade.address].ethPrices);
+      const { sell: sellSignal } = isSellSignal(
+        _trades[tokenToTrade.address].ethPrices
+      );
 
       console.log(`Amount to trade: ${formatDecimals(amountEth, 18)}`);
       console.log(

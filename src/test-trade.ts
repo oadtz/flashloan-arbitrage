@@ -1,14 +1,10 @@
 import * as fs from "fs";
 import * as readline from "readline";
-import { isSellSignal } from "./utils/is-sell-signal";
-import logger from "./utils/logger";
-
-interface DataPoint {
-  price2?: number;
-}
+import { isBuySignal, isSellSignal } from "./utils/trade-analysis";
 
 async function processLineByLine() {
-  const fileStream = fs.createReadStream("price.log");
+  const fileStream = fs.createReadStream("debug.log");
+  const writeStream = fs.createWriteStream("simulate.log", { flags: "w" });
 
   const rl = readline.createInterface({
     input: fileStream,
@@ -19,19 +15,24 @@ async function processLineByLine() {
 
   let i = 0;
   for await (const line of rl) {
-    const data: DataPoint = JSON.parse(line);
-    console.log(i++, data.price2);
+    const data = JSON.parse(line);
+
     if (data.price2 !== undefined) {
       try {
         if (prices.length > 500) prices.shift();
 
-        prices.push(data.price2);
-        const sell = isSellSignal(prices);
+        prices.push(1 / data.price2);
+        const { sell } = isSellSignal(prices);
+        const { buy } = isBuySignal(prices);
 
-        logger.error({
-          price: prices[prices.length - 1],
+        const result = {
+          price: 1 / data.price2,
           sell,
-        });
+          buy,
+          // ...indicators,
+        };
+
+        writeStream.write(`${JSON.stringify(result)}\n`);
       } catch (error) {
         console.error(error);
       }
