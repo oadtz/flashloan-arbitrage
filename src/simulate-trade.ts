@@ -343,21 +343,21 @@ export async function run(
     if (_trades[tokenToTrade.address].tokenPrices.length > 500)
       _trades[tokenToTrade.address].tokenPrices.shift();
 
-    _trades[tokenToTrade.address].tokenPrices.push(baseLinePrice);
-    // _trades[tokenToTrade.address].tokenPrices.push(
-    //   +formatDecimals(amountToken, tokenToTrade.decimals) /
-    //     +formatDecimals(amountEth, 18)
-    // );
+    // _trades[tokenToTrade.address].tokenPrices.push(baseLinePrice);
+    _trades[tokenToTrade.address].tokenPrices.push(
+      +formatDecimals(amountToken, tokenToTrade.decimals) /
+        +formatDecimals(amountEth, 18)
+    );
 
     // Calculate ETH Price
     if (_trades[tokenToTrade.address].ethPrices.length > 500)
       _trades[tokenToTrade.address].ethPrices.shift();
 
-    _trades[tokenToTrade.address].ethPrices.push(1 / baseLinePrice);
-    // _trades[tokenToTrade.address].ethPrices.push(
-    //   +formatDecimals(amountEth, 18) /
-    //     +formatDecimals(amountToken, tokenToTrade.decimals)
-    // );
+    // _trades[tokenToTrade.address].ethPrices.push(1 / baseLinePrice);
+    _trades[tokenToTrade.address].ethPrices.push(
+      +formatDecimals(amountEth, 18) /
+        +formatDecimals(amountToken, tokenToTrade.decimals)
+    );
 
     if (direction === "eth_to_token") {
       console.log(
