@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as readline from "readline";
-import { isBuySignal, isSellSignal } from "./utils/trade-analysis";
+import { isSellSignal } from "./utils/trade-analysis";
 
 async function processLineByLine() {
   const fileStream = fs.createReadStream("debug.log");
@@ -22,14 +22,14 @@ async function processLineByLine() {
         if (prices.length > 500) prices.shift();
 
         prices.push(data.price2);
-        const { sell } = isSellSignal(prices);
-        const { buy } = isBuySignal(prices);
+        const { sell, indicators } = isSellSignal(prices);
+        //const { buy } = isBuySignal(prices);
 
         const result = {
           price: data.price2,
           //sell,
           //buy,
-          // ...indicators,
+          ...indicators,
         };
 
         writeStream.write(`${JSON.stringify(result)}\n`);
