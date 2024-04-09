@@ -170,7 +170,6 @@ export async function run(
               ),
             ];
           } else {
-            console.log(priceData.price3, amountIn);
             return [
               amountIn,
               BigInt(
@@ -438,8 +437,8 @@ export async function run(
           +formatDecimals(amountToken, tokenToTrade.decimals),
         price2: baseLinePrice,
         price3: 1 / baseLinePrice,
-        sellOnETH: sellSignal,
-        sellOnToken: false,
+        sell: sellSignal,
+        buy: false,
       });
       logger.flush();
 
@@ -519,8 +518,8 @@ export async function run(
           +formatDecimals(amountToken, tokenToTrade.decimals),
         price2: baseLinePrice,
         price3: 1 / baseLinePrice,
-        sellOnETH: false,
-        sellOnToken: sellSignal,
+        sell: false,
+        buy: sellSignal,
       });
       logger.flush();
 

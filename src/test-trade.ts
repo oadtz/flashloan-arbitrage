@@ -27,8 +27,8 @@ async function processLineByLine() {
 
         const result = {
           price: data.price2,
-          sell,
-          buy,
+          //sell,
+          //buy,
           // ...indicators,
         };
 
