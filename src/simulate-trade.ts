@@ -19,7 +19,7 @@ const WETH = assets.WETH.address;
 
 const slippageTolerance = 0.5;
 const gasLimit = 3000000; // 25000000;
-const delay = 300000;
+const delay = 0;
 
 const networkProviderUrl = appConfig.ethereumRpcUrl;
 
@@ -151,35 +151,41 @@ export async function run(
             return [
               amountIn,
               BigInt(
-                priceData.price2 *
-                  +formatDecimals(amountIn, 18) *
-                  10 ** assetsToCheck[0].decimals
+                Math.round(
+                  priceData.price2 *
+                    +formatDecimals(amountIn, 18) *
+                    10 ** assetsToCheck[0].decimals
+                )
               ),
             ];
           } else if (path[0] === WETH) {
             return [
               amountIn,
               BigInt(
-                priceData.price2 *
-                  +formatDecimals(amountIn, 18) *
-                  10 ** assetsToCheck[0].decimals
+                Math.round(
+                  priceData.price2 *
+                    +formatDecimals(amountIn, 18) *
+                    10 ** assetsToCheck[0].decimals
+                )
               ),
             ];
           } else {
+            console.log(priceData.price3, amountIn);
             return [
               amountIn,
               BigInt(
-                priceData.price3 *
-                  +formatDecimals(amountIn, assetsToCheck[0].decimals) *
-                  10 ** 18
+                Math.round(
+                  priceData.price3 *
+                    +formatDecimals(amountIn, assetsToCheck[0].decimals) *
+                    10 ** 18
+                )
               ),
             ];
           }
         }
       } catch (e) {
-        console.error(e);
         throw new Error(
-          "No more data to read from price.log. Please run the bot again."
+          "✅ No more data to read from price.log. Please run the bot again."
         );
       }
     } else {
@@ -225,40 +231,40 @@ export async function run(
     amountEth: bigint,
     expectAmountToken: bigint
   ) {
-    const router = new ethers.Contract(
-      routersToCheck[0],
-      [
-        {
-          constant: true,
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "amountIn",
-              type: "uint256",
-            },
-            {
-              internalType: "address[]",
-              name: "path",
-              type: "address[]",
-            },
-          ],
-          name: "getAmountsOut",
-          outputs: [
-            {
-              internalType: "uint256[]",
-              name: "amounts",
-              type: "uint256[]",
-            },
-          ],
-          payable: false,
-          stateMutability: "view",
-          type: "function",
-        },
-      ],
-      provider.ethers
-    );
+    // const router = new ethers.Contract(
+    //   routersToCheck[0],
+    //   [
+    //     {
+    //       constant: true,
+    //       inputs: [
+    //         {
+    //           internalType: "uint256",
+    //           name: "amountIn",
+    //           type: "uint256",
+    //         },
+    //         {
+    //           internalType: "address[]",
+    //           name: "path",
+    //           type: "address[]",
+    //         },
+    //       ],
+    //       name: "getAmountsOut",
+    //       outputs: [
+    //         {
+    //           internalType: "uint256[]",
+    //           name: "amounts",
+    //           type: "uint256[]",
+    //         },
+    //       ],
+    //       payable: false,
+    //       stateMutability: "view",
+    //       type: "function",
+    //     },
+    //   ],
+    //   provider.ethers
+    // );
 
-    const amounts = await router.getAmountsOut(amountEth, [WETH, token]);
+    const amounts = await getAmountsOut(amountEth, [WETH, token]);
 
     _balances.eth = BigInt(0);
     _balances[token] = amounts[1];
@@ -270,7 +276,7 @@ export async function run(
         { error: "INSUFFICIENT_OUTPUT_AMOUNT" },
         "Error performing executeTradeETHForTokens"
       );
-      logger.error(`Router: ${router}`);
+      //logger.error(`Router: ${router}`);
       logger.error(`Token: ${token}`);
       logger.error(`Amount In: ${_trades[token].amountETH}`);
       logger.error(`Expected Amount Out: ${_trades[token].amountToken}`);
@@ -286,40 +292,40 @@ export async function run(
     amountToken: bigint,
     expectAmountEth: bigint
   ) {
-    const router = new ethers.Contract(
-      routersToCheck[0],
-      [
-        {
-          constant: true,
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "amountIn",
-              type: "uint256",
-            },
-            {
-              internalType: "address[]",
-              name: "path",
-              type: "address[]",
-            },
-          ],
-          name: "getAmountsOut",
-          outputs: [
-            {
-              internalType: "uint256[]",
-              name: "amounts",
-              type: "uint256[]",
-            },
-          ],
-          payable: false,
-          stateMutability: "view",
-          type: "function",
-        },
-      ],
-      provider.ethers
-    );
+    // const router = new ethers.Contract(
+    //   routersToCheck[0],
+    //   [
+    //     {
+    //       constant: true,
+    //       inputs: [
+    //         {
+    //           internalType: "uint256",
+    //           name: "amountIn",
+    //           type: "uint256",
+    //         },
+    //         {
+    //           internalType: "address[]",
+    //           name: "path",
+    //           type: "address[]",
+    //         },
+    //       ],
+    //       name: "getAmountsOut",
+    //       outputs: [
+    //         {
+    //           internalType: "uint256[]",
+    //           name: "amounts",
+    //           type: "uint256[]",
+    //         },
+    //       ],
+    //       payable: false,
+    //       stateMutability: "view",
+    //       type: "function",
+    //     },
+    //   ],
+    //   provider.ethers
+    // );
 
-    const amounts = await router.getAmountsOut(amountToken, [token, WETH]);
+    const amounts = await getAmountsOut(amountToken, [token, WETH]);
 
     _balances[token] = BigInt(0);
     _balances.eth = amounts[1];
@@ -331,7 +337,7 @@ export async function run(
         { error: "INSUFFICIENT_OUTPUT_AMOUNT" },
         "Error performing executeTradeTokensForETH"
       );
-      logger.error(`Router: ${router}`);
+      //logger.error(`Router: ${router}`);
       logger.error(`Token: ${token}`);
       logger.error(`Amount In: ${_trades[token].amountToken}`);
       logger.error(`Expected Amount Out: ${_trades[token].amountETH}`);
@@ -342,6 +348,7 @@ export async function run(
     return true;
   }
 
+  const gasPrice = await getGasPrice(provider);
   while (true) {
     const shuffledAssets = shuffle(assetsToCheck);
     const tokenToTrade =
@@ -369,7 +376,6 @@ export async function run(
       )}`
     );
 
-    const gasPrice = await getGasPrice(provider);
     const [direction, router, amountEth, amountToken, baseLinePrice] =
       await checkTrade(
         routersToCheck,
