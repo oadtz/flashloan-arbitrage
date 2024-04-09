@@ -6,7 +6,7 @@ const errorFile = "./error.log";
 const errorFileStream = fs.createWriteStream(errorFile, { flags: "a" });
 
 const debugFile = "./debug.log";
-const debugFileStream = fs.createWriteStream(debugFile, { flags: "a" });
+const debugFileStream = fs.createWriteStream(debugFile, { flags: "w" });
 
 const streams = [
   {

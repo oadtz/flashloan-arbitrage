@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import { ethers } from "ethers";
 import { Asset, assets, getAssetName } from "./config/assets";
 import { getRouterName, routers } from "./config/dex";
@@ -14,10 +15,11 @@ import { isSellSignal } from "./utils/trade-analysis";
 
 const assetsToCheck = [assets.eUSDT];
 const routersToCheck = [routers.UniSwap];
+const WETH = assets.WETH.address;
 
 const slippageTolerance = 0.5;
 const gasLimit = 3000000; // 25000000;
-const delay = 30000;
+const delay = 0;
 
 const networkProviderUrl = appConfig.ethereumRpcUrl;
 
@@ -47,6 +49,8 @@ export async function run(
       amountToken: bigint;
     }
   > = {};
+
+  let epoch = 0;
 
   assetsToCheck.forEach((asset) => {
     _trades[asset.address] = {
@@ -84,44 +88,8 @@ export async function run(
     let profitInToken = BigInt(0);
     let baseLinePrice = 0;
 
-    const router = new ethers.Contract(
-      routersToCheck[0],
-      [
-        {
-          constant: true,
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "amountIn",
-              type: "uint256",
-            },
-            {
-              internalType: "address[]",
-              name: "path",
-              type: "address[]",
-            },
-          ],
-          name: "getAmountsOut",
-          outputs: [
-            {
-              internalType: "uint256[]",
-              name: "amounts",
-              type: "uint256[]",
-            },
-          ],
-          payable: false,
-          stateMutability: "view",
-          type: "function",
-        },
-      ],
-      provider.ethers
-    );
-
     if (_balances[token] > 0) {
-      const amounts = await router.getAmountsOut(_balances[token], [
-        token,
-        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-      ]);
+      const amounts = await getAmountsOut(_balances[token], [token, WETH]);
 
       amountToken = amounts[0];
       amountEth = amounts[1];
@@ -133,10 +101,7 @@ export async function run(
     }
 
     if (_balances.eth > 0) {
-      const amounts = await router.getAmountsOut(_balances.eth, [
-        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-        token,
-      ]);
+      const amounts = await getAmountsOut(_balances.eth, [WETH, token]);
 
       amountEth = amounts[0];
       amountToken = amounts[1];
@@ -147,8 +112,8 @@ export async function run(
         amountToken > gasCostLimit ? amountToken - gasCostLimit : BigInt(0);
     }
 
-    const baseLineAmounts = await router.getAmountsOut(toDecimals(1, 18), [
-      "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    const baseLineAmounts = await getAmountsOut(toDecimals(1, 18), [
+      WETH,
       token,
     ]);
     baseLinePrice =
@@ -170,6 +135,89 @@ export async function run(
       amountToken,
       baseLinePrice,
     ];
+  }
+
+  async function getAmountsOut(amountIn: bigint, path: string[]) {
+    if (fs.existsSync("price.log")) {
+      const data = fs.readFileSync("price.log", "utf8");
+      const lines = data.split("\n");
+
+      try {
+        const priceData = JSON.parse(lines[epoch]);
+
+        // For simulation we only use the baseline prices
+        if (priceData.price2 && priceData.price3) {
+          if (amountIn === toDecimals(1, 18) && path[0] === WETH) {
+            return [
+              amountIn,
+              BigInt(
+                priceData.price2 *
+                  +formatDecimals(amountIn, 18) *
+                  10 ** assetsToCheck[0].decimals
+              ),
+            ];
+          } else if (path[0] === WETH) {
+            return [
+              amountIn,
+              BigInt(
+                priceData.price2 *
+                  +formatDecimals(amountIn, 18) *
+                  10 ** assetsToCheck[0].decimals
+              ),
+            ];
+          } else {
+            return [
+              amountIn,
+              BigInt(
+                priceData.price3 *
+                  +formatDecimals(amountIn, assetsToCheck[0].decimals) *
+                  10 ** 18
+              ),
+            ];
+          }
+        }
+      } catch (e) {
+        console.error(e);
+        throw new Error(
+          "No more data to read from price.log. Please run the bot again."
+        );
+      }
+    } else {
+      const router = new ethers.Contract(
+        routersToCheck[0],
+        [
+          {
+            constant: true,
+            inputs: [
+              {
+                internalType: "uint256",
+                name: "amountIn",
+                type: "uint256",
+              },
+              {
+                internalType: "address[]",
+                name: "path",
+                type: "address[]",
+              },
+            ],
+            name: "getAmountsOut",
+            outputs: [
+              {
+                internalType: "uint256[]",
+                name: "amounts",
+                type: "uint256[]",
+              },
+            ],
+            payable: false,
+            stateMutability: "view",
+            type: "function",
+          },
+        ],
+        provider.ethers
+      );
+
+      return await router.getAmountsOut(amountIn, path);
+    }
   }
 
   async function executeTradeETHForTokens(
@@ -210,10 +258,7 @@ export async function run(
       provider.ethers
     );
 
-    const amounts = await router.getAmountsOut(amountEth, [
-      "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-      token,
-    ]);
+    const amounts = await router.getAmountsOut(amountEth, [WETH, token]);
 
     _balances.eth = BigInt(0);
     _balances[token] = amounts[1];
@@ -274,10 +319,7 @@ export async function run(
       provider.ethers
     );
 
-    const amounts = await router.getAmountsOut(amountToken, [
-      token,
-      "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-    ]);
+    const amounts = await router.getAmountsOut(amountToken, [token, WETH]);
 
     _balances[token] = BigInt(0);
     _balances.eth = amounts[1];
@@ -306,6 +348,8 @@ export async function run(
       shuffledAssets[Math.floor(Math.random() * shuffledAssets.length)];
 
     console.log("Checking trade opportunities...");
+
+    console.log(`Epoch: ${epoch}`);
 
     const trades = getTrades(tokenToTrade.address);
 
@@ -541,6 +585,7 @@ export async function run(
       )}\n\n`
     );
 
+    epoch++;
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 }
