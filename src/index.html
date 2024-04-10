@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>TradingView Chart</title>
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="./libs/charting_library/v1.8/charting_library.min.js"></script>
+    <style>
+      body,
+      html {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      #chart-container {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chart-container"></div>
+
+    <script>
+      $(document).ready(function () {
+        var prices = [
+          100, 102, 105, 103, 106, 108, 110, 112, 115, 113, 117, 120,
+        ];
+
+        var widget = new TradingView.widget({
+          fullscreen: true,
+          symbol: "EXAMPLE",
+          interval: "D",
+          container_id: "chart-container",
+          library_path: "./libs/charting_library/v1.8/",
+          locale: "en",
+          drawings_access: {
+            type: "black",
+            tools: [{ name: "Regression Trend" }],
+          },
+          disabled_features: ["use_localstorage_for_settings"],
+          enabled_features: ["chart_property_page_trading"],
+          charts_storage_url: "https://saveload.tradingview.com",
+          charts_storage_api_version: "1.1",
+          client_id: "tradingview.com",
+          user_id: "public_user_id",
+          datafeed: {
+            onReady: function (callback) {
+              setTimeout(function () {
+                callback({
+                  supports_search: false,
+                  supports_group_request: false,
+                  supports_marks: false,
+                  supports_timescale_marks: false,
+                  supports_time: true,
+                });
+              }, 0);
+            },
+            getBars: function (
+              symbolInfo,
+              resolution,
+              from,
+              to,
+              onHistoryCallback,
+              onErrorCallback,
+              firstDataRequest
+            ) {
+              var bars = [];
+              for (var i = 0; i < prices.length; i++) {
+                var time =
+                  new Date(
+                    Date.now() - (prices.length - i) * 24 * 60 * 60 * 1000
+                  ).getTime() / 1000;
+                bars.push({
+                  time: time,
+                  close: prices[i],
+                  open: prices[i],
+                  high: prices[i],
+                  low: prices[i],
+                });
+              }
+              var data = {
+                bars: bars,
+                meta: {
+                  noData: false,
+                },
+              };
+              onHistoryCallback(data, { noData: false });
+            },
+          },
+        });
+      });
+    </script>
+  </body>
+</html>

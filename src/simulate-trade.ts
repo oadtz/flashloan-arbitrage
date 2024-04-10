@@ -50,6 +50,11 @@ export async function run(
     }
   > = {};
 
+  const initialAmounts: Record<
+    string,
+    { amountEth: bigint; amountToken: bigint }
+  > = {};
+
   let epoch = 0;
 
   assetsToCheck.forEach((asset) => {
@@ -382,6 +387,13 @@ export async function run(
         BigInt(gasLimit) * gasPrice
       );
 
+    if (!initialAmounts[tokenToTrade.address]) {
+      initialAmounts[tokenToTrade.address] = {
+        amountEth,
+        amountToken,
+      };
+    }
+
     console.log(`Result from checkTrade`);
     console.log(`Direction: ${direction}`);
     console.log(`Router: ${router}`);
@@ -582,12 +594,29 @@ export async function run(
       console.warn(`❌ Not a trade opportunity`);
     }
 
-    console.log(`After ETH balance: ${formatDecimals(getETHBalance(), 18)}`);
     console.log(
-      `After token balance: ${formatDecimals(
+      `Updated ETH balance: ${formatDecimals(getETHBalance(), 18)} (${
+        (+formatDecimals(getETHBalance(), 18) * 100) /
+          +formatDecimals(initialAmounts[tokenToTrade.address].amountEth, 18) -
+        100
+      }%)`
+    );
+    console.log(
+      `Updated token balance: ${formatDecimals(
         getTokenBalance(tokenToTrade.address),
         tokenToTrade.decimals
-      )}\n\n`
+      )} (${
+        (+formatDecimals(
+          getTokenBalance(tokenToTrade.address),
+          tokenToTrade.decimals
+        ) *
+          100) /
+          +formatDecimals(
+            initialAmounts[tokenToTrade.address].amountToken,
+            tokenToTrade.decimals
+          ) -
+        100
+      }%)\n\n`
     );
 
     epoch++;
