@@ -4,7 +4,13 @@ import { abi as tradeAbi } from "../config/trade";
 import { getRouterName } from "../config/dex";
 import { shuffle } from "lodash";
 import logger from "./logger";
-import { Provider, formatDecimals, getGasPrice, getProvider } from "./provider";
+import {
+  Provider,
+  formatDecimals,
+  getGasPrice,
+  getProvider,
+  toDecimals,
+} from "./provider";
 import { isSellSignal } from "./trade-analysis";
 
 export async function run(
@@ -24,6 +30,11 @@ export async function run(
   const _trades: Record<
     string,
     { ethPrices: number[]; tokenPrices: number[] }
+  > = {};
+
+  const initialAmounts: Record<
+    string,
+    { amountEth: bigint; amountToken: bigint }
   > = {};
 
   assetsToCheck.forEach((asset) => {
@@ -72,13 +83,21 @@ export async function run(
     );
 
     const gasPrice = await getGasPrice(provider);
-    const [direction, router, amountEth, amountToken] = await checkTrade(
-      routersToCheck,
-      tokenToTrade.address,
-      provider,
-      BigInt(gasLimit) * gasPrice,
-      tradeContractAddress
-    );
+    const [direction, router, amountEth, amountToken, baseLinePrice] =
+      await checkTrade(
+        routersToCheck,
+        tokenToTrade,
+        provider,
+        BigInt(gasLimit) * gasPrice,
+        tradeContractAddress
+      );
+
+    if (!initialAmounts[tokenToTrade.address]) {
+      initialAmounts[tokenToTrade.address] = {
+        amountEth,
+        amountToken,
+      };
+    }
 
     console.log(`Result from checkTrade`);
     console.log(`Direction: ${direction}`);
@@ -90,19 +109,13 @@ export async function run(
     if (_trades[tokenToTrade.address].tokenPrices.length > 500)
       _trades[tokenToTrade.address].tokenPrices.shift();
 
-    _trades[tokenToTrade.address].tokenPrices.push(
-      +formatDecimals(amountToken, tokenToTrade.decimals) /
-        +formatDecimals(amountEth, 18)
-    );
+    _trades[tokenToTrade.address].tokenPrices.push(baseLinePrice);
 
     // Calculate ETH Price
     if (_trades[tokenToTrade.address].ethPrices.length > 500)
       _trades[tokenToTrade.address].ethPrices.shift();
 
-    _trades[tokenToTrade.address].ethPrices.push(
-      +formatDecimals(amountEth, 18) /
-        +formatDecimals(amountToken, tokenToTrade.decimals)
-    );
+    _trades[tokenToTrade.address].ethPrices.push(1 / baseLinePrice);
 
     if (direction === "eth_to_token") {
       console.log(
@@ -124,11 +137,13 @@ export async function run(
       );
       console.log(`Sell Signal: ${sellSignal}`);
       if (
-        (checkSellSignal && !sellSignal) ||
-        trades.amountToken +
-          (amountToken * BigInt(Math.floor(slippageTolerance * 10000))) /
-            BigInt(1000000) >=
-          amountToken
+        checkSellSignal &&
+        !sellSignal
+        // ||
+        // trades.amountToken +
+        //   (amountToken * BigInt(Math.floor(slippageTolerance * 10000))) /
+        //     BigInt(1000000) >=
+        //   amountToken
       ) {
         console.warn(`❌ Price not good enough, waiting for better price`);
       } else {
@@ -153,7 +168,10 @@ export async function run(
           router,
           tokenToTrade.address,
           amountEth,
-          trades.amountToken,
+          // trades.amountToken // For price safe guard
+          amountToken -
+            (amountToken * BigInt(Math.floor(slippageTolerance * 10000))) /
+              BigInt(1000000),
           provider,
           gasLimit,
           tradeContractAddress
@@ -190,11 +208,13 @@ export async function run(
       console.log(`Sell Signal: ${sellSignal}`);
 
       if (
-        (checkSellSignal && !sellSignal) ||
-        trades.amountETH +
-          (amountEth * BigInt(Math.floor(slippageTolerance * 10000))) /
-            BigInt(1000000) >=
-          amountEth
+        checkSellSignal &&
+        !sellSignal
+        // ||
+        // trades.amountETH +
+        //   (amountEth * BigInt(Math.floor(slippageTolerance * 10000))) /
+        //     BigInt(1000000) >=
+        //   amountEth
       ) {
         console.warn(`❌ Price not good enough, waiting for better price`);
       } else {
@@ -219,7 +239,10 @@ export async function run(
           router,
           tokenToTrade.address,
           amountToken,
-          trades.amountETH,
+          // trades.amountETH // For price safe guard
+          amountEth -
+            (amountEth * BigInt(Math.floor(slippageTolerance * 10000))) /
+              BigInt(1000000),
           provider,
           gasLimit,
           tradeContractAddress
@@ -246,20 +269,43 @@ export async function run(
     }
 
     console.log(
-      `After ETH balance: ${formatDecimals(
+      `Updated ETH balance: ${formatDecimals(
         await getETHBalance(provider, tradeContractAddress),
         18
-      )}`
+      )} (${
+        (+formatDecimals(
+          await getETHBalance(provider, tradeContractAddress),
+          18
+        ) *
+          100) /
+          +formatDecimals(initialAmounts[tokenToTrade.address].amountEth, 18) -
+        100
+      }%)`
     );
     console.log(
-      `After token balance: ${formatDecimals(
+      `Updated token balance: ${formatDecimals(
         await getTokenBalance(
           tokenToTrade.address,
           provider,
           tradeContractAddress
         ),
         tokenToTrade.decimals
-      )}\n\n`
+      )} (${
+        (+formatDecimals(
+          await getTokenBalance(
+            tokenToTrade.address,
+            provider,
+            tradeContractAddress
+          ),
+          tokenToTrade.decimals
+        ) *
+          100) /
+          +formatDecimals(
+            initialAmounts[tokenToTrade.address].amountToken,
+            tokenToTrade.decimals
+          ) -
+        100
+      }%)\n\n`
     );
 
     await new Promise((resolve) => setTimeout(resolve, delay));
@@ -386,11 +432,13 @@ async function getTrades(
 
 async function checkTrade(
   routersToCheck: string[],
-  tokenToTrade: string,
+  tokenToTrade: Asset,
   provider: Provider,
   gasLimit: bigint,
   tradeContractAddress: string
-): Promise<["eth_to_token" | "token_to_eth" | "none", string, bigint, bigint]> {
+): Promise<
+  ["eth_to_token" | "token_to_eth" | "none", string, bigint, bigint, number]
+> {
   try {
     if (tradeContractAddress) {
       const trader = new ethers.Contract(
@@ -400,15 +448,52 @@ async function checkTrade(
       );
 
       const [direction, router, amountETHToTrade, amountTokenToTrade] =
-        await trader.checkTrade(routersToCheck, tokenToTrade, gasLimit);
+        await trader.checkTrade(routersToCheck, tokenToTrade.address, gasLimit);
+      const baseLinePrice = await getBaseLinePrice(
+        router,
+        tokenToTrade.address,
+        provider,
+        tradeContractAddress
+      );
 
-      return [direction, router, amountETHToTrade, amountTokenToTrade];
+      return [
+        direction,
+        router,
+        amountETHToTrade,
+        amountTokenToTrade,
+        +formatDecimals(baseLinePrice, tokenToTrade.decimals),
+      ];
     }
   } catch (error) {
     console.error("Error checking trade", error);
   }
 
-  return ["none", "", BigInt(0), BigInt(0)];
+  return ["none", "", BigInt(0), BigInt(0), 0];
+}
+
+async function getBaseLinePrice(
+  router: string,
+  token: string,
+  provider: Provider,
+  tradeContractAddress: string
+): Promise<bigint> {
+  try {
+    if (tradeContractAddress) {
+      const trader = new ethers.Contract(
+        tradeContractAddress,
+        tradeAbi,
+        provider.ethers
+      );
+
+      const baseLinePrice = await trader.getBaseLinePrice(router, token);
+
+      return baseLinePrice;
+    }
+  } catch (error) {
+    console.error("Error getBaseLinePrice", error);
+  }
+
+  return BigInt(0);
 }
 
 async function executeTradeETHForTokens(

@@ -2,7 +2,7 @@ export const addresses = {
   localhost: "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
   sepolia: "",
   ethereum: "",
-  bsc: "0x49231586D9B9940b153F6d550F3371E643924eB1",
+  bsc: "0xbF522a8AE0E27ba0b9a880d845aaF3b5fb4CE279",
   polygon: "0xF8AD9048395481807Df979EAd4Fe6E0EB9a3A88D",
 };
 
@@ -215,6 +215,30 @@ export const abi = [
     name: "executeTradeTokensForETH",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "router",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "tokenOut",
+        type: "address",
+      },
+    ],
+    name: "getBaseLinePrice",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
