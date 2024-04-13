@@ -13,11 +13,11 @@ export function isSellSignal(data: number[]): {
   indicators?: any;
 } {
   // Configuration for various indicators
-  const rsiPeriod = 14;
+  const rsiPeriod = 30;
   const rsiOverbought = 70;
-  const macdFastPeriod = 12;
-  const macdSlowPeriod = 26;
-  const macdSignalPeriod = 9;
+  const macdFastPeriod = 30;
+  const macdSlowPeriod = 50;
+  const macdSignalPeriod = 15;
   const bbPeriod = 20;
   const bbStdDev = 2;
   const shortTermMA = 50;
