@@ -96,7 +96,10 @@ export function isSellSignal(data: number[]): {
     latestStochRsiK > stochRsiOverbought &&
     latestStochRsiD > stochRsiOverbought &&
     latestStochRsiK > latestStochRsiD;
-  const isStochRsiCross = latestStochRsiK > latestStochRsiD;
+  const isStochRsiCross =
+    // latestStochRsiK > 30 &&
+    // latestStochRsiD > 30 &&
+    latestStochRsiK > latestStochRsiD;
 
   // Simplify the combination of conditions for demonstration purposes
   const isSellSignal =
