@@ -9,6 +9,7 @@ const assetsToCheck = [assets.USDT];
 
 const slippageTolerance = 0.5;
 const gasLimit = 3000000; // 25000000;
+const delay = 60000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
@@ -22,7 +23,7 @@ run(
   networkProviderUrl,
   tradeContractAddress,
   true,
-  30000
+  delay
 ).catch((error) => {
   console.error(error);
   process.exit(1);
