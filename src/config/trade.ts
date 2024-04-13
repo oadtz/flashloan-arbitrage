@@ -3,7 +3,7 @@ export const addresses = {
   sepolia: "",
   ethereum: "",
   bsc: "0xbF522a8AE0E27ba0b9a880d845aaF3b5fb4CE279",
-  polygon: "0xF8AD9048395481807Df979EAd4Fe6E0EB9a3A88D",
+  polygon: "0x8dbeb0b9302533C9c283e0e7AD7D01fFD998DE4b",
 };
 
 export const abi = [

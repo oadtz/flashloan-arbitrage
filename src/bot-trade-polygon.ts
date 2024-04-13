@@ -4,11 +4,12 @@ import { appConfig } from "./config/app";
 import { run } from "./utils/trade";
 import { addresses as tradeContractAddresses } from "./config/trade";
 
-const routersToCheck = [routers.QuickSwap, routers.SushiSwapPolygon];
-const assetsToCheck = [assets.pUSDT, assets.pWETH, assets.pWBTC];
+const routersToCheck = [routers.QuickSwap];
+const assetsToCheck = [assets.pUSDT];
 
 const slippageTolerance = 0.5;
 const gasLimit = 3000000; // 25000000;
+const delay = 60000;
 
 const networkProviderUrl = appConfig.polygonRpcUrl;
 
@@ -22,7 +23,7 @@ run(
   networkProviderUrl,
   tradeContractAddress,
   true,
-  1000
+  delay
 ).catch((error) => {
   console.error(error);
   process.exit(1);
