@@ -425,7 +425,7 @@ export async function run(
         `Data Points: ${_trades[tokenToTrade.address].tokenPrices.length}`
       );
 
-      const { sell: sellSignal } = isSellSignal(
+      const { sell: sellSignal, indicators } = isSellSignal(
         _trades[tokenToTrade.address].tokenPrices
       );
 
@@ -451,6 +451,7 @@ export async function run(
         price3: 1 / baseLinePrice,
         sell: sellSignal,
         buy: false,
+        ...indicators,
       });
       logger.flush();
 
@@ -508,7 +509,7 @@ export async function run(
         `Data Points: ${_trades[tokenToTrade.address].ethPrices.length}`
       );
 
-      const { sell: sellSignal } = isSellSignal(
+      const { sell: sellSignal, indicators } = isSellSignal(
         _trades[tokenToTrade.address].ethPrices
       );
 
@@ -532,6 +533,7 @@ export async function run(
         price3: 1 / baseLinePrice,
         sell: false,
         buy: sellSignal,
+        ...indicators,
       });
       logger.flush();
 
