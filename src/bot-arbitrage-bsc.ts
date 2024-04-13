@@ -14,27 +14,27 @@ const routersToCheck = [
 const assetsToCheck = [
   {
     token: assets.BTCB,
-    amount: 1,
-    borrowable: true,
-  },
-  {
-    token: assets.ETH,
     amount: 10,
     borrowable: true,
   },
   {
+    token: assets.ETH,
+    amount: 200,
+    borrowable: true,
+  },
+  {
     token: assets.WBNB,
-    amount: 100,
+    amount: 1_000,
     borrowable: true,
   },
   {
     token: assets.USDT,
-    amount: 10_000,
+    amount: 100_000,
     borrowable: true,
   },
   {
     token: assets.BUSD,
-    amount: 10_000,
+    amount: 100_000,
   },
   {
     token: assets.DOGE,
@@ -44,6 +44,7 @@ const assetsToCheck = [
 
 const slippageTolerance = 0; //0.5;
 const flashLoanFee = 0.0005;
+const delay = 60000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
@@ -56,7 +57,7 @@ run(
   flashLoanFee,
   networkProviderUrl,
   arbitrageContractAddress,
-  0
+  delay
 ).catch((error) => {
   console.error(error);
   process.exit(1);
