@@ -192,6 +192,55 @@ export async function run(
           "✅ No more data to read from price.log. Please run the bot again."
         );
       }
+    } else if (fs.existsSync("price.csv")) {
+      const data = fs.readFileSync("price.log", "utf8");
+      const lines = data.split("\n");
+
+      try {
+        const priceData = lines[epoch].split(",");
+
+        // For simulation we only use the baseline prices
+        if (priceData[1]) {
+          if (amountIn === toDecimals(1, 18) && path[0] === WETH) {
+            return [
+              amountIn,
+              BigInt(
+                Math.round(
+                  Number(priceData[1]) *
+                    +formatDecimals(amountIn, 18) *
+                    10 ** assetsToCheck[0].decimals
+                )
+              ),
+            ];
+          } else if (path[0] === WETH) {
+            return [
+              amountIn,
+              BigInt(
+                Math.round(
+                  Number(priceData[1]) *
+                    +formatDecimals(amountIn, 18) *
+                    10 ** assetsToCheck[0].decimals
+                )
+              ),
+            ];
+          } else {
+            return [
+              amountIn,
+              BigInt(
+                Math.round(
+                  (1 / Number(priceData[1])) *
+                    +formatDecimals(amountIn, assetsToCheck[0].decimals) *
+                    10 ** 18
+                )
+              ),
+            ];
+          }
+        }
+      } catch (e) {
+        throw new Error(
+          "✅ No more data to read from price.csv. Please run the bot again."
+        );
+      }
     } else {
       const router = new ethers.Contract(
         routersToCheck[0],
