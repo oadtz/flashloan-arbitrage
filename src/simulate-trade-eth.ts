@@ -19,7 +19,7 @@ const WETH = assets.WETH.address;
 
 const slippageTolerance = 0.5;
 const gasLimit = 3000000; // 25000000;
-const delay = 60000;
+const delay = 0;
 
 const networkProviderUrl = appConfig.ethereumRpcUrl;
 
@@ -193,20 +193,20 @@ export async function run(
         );
       }
     } else if (fs.existsSync("price.csv")) {
-      const data = fs.readFileSync("price.log", "utf8");
+      const data = fs.readFileSync("price.csv", "utf8");
       const lines = data.split("\n");
 
       try {
         const priceData = lines[epoch].split(",");
 
         // For simulation we only use the baseline prices
-        if (priceData[1]) {
+        if (priceData[4]) {
           if (amountIn === toDecimals(1, 18) && path[0] === WETH) {
             return [
               amountIn,
               BigInt(
                 Math.round(
-                  Number(priceData[1]) *
+                  Number(priceData[4]) *
                     +formatDecimals(amountIn, 18) *
                     10 ** assetsToCheck[0].decimals
                 )
@@ -217,7 +217,7 @@ export async function run(
               amountIn,
               BigInt(
                 Math.round(
-                  Number(priceData[1]) *
+                  Number(priceData[4]) *
                     +formatDecimals(amountIn, 18) *
                     10 ** assetsToCheck[0].decimals
                 )
@@ -228,7 +228,7 @@ export async function run(
               amountIn,
               BigInt(
                 Math.round(
-                  (1 / Number(priceData[1])) *
+                  (1 / Number(priceData[4])) *
                     +formatDecimals(amountIn, assetsToCheck[0].decimals) *
                     10 ** 18
                 )

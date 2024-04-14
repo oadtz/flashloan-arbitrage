@@ -193,7 +193,7 @@ export async function run(
         );
       }
     } else if (fs.existsSync("price.csv")) {
-      const data = fs.readFileSync("price.log", "utf8");
+      const data = fs.readFileSync("price.csv", "utf8");
       const lines = data.split("\n");
 
       try {
