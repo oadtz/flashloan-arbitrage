@@ -42,6 +42,7 @@ export const assets: Assets = {
     decimals: 18,
   },
   SHIB: { address: "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce", decimals: 18 },
+  PEPE: { address: "0x6982508145454ce325ddbe47a25d4ec3d2311933", decimals: 18 },
   FRAX: { address: "0x853d955acef822db058eb8505911ed77f175b99e", decimals: 18 },
   // Binance Smart Chain
   USDT: { address: "0x55d398326f99059fF775485246999027B3197955", decimals: 18 },

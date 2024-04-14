@@ -25,6 +25,7 @@
     "start:trade:bsc": "ts-node src/bot-trade-bsc.ts",
     "start:trade:polygon": "ts-node src/bot-trade-polygon.ts",
     "withdraw:trade:localhost": "ts-node src/withdraw-trade-localhost.ts",
+    "withdraw:trade:eth": "ts-node src/withdraw-trade-eth.ts",
     "withdraw:trade:bsc": "ts-node src/withdraw-trade-bsc.ts",
     "withdraw:trade:polygon": "ts-node src/withdraw-trade-polygon.ts",
     "simulate:trade:eth": "ts-node src/simulate-trade-eth.ts",
