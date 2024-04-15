@@ -1,130 +1,96 @@
 import {
   RSI,
   MACD,
-  BollingerBands,
-  SMA,
   EMA,
+  SMA,
   StochasticRSI,
   ADX,
+  BollingerBands,
 } from "technicalindicators";
 
-export function isSellSignal(data: number[]): {
+export function isSellSignal(price: number[]): {
   sell: boolean;
   indicators?: any;
 } {
-  // Configuration for various indicators
-  const rsiPeriod = 30;
-  const rsiOverbought = 70;
-  const macdFastPeriod = 30;
-  const macdSlowPeriod = 50;
-  const macdSignalPeriod = 15;
-  const bbPeriod = 20;
-  const bbStdDev = 2;
-  const shortTermMA = 50;
-  const longTermMA = 100;
-  const stochRsiPeriod = 14;
-  const stochRsiKPeriod = 3;
-  const stochRsiDPeriod = 3;
-  const stochRsiOverbought = 70;
-  const adxPeriod = 14;
-  const adxThreshold = 25;
-
-  // Calculate indicators
-  const rsi = RSI.calculate({ values: data, period: rsiPeriod });
-  const rsiMA = SMA.calculate({ values: rsi, period: rsiPeriod });
-  const rsiDerivative = rsi.slice(1).map((value, index) => value - rsi[index]);
+  const rsi = RSI.calculate({ values: price, period: 14 });
+  // const macd = MACD.calculate({
+  //   values: price,
+  //   fastPeriod: 9,
+  //   slowPeriod: 21,
+  //   signalPeriod: 9,
+  //   SimpleMAOscillator: false,
+  //   SimpleMASignal: false,
+  // });
   const macd = MACD.calculate({
-    values: data,
-    fastPeriod: macdFastPeriod,
-    slowPeriod: macdSlowPeriod,
-    signalPeriod: macdSignalPeriod,
+    values: price,
+    fastPeriod: 12,
+    slowPeriod: 26,
+    signalPeriod: 9,
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   });
-  const bb = BollingerBands.calculate({
-    values: data,
-    period: bbPeriod,
-    stdDev: bbStdDev,
-  });
-  const smaShort = SMA.calculate({ values: data, period: shortTermMA });
-  const smaLong = SMA.calculate({ values: data, period: longTermMA });
-  const emaShort = EMA.calculate({ values: data, period: shortTermMA });
-  const emaLong = EMA.calculate({ values: data, period: longTermMA });
+  // const macd = MACD.calculate({
+  //   values: price,
+  //   fastPeriod: 26,
+  //   slowPeriod: 50,
+  //   signalPeriod: 9,
+  //   SimpleMAOscillator: false,
+  //   SimpleMASignal: false,
+  // });
+  // const macd = MACD.calculate({
+  //   values: price,
+  //   fastPeriod: 100,
+  //   slowPeriod: 200,
+  //   signalPeriod: 20,
+  //   SimpleMAOscillator: false,
+  //   SimpleMASignal: false,
+  // });
+  const ema = EMA.calculate({ period: 50, values: price });
+  const sma = SMA.calculate({ period: 200, values: price });
   const stochRsi = StochasticRSI.calculate({
-    values: data,
-    rsiPeriod: stochRsiPeriod,
-    stochasticPeriod: stochRsiPeriod,
-    kPeriod: stochRsiKPeriod,
-    dPeriod: stochRsiDPeriod,
+    values: price,
+    rsiPeriod: 14,
+    stochasticPeriod: 14,
+    kPeriod: 3,
+    dPeriod: 3,
   });
   const adx = ADX.calculate({
-    high: data,
-    low: data,
-    close: data,
-    period: adxPeriod,
+    period: 14,
+    high: price,
+    low: price,
+    close: price,
+  });
+  const bollinger = BollingerBands.calculate({
+    period: 20,
+    values: price,
+    stdDev: 2,
   });
 
-  // Extract latest values for each indicator
-  const latestRsi = rsi[rsi.length - 1];
-  const latestRsiDerivative = rsiDerivative[rsiDerivative.length - 1];
-  const latestRsiMA = rsiMA[rsiMA.length - 1];
-  const latestMacd = macd[macd.length - 1]?.MACD || 0;
-  const latestMacdSignal = macd[macd.length - 1]?.signal || 0;
-  const previousSmaShort =
-    smaShort.length > 1 ? smaShort[smaShort.length - 2] : 0;
-  const previousSmaLong = smaLong.length > 1 ? smaLong[smaLong.length - 2] : 0;
-  const latestSmaShort = smaShort[smaShort.length - 1];
-  const latestSmaLong = smaLong[smaLong.length - 1];
-  const previousEmaShort =
-    emaShort.length > 1 ? emaShort[emaShort.length - 2] : 0;
-  const previousEmaLong = emaLong.length > 1 ? emaLong[emaLong.length - 2] : 0;
-  const latestEmaShort = emaShort[emaShort.length - 1];
-  const latestEmaLong = emaLong[emaLong.length - 1];
-  const latestStochRsiK = stochRsi[stochRsi.length - 1]?.k || 0;
-  const latestStochRsiD = stochRsi[stochRsi.length - 1]?.d || 0;
-  const latestAdx = adx[adx.length - 1]?.adx || 0;
+  const currentPrice = price[price.length - 1];
+  const rsiValue = rsi[rsi.length - 1];
+  const macdValue = macd[macd.length - 1]?.MACD || 0;
+  const macdSignalValue = macd[macd.length - 1]?.signal || 0;
+  const emaValue = ema[ema.length - 1];
+  const smaValue = sma[sma.length - 1];
+  const stochRsiValueK = stochRsi[stochRsi.length - 1]?.k || 0;
+  const stochRsiValueD = stochRsi[stochRsi.length - 1]?.d || 0;
+  const adxValue = adx[adx.length - 1]?.adx;
+  const bollingerUpper = bollinger[bollinger.length - 1]?.upper;
+  const bollingerMiddle = bollinger[bollinger.length - 1]?.middle;
 
-  // Define conditions for a sell signal
-  const isRsiDeclining = latestRsiDerivative < 0 && latestRsi > rsiOverbought;
-  const isRsiSellSignal = latestRsi > rsiOverbought;
-  const isMACDSellSignal = latestMacd < latestMacdSignal && latestMacd < 0; // Ensuring MACD is below zero for additional confirmation
-  const isSMASellSignal =
-    latestSmaShort < latestSmaLong && previousSmaShort > previousSmaLong;
-  const isEMASellSignal =
-    latestEmaShort < latestEmaLong && previousEmaShort > previousEmaLong;
-  const isStochRsiOverbought =
-    latestStochRsiK > stochRsiOverbought &&
-    latestStochRsiD > stochRsiOverbought &&
-    latestStochRsiK > latestStochRsiD;
-  const isStochRsiCross =
-    // latestStochRsiK > 30 &&
-    // latestStochRsiD > 30 &&
-    latestStochRsiK > latestStochRsiD;
-
-  // Simplify the combination of conditions for demonstration purposes
-  const isSellSignal =
-    isMACDSellSignal &&
-    //isRsiSellSignal &&
-    //isRsiDeclining &&
-    isStochRsiCross &&
-    (isSMASellSignal || isEMASellSignal) &&
+  const sellSignal =
+    //rsiValue > 70 &&
+    macdValue < macdSignalValue &&
+    //macdValue < 0 &&
+    //currentPrice < emaValue &&
+    //currentPrice < smaValue &&
+    //stochRsiValueK < stochRsiValueD &&
+    //adxValue > 25 &&
+    //currentPrice > bollingerUpper &&
     true;
 
   return {
-    sell: isSellSignal,
-    indicators: {
-      rsi: latestRsi,
-      rsiDerivative: latestRsiDerivative,
-      rsiMA: latestRsiMA,
-      macd: latestMacd,
-      macdSignal: latestMacdSignal,
-      smaShort: latestSmaShort,
-      smaLong: latestSmaLong,
-      emaShort: latestEmaShort,
-      emaLong: latestEmaLong,
-      stochRsiK: latestStochRsiK,
-      stochRsiD: latestStochRsiD,
-      adx: latestAdx,
-    },
+    sell: sellSignal,
+    indicators: {},
   };
 }
