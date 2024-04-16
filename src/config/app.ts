@@ -8,5 +8,5 @@ export const appConfig = {
   sepoliaRpcUrl: "https://ethereum-sepolia-rpc.publicnode.com",
   ethereumRpcUrl: "https://eth-pokt.nodies.app",
   bscRpcUrl: `https://bsc-dataseed.binance.org/`,
-  polygonRpcUrl: `https://polygon-rpc.com/`,
+  polygonRpcUrl: `https://polygon.rpc.blxrbdn.com`,
 };

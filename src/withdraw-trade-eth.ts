@@ -1,29 +1,21 @@
-import { routers } from "./config/dex";
 import { assets } from "./config/assets";
 import { appConfig } from "./config/app";
-import { run } from "./utils/trade";
+import { withdrawTrade } from "./utils/trade";
 import { addresses as tradeContractAddresses } from "./config/trade";
 
-const routersToCheck = [routers.UniSwap];
-const assetsToCheck = [assets.PEPE];
+const assetsToWithdraw = [assets.PEPE];
 
-const slippageTolerance = 0.5;
-const gasLimit = 3000000; // 25000000;
-const delay = 300000;
+const gasLimit = 300000;
 
 const networkProviderUrl = appConfig.ethereumRpcUrl;
 
 const tradeContractAddress = tradeContractAddresses.ethereum;
 
-run(
-  routersToCheck,
-  assetsToCheck,
-  slippageTolerance,
-  gasLimit,
+withdrawTrade(
+  assetsToWithdraw,
   networkProviderUrl,
-  tradeContractAddress,
-  true,
-  delay
+  gasLimit,
+  tradeContractAddress
 ).catch((error) => {
   console.error(error);
   process.exit(1);

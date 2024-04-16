@@ -22,6 +22,7 @@
     "deploy:trade:bsc": "hardhat run src/deploy-trade-bsc.ts --network bsc",
     "deploy:trade:polygon": "hardhat run src/deploy-trade-polygon.ts --network polygon",
     "start:trade:localhost": "ts-node src/bot-trade-localhost.ts",
+    "start:trade:eth": "ts-node src/bot-trade-eth.ts",
     "start:trade:bsc": "ts-node src/bot-trade-bsc.ts",
     "start:trade:polygon": "ts-node src/bot-trade-polygon.ts",
     "withdraw:trade:localhost": "ts-node src/withdraw-trade-localhost.ts",
