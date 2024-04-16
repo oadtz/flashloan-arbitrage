@@ -41,7 +41,7 @@ export function isSellSignal(price: number[]): {
     values: price,
     fastPeriod: 100,
     slowPeriod: 200,
-    signalPeriod: 20,
+    signalPeriod: 50,
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   });
@@ -49,10 +49,10 @@ export function isSellSignal(price: number[]): {
   const sma = SMA.calculate({ period: 200, values: price });
   const stochRsi = StochasticRSI.calculate({
     values: price,
-    rsiPeriod: 14,
-    stochasticPeriod: 14,
-    kPeriod: 3,
-    dPeriod: 3,
+    rsiPeriod: 100,
+    stochasticPeriod: 200,
+    kPeriod: 50,
+    dPeriod: 50,
   });
   const adx = ADX.calculate({
     period: 14,
@@ -84,7 +84,7 @@ export function isSellSignal(price: number[]): {
     //macdValue > 0 &&
     //currentPrice < emaValue &&
     //currentPrice < smaValue &&
-    stochRsiValueK < stochRsiValueD &&
+    //stochRsiValueK < stochRsiValueD &&
     //stochRsiValueK > 30 &&
     //stochRsiValueD > 30 &&
     //adxValue > 25 &&
