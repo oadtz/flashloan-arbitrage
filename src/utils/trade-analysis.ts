@@ -21,14 +21,14 @@ export function isSellSignal(price: number[]): {
   //   SimpleMAOscillator: false,
   //   SimpleMASignal: false,
   // });
-  const macd = MACD.calculate({
-    values: price,
-    fastPeriod: 12,
-    slowPeriod: 26,
-    signalPeriod: 9,
-    SimpleMAOscillator: false,
-    SimpleMASignal: false,
-  });
+  // const macd = MACD.calculate({
+  //   values: price,
+  //   fastPeriod: 12,
+  //   slowPeriod: 26,
+  //   signalPeriod: 9,
+  //   SimpleMAOscillator: false,
+  //   SimpleMASignal: false,
+  // });
   // const macd = MACD.calculate({
   //   values: price,
   //   fastPeriod: 26,
@@ -37,14 +37,14 @@ export function isSellSignal(price: number[]): {
   //   SimpleMAOscillator: false,
   //   SimpleMASignal: false,
   // });
-  // const macd = MACD.calculate({
-  //   values: price,
-  //   fastPeriod: 100,
-  //   slowPeriod: 200,
-  //   signalPeriod: 20,
-  //   SimpleMAOscillator: false,
-  //   SimpleMASignal: false,
-  // });
+  const macd = MACD.calculate({
+    values: price,
+    fastPeriod: 100,
+    slowPeriod: 200,
+    signalPeriod: 20,
+    SimpleMAOscillator: false,
+    SimpleMASignal: false,
+  });
   const ema = EMA.calculate({ period: 50, values: price });
   const sma = SMA.calculate({ period: 200, values: price });
   const stochRsi = StochasticRSI.calculate({
@@ -81,10 +81,12 @@ export function isSellSignal(price: number[]): {
   const sellSignal =
     //rsiValue > 70 &&
     macdValue < macdSignalValue &&
-    //macdValue < 0 &&
+    //macdValue > 0 &&
     //currentPrice < emaValue &&
     //currentPrice < smaValue &&
-    //stochRsiValueK < stochRsiValueD &&
+    stochRsiValueK < stochRsiValueD &&
+    //stochRsiValueK > 30 &&
+    //stochRsiValueD > 30 &&
     //adxValue > 25 &&
     //currentPrice > bollingerUpper &&
     true;
