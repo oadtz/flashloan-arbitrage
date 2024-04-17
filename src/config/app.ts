@@ -7,6 +7,6 @@ export const appConfig = {
   localhost: "http://localhost:8545",
   sepoliaRpcUrl: "https://ethereum-sepolia-rpc.publicnode.com",
   ethereumRpcUrl: "https://eth-pokt.nodies.app",
-  bscRpcUrl: `https://bsc-dataseed.binance.org/`,
+  bscRpcUrl: `https://bsc-dataseed3.binance.org/`,
   polygonRpcUrl: `https://polygon.rpc.blxrbdn.com`,
 };
