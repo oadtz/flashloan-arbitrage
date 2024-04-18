@@ -38,7 +38,7 @@ const assetsToCheck = [
 
 const slippageTolerance = 0; //0.5;
 const flashLoanFee = 0.0005;
-const delay = 0;
+const delay = 100;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
