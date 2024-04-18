@@ -39,9 +39,9 @@ export function isSellSignal(price: number[]): {
   // });
   const macd = MACD.calculate({
     values: price,
-    fastPeriod: price.length < 150 ? 26 : 50,
-    slowPeriod: price.length < 150 ? 50 : 100,
-    signalPeriod: price.length < 150 ? 9 : 50,
+    fastPeriod: /*price.length < 150 ? 26 :*/ 50,
+    slowPeriod: /*price.length < 150 ? 50 :*/ 100,
+    signalPeriod: /*price.length < 150 ? 9 :*/ 50,
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   });
@@ -56,10 +56,10 @@ export function isSellSignal(price: number[]): {
   // });
   const stochRsi = StochasticRSI.calculate({
     values: price,
-    rsiPeriod: price.length < 323 ? 14 : 75,
-    stochasticPeriod: price.length < 323 ? 14 : 150,
-    kPeriod: price.length < 323 ? 3 : 50,
-    dPeriod: price.length < 323 ? 3 : 50,
+    rsiPeriod: /*price.length < 323 ? 14 :*/ 75,
+    stochasticPeriod: /*price.length < 323 ? 14 :*/ 150,
+    kPeriod: /*price.length < 323 ? 3 :*/ 50,
+    dPeriod: /*price.length < 323 ? 3 :*/ 50,
   });
   const adx = ADX.calculate({
     period: 14,
