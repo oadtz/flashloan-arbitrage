@@ -1,6 +1,6 @@
 export const addresses = {
   localhost: "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
-  sepolia: "",
+  btc: "0xd1542eec9b0d17dc1cc4daf21de8deec5028c196",
   ethereum: "0x416Ae8f88A233d389744D538c66B713772a404b7",
   bsc: "0xbF522a8AE0E27ba0b9a880d845aaF3b5fb4CE279",
   polygon: "0x8dbeb0b9302533C9c283e0e7AD7D01fFD998DE4b",
