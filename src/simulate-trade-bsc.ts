@@ -13,13 +13,13 @@ import { appConfig } from "./config/app";
 import _, { shuffle } from "lodash";
 import { isSellSignal } from "./utils/trade-analysis";
 
-const assetsToCheck = [assets.USDT];
+const assetsToCheck = [assets.BTCB, assets.USDT];
 const routersToCheck = [routers.PancakeSwap];
 const WETH = assets.WBNB.address;
 
 const slippageTolerance = 0.5;
 const gasLimit = 3000000; // 25000000;
-const delay = 60000;
+const delay = 10000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 

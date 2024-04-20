@@ -122,7 +122,7 @@ export async function run(
         `Data Points: ${_trades[tokenToTrade.address].tokenPrices.length}`
       );
 
-      const { sell: sellSignal } = isSellSignal(
+      const { sell: sellSignal, indicators } = isSellSignal(
         _trades[tokenToTrade.address].tokenPrices
       );
 
@@ -135,6 +135,10 @@ export async function run(
           +formatDecimals(amountEth, 18)
         } ${getAssetName(tokenToTrade.address)}/ETH`
       );
+      console.log(`MACD: ${indicators.macd}`);
+      console.log(`MACD Signal: ${indicators.macdSignal}`);
+      console.log(`Stoch RSI D: ${indicators.stochRsiD}`);
+      console.log(`Stoch RSI K: ${indicators.stochRsiK}`);
       console.log(`Sell Signal: ${sellSignal}`);
       if (
         checkSellSignal &&
@@ -194,7 +198,7 @@ export async function run(
         `Data Points: ${_trades[tokenToTrade.address].ethPrices.length}`
       );
 
-      const { sell: sellSignal } = isSellSignal(
+      const { sell: sellSignal, indicators } = isSellSignal(
         _trades[tokenToTrade.address].ethPrices
       );
 
@@ -205,6 +209,10 @@ export async function run(
           +formatDecimals(amountToken, tokenToTrade.decimals)
         } ETH/${getAssetName(tokenToTrade.address)}`
       );
+      console.log(`MACD: ${indicators.macd}`);
+      console.log(`MACD Signal: ${indicators.macdSignal}`);
+      console.log(`Stoch RSI D: ${indicators.stochRsiD}`);
+      console.log(`Stoch RSI K: ${indicators.stochRsiK}`);
       console.log(`Sell Signal: ${sellSignal}`);
 
       if (

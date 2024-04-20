@@ -92,7 +92,7 @@ export function isSellSignal(price: number[]): {
     macdValue < macdSignalValue &&
     //macdValue > 0 &&
     stochRsiValueK < stochRsiValueD &&
-    stochRsiValueD > 50 &&
+    stochRsiValueD > 30 &&
     //stochRsiValueK > 50 &&
     //adxValue > 25 &&
     //currentPrice > bollingerUpper &&
