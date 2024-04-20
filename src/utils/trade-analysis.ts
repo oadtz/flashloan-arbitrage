@@ -8,10 +8,21 @@ import {
   BollingerBands,
 } from "technicalindicators";
 
-export function isSellSignal(price: number[]): {
+export function isSellSignal(data: number[]): {
   sell: boolean;
   indicators?: any;
 } {
+  let price = [...data];
+
+  if (data.length < 111) {
+    const chunkSize = Math.ceil(111 / data.length);
+
+    for (let i = 0; i < 111; i++) {
+      const chunkIndex = Math.floor(i / chunkSize);
+      price[i] = data[chunkIndex];
+    }
+  }
+
   const rsi = RSI.calculate({ values: price, period: 14 });
   // const macd = MACD.calculate({
   //   values: price,
