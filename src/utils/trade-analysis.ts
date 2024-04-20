@@ -41,26 +41,26 @@ export function isSellSignal(price: number[]): {
     values: price,
     fastPeriod: /*price.length < 150 ? 26 :*/ 50,
     slowPeriod: /*price.length < 150 ? 50 :*/ 100,
-    signalPeriod: /*price.length < 150 ? 9 :*/ 50,
+    signalPeriod: /*price.length < 150 ? 9 :*/ 12,
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   });
   const ema = EMA.calculate({ period: 50, values: price });
   const sma = SMA.calculate({ period: 200, values: price });
-  // const stochRsi = StochasticRSI.calculate({
-  //   values: price,
-  //   rsiPeriod: 14,
-  //   stochasticPeriod: 14,
-  //   kPeriod: 3,
-  //   dPeriod: 3,
-  // });
   const stochRsi = StochasticRSI.calculate({
     values: price,
-    rsiPeriod: /*price.length < 323 ? 14 :*/ 75,
-    stochasticPeriod: /*price.length < 323 ? 14 :*/ 150,
-    kPeriod: /*price.length < 323 ? 3 :*/ 50,
-    dPeriod: /*price.length < 323 ? 3 :*/ 50,
+    rsiPeriod: 14,
+    stochasticPeriod: 14,
+    kPeriod: 3,
+    dPeriod: 3,
   });
+  // const stochRsi = StochasticRSI.calculate({
+  //   values: price,
+  //   rsiPeriod: /*price.length < 323 ? 14 :*/ 75,
+  //   stochasticPeriod: /*price.length < 323 ? 14 :*/ 150,
+  //   kPeriod: /*price.length < 323 ? 3 :*/ 50,
+  //   dPeriod: /*price.length < 323 ? 3 :*/ 50,
+  // });
   const adx = ADX.calculate({
     period: 14,
     high: price,
@@ -92,8 +92,8 @@ export function isSellSignal(price: number[]): {
     macdValue < macdSignalValue &&
     //macdValue > 0 &&
     stochRsiValueK < stochRsiValueD &&
-    stochRsiValueD > 30 &&
-    //stochRsiValueK > 50 &&
+    stochRsiValueD > 70 &&
+    // stochRsiValueK > 70 &&
     //adxValue > 25 &&
     //currentPrice > bollingerUpper &&
     true;
