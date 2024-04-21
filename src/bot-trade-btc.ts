@@ -9,7 +9,7 @@ const assetsToCheck = [assets.BTCB];
 
 const slippageTolerance = 0.5;
 const gasLimit = 3000000; // 25000000;
-const delay = 300000;
+const delay = 3600000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
