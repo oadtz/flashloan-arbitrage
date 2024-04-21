@@ -14,10 +14,10 @@ export function isSellSignal(data: number[]): {
 } {
   let price = [...data];
 
-  if (data.length < 111) {
-    const chunkSize = Math.round(111 / data.length);
+  if (data.length < 21) {
+    const chunkSize = Math.round(21 / data.length);
 
-    for (let i = 0; i < 111; i++) {
+    for (let i = 0; i < 21; i++) {
       const chunkIndex = Math.floor(i / chunkSize);
       price[i] = data[chunkIndex] ? data[chunkIndex] : data[data.length - 1];
     }
