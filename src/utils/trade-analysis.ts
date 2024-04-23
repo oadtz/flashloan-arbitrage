@@ -102,6 +102,8 @@ export function isSellSignal(data: number[]): {
     //rsiValue > 70 &&
     macdValue < macdSignalValue &&
     macdSignalValue !== 0 &&
+    // stochRsiValueD !== 0 &&
+    // stochRsiValueK !== 0 &&
     //macdValue > 0 &&
     // stochRsiValueK < stochRsiValueD &&
     // stochRsiValueD > 70 &&
