@@ -93,32 +93,39 @@ export function isSellSignal(data: number[]): {
   const stochRsiValueK = stochRsi[stochRsi.length - 1]?.k || 0;
   const stochRsiValueD = stochRsi[stochRsi.length - 1]?.d || 0;
   const adxValue = adx[adx.length - 1]?.adx;
+  const adxPreviousValue = adx[adx.length - 2]?.adx;
   const bollingerUpper = bollinger[bollinger.length - 1]?.upper;
   const bollingerMiddle = bollinger[bollinger.length - 1]?.middle;
 
   const sellSignal =
-    //currentPrice < emaValue &&
-    //currentPrice < smaValue &&
-    //rsiValue > 70 &&
     macdValue < macdSignalValue &&
     macdSignalValue !== 0 &&
+    currentPrice < bollingerMiddle &&
+    //currentPrice < emaValue &&
+    //currentPrice < smaValue &&
+    //emaValue < smaValue &&
+    //rsiValue < 30 &&
     // stochRsiValueD !== 0 &&
     // stochRsiValueK !== 0 &&
     //macdValue > 0 &&
     // stochRsiValueK < stochRsiValueD &&
-    // stochRsiValueD > 70 &&
-    // stochRsiValueK > 70 &&
-    //adxValue > 25 &&
+    // stochRsiValueD < 20 &&
+    // stochRsiValueK < 20 &&
+    //adxValue < adxPreviousValue &&
     //currentPrice > bollingerUpper &&
     true;
 
   return {
     sell: sellSignal,
     indicators: {
+      ema: emaValue,
+      sma: smaValue,
       macd: macdValue,
       macdSignal: macdSignalValue,
       stochRsiK: stochRsiValueK,
       stochRsiD: stochRsiValueD,
+      adx: adxValue,
+      adxPrevious: adxPreviousValue
     },
   };
 }
