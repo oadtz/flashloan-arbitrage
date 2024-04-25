@@ -24,5 +24,17 @@ module.exports = {
         NODE_ENV: "production",
       },
     },
+    {
+      name: "arbitrage-polygon",
+      script: "npm",
+      args: "run start:arbitrage:polygon",
+      watch: false,
+      restart: true,
+      autorestart: true,
+      max_memory_restart: "1G",
+      env: {
+        NODE_ENV: "production",
+      },
+    },
   ],
 };
