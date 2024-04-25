@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: "arbitrage-bsc",
-      script: "npm",
-      args: "run start:arbitrage:bsc",
+      script: "ts-node",
+      args: "src/bot-arbitrage-bsc.ts",
       watch: false,
       restart: true,
       autorestart: true,
@@ -14,8 +14,8 @@ module.exports = {
     },
     {
       name: "arbitrage-eth",
-      script: "npm",
-      args: "run start:arbitrage:eth",
+      script: "ts-node",
+      args: "src/bot-arbitrage-eth.ts",
       watch: false,
       restart: true,
       autorestart: true,
@@ -26,8 +26,8 @@ module.exports = {
     },
     {
       name: "arbitrage-polygon",
-      script: "npm",
-      args: "run start:arbitrage:polygon",
+      script: "ts-node",
+      args: "src/bot-arbitrage-polygon.ts",
       watch: false,
       restart: true,
       autorestart: true,
