@@ -85,13 +85,6 @@ export async function run(
       arbitrageContractAddress
     );
 
-    console.log(`Route0 (${getRouterName(router0)}): ${router0}`);
-    console.log(`Route1 (${getRouterName(router1)}): ${router1}`);
-    console.log(`Token0 (${getAssetName(token0.address)}): ${token0.address}`);
-    console.log(`Token1 (${getAssetName(token1.address)}): ${token1.address}`);
-    console.log(`amountIn: ${formatDecimals(amountIn, token0.decimals)}`);
-    console.log(`amountOut: ${formatDecimals(amountOut, token0.decimals)}`);
-
     if (amountOut > expactedAmountOut) {
       const result = await executeArbitrage(
         router0,

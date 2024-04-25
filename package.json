@@ -18,7 +18,7 @@
     "start:arbitrage:bsc": "ts-node src/bot-arbitrage-bsc.ts",
     "start:arbitrage:polygon": "ts-node src/bot-arbitrage-polygon.ts",
     "start:arbitrage:eth": "ts-node src/bot-arbitrage-eth.ts",
-    "start:arbitrage:all": "pm2 start ./pm2-npm.js --restart-delay 0 --name arbitrage-bsc -- run start:arbitrage:bsc & pm2 start ./pm2-npm.js --restart-delay 0 --name arbitrage-polygon -- run start:arbitrage:polygon & pm2 start ./pm2-npm.js --restart-delay 0 --name arbitrage-eth -- run start:arbitrage:eth",
+    "start:arbitrage:all": "pm2 start ./pm2-npm.js --restart-delay 0 --name arbitrage-bsc -- run start:arbitrage:bsc & pm2 start ./pm2-npm.js --restart-delay 0 --name arbitrage-eth -- run start:arbitrage:eth",
     "deploy:trade:localhost": "hardhat run src/deploy-trade-test.ts --network localhost",
     "deploy:trade:btc": "hardhat run src/deploy-trade-btc.ts --network bsc",
     "deploy:trade:bsc": "hardhat run src/deploy-trade-bsc.ts --network bsc",
