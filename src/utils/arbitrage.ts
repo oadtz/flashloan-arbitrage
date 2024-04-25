@@ -23,7 +23,7 @@ export async function run(
 
   const provider = getProvider(networkProviderUrl);
 
-  // const nonProfitableRoutesAndAssets = [];
+  const nonProfitableRoutesAndAssets = [];
 
   while (true) {
     const shuffledAssets = shuffle(assetsToCheck);
@@ -50,17 +50,17 @@ export async function run(
       continue;
     }
 
-    // if (
-    //   nonProfitableRoutesAndAssets.findIndex((nonProfitable) => {
-    //     return (
-    //       nonProfitable.router0 === router0 &&
-    //       nonProfitable.router1 === router1 &&
-    //       nonProfitable.token0 === token0.address &&
-    //       nonProfitable.token1 === token1.address
-    //     );
-    //   }) !== -1
-    // )
-    //   continue;
+    if (
+      nonProfitableRoutesAndAssets.findIndex((nonProfitable) => {
+        return (
+          nonProfitable.router0 === router0 &&
+          nonProfitable.router1 === router1 &&
+          nonProfitable.token0 === token0.address &&
+          nonProfitable.token1 === token1.address
+        );
+      }) !== -1
+    )
+      continue;
 
     const randomFactor = slippageTolerance + Math.random() * slippageTolerance; // Generate a random factor between 0.5 and 1
     const amountIn =
@@ -133,16 +133,15 @@ export async function run(
       }
     } else {
       console.log(`❌ Not an arbitrage opportunity\n\n`);
-      process.exit(1);
 
-      // if (amountOut === BigInt(0)) {
-      //   nonProfitableRoutesAndAssets.push({
-      //     router0,
-      //     router1,
-      //     token0: token0.address,
-      //     token1: token1.address,
-      //   });
-      // }
+      if (amountOut === BigInt(0)) {
+        nonProfitableRoutesAndAssets.push({
+          router0,
+          router1,
+          token0: token0.address,
+          token1: token1.address,
+        });
+      }
     }
 
     await new Promise((resolve) => setTimeout(resolve, delay));
@@ -301,6 +300,7 @@ async function checkArbitrage(
     }
   } catch (error) {
     console.error("Error checking arbitrage", error);
+    process.exit(1);
   }
 
   return BigInt(0);
