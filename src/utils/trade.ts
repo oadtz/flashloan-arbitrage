@@ -209,10 +209,10 @@ export async function run(
           +formatDecimals(amountToken, tokenToTrade.decimals)
         } ETH/${getAssetName(tokenToTrade.address)}`
       );
-      console.log(`MACD: ${indicators.macd}`);
       console.log(`MACD Signal: ${indicators.macdSignal}`);
-      console.log(`Stoch RSI D: ${indicators.stochRsiD}`);
-      console.log(`Stoch RSI K: ${indicators.stochRsiK}`);
+      console.log(`MACD: ${indicators.macd}`);
+      console.log(`Stochastic D: ${indicators.stochasticD}`);
+      console.log(`Stochastic K: ${indicators.stochasticK}`);
       console.log(`Sell Signal: ${sellSignal}`);
 
       if (
