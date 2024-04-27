@@ -36,7 +36,8 @@
     "withdraw:trade:polygon": "ts-node src/withdraw-trade-polygon.ts",
     "simulate:trade:eth": "ts-node src/simulate-trade-eth.ts",
     "simulate:trade:bsc": "ts-node src/simulate-trade-bsc.ts",
-    "simulate:trade:polygon": "ts-node src/simulate-trade-polygon.ts"
+    "simulate:trade:polygon": "ts-node src/simulate-trade-polygon.ts",
+    "simulate:perp:bsc": "ts-node src/simulate-perp-bsc.ts"
   },
   "keywords": [],
   "author": "",

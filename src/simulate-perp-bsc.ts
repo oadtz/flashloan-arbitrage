@@ -9,14 +9,15 @@ import {
   toDecimals,
 } from "./utils/provider";
 import { ethers } from "ethers";
-import { isBuySignal, isSellSignal } from "./utils/trade-analysis";
+import { isShortSignal, isLongSignal } from "./utils/trade-analysis";
 import { routers } from "./config/dex";
 import { abi as tradeAbi } from "./config/trade";
-import { BigUnit } from "bigunit";
+import fs from "fs";
 
 const asset = assets.WBNB;
 
-const delay = 10000;
+const leverage = 50;
+const delay = 0;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
@@ -46,28 +47,49 @@ async function run(
     tradeContractAddress: string,
     provider: Provider
   ): Promise<bigint | null> {
-    try {
-      const trader = new ethers.Contract(
-        tradeContractAddress,
-        tradeAbi,
-        provider.ethers
-      );
+    if (fs.existsSync("price.csv")) {
+      const data = fs.readFileSync("price.csv", "utf8");
+      const lines = data.split("\n");
 
-      const baseLinePrice = await trader.getBaseLinePrice(
-        routers.PancakeSwap,
-        assets.BUSD.address
-      );
+      try {
+        const priceData = lines[epoch].split(",");
 
-      return baseLinePrice;
-    } catch (error) {
-      console.error("Error getBaseLinePrice", error);
+        return BigInt(Number(priceData[4]) * 1e18);
+      } catch (error) {
+        throw new Error(
+          "✅ No more data to read from price.csv. Please run the bot again."
+        );
+      }
+    } else {
+      try {
+        const trader = new ethers.Contract(
+          tradeContractAddress,
+          tradeAbi,
+          provider.ethers
+        );
+
+        const baseLinePrice = await trader.getBaseLinePrice(
+          routers.PancakeSwap,
+          assets.BUSD.address
+        );
+
+        return baseLinePrice;
+      } catch (error) {
+        console.error("Error getBaseLinePrice", error);
+      }
+
+      return BigInt(0);
     }
-
-    return BigInt(0);
   }
 
   function closeTrade() {
     _balance += openPosition.pnl;
+
+    openPosition.amount = BigInt(0);
+    openPosition.price = BigInt(0);
+    openPosition.pnl = BigInt(0);
+
+    console.log(`Updated balance: ${formatDecimals(_balance, 18)}`);
 
     return true;
   }
@@ -76,11 +98,12 @@ async function run(
     const openPrice = +formatDecimals(position.price, 18);
     const currentPrice = +formatDecimals(price, 18);
 
-    const roi = position.isLong
-      ? (currentPrice - openPrice) / openPrice
-      : (openPrice - currentPrice) / openPrice;
+    const roi =
+      _lastPosition === "long"
+        ? (currentPrice - openPrice) / openPrice
+        : (openPrice - currentPrice) / openPrice;
 
-    return roi * 49 * 100;
+    return roi * leverage * 100;
   }
 
   function openTrade(isLong: boolean, amount: bigint, price: bigint) {
@@ -95,17 +118,17 @@ async function run(
 
   while (true) {
     // Get current BNB price & balance
-    const bnbPrice = await getBNBPrice(tradeContractAddress, provider);
+    const currentPrice = await getBNBPrice(tradeContractAddress, provider);
 
     console.log(`Epoch: ${epoch}`);
-    if (bnbPrice && _balance) {
-      console.log("Current price", formatDecimals(bnbPrice, 18));
+    if (currentPrice && _balance) {
+      console.log("Current price", formatDecimals(currentPrice, 18));
       console.log("Current balance", formatDecimals(_balance, 18));
 
       if (openPosition.amount > 0) {
         console.log(`Last position: ${_lastPosition}`);
         console.log(`Open position: ${formatDecimals(openPosition.price, 18)}`);
-        const roi = calculateROI(bnbPrice, openPosition);
+        const roi = calculateROI(currentPrice, openPosition);
         console.log(`ROI: ${roi}%`);
         openPosition.pnl = toDecimals(
           Math.round(+formatDecimals(openPosition.amount, 0) * (1 + roi / 100)),
@@ -113,55 +136,67 @@ async function run(
         );
         console.log(`PNL: ${formatDecimals(openPosition.pnl, 18)}`);
 
-        if (roi <= -100) {
+        if (roi <= -90) {
           console.log("Liquidated");
           openPosition.amount = BigInt(0);
           openPosition.price = BigInt(0);
           openPosition.pnl = BigInt(0);
+        } else if (roi <= -50) {
+          console.log("Stop loss");
+          closeTrade();
         }
       }
 
       if (_prices.length > 500) _prices.shift();
 
-      _prices.push(+formatDecimals(bnbPrice, 18));
+      _prices.push(+formatDecimals(currentPrice, 18));
 
-      const { sell: sellSignal, indicators } = isSellSignal(_prices);
-      const { buy: buySignal } = isBuySignal(_prices);
+      const { short: shortSignal, indicators } = isShortSignal(_prices);
+      const { long: longSignal } = isLongSignal(_prices);
 
       console.log(`MACD Signal: ${indicators.macdSignal}`);
       console.log(`MACD: ${indicators.macd}`);
       console.log(`Stochastic D: ${indicators.stochasticD}`);
       console.log(`Stochastic K: ${indicators.stochasticK}`);
-      console.log(`Short Signal: ${sellSignal}`);
-      console.log(`Long Signal: ${buySignal}`);
+      console.log(`Short Signal: ${shortSignal}`);
+      console.log(`Long Signal: ${longSignal}`);
 
-      if (_lastPosition !== "long" && buySignal) {
-        console.log("⬆️ Long signal detected");
+      logger.warn({
+        price0: 0,
+        price1: 0,
+        price2: +formatDecimals(currentPrice, 18),
+        price3: 0,
+        sell: _lastPosition !== "short" && shortSignal,
+        buy: _lastPosition !== "long" && longSignal,
+        ...indicators,
+      });
+      logger.flush();
 
-        // Close current order
-        if (closeTrade()) {
-          console.log("Closed last trade");
-        }
-
-        const result = openTrade(true, _balance / BigInt(2), bnbPrice);
-
-        if (result) {
-          console.log("Opened long trade successfully\n\n");
-          _lastPosition = "long";
-        }
-      } else if (_lastPosition !== "short" && sellSignal) {
+      if (_lastPosition !== "short" && shortSignal) {
         console.log("⬇️ Short signal detected");
 
-        // Close current order
         if (closeTrade()) {
           console.log("Closed last trade");
         }
 
-        const result = openTrade(false, _balance / BigInt(2), bnbPrice);
+        const result = openTrade(false, _balance / BigInt(2), currentPrice);
 
         if (result) {
           console.log("Opened short trade successfully\n\n");
           _lastPosition = "short";
+        }
+      } else if (_lastPosition !== "long" && longSignal) {
+        console.log("⬆️ Long signal detected");
+
+        if (closeTrade()) {
+          console.log("Closed last trade");
+        }
+
+        const result = openTrade(true, _balance / BigInt(2), currentPrice);
+
+        if (result) {
+          console.log("Opened long trade successfully\n\n");
+          _lastPosition = "long";
         }
       } else {
         console.log("❌ No signal detected\n\n");
