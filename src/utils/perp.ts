@@ -1,43 +1,98 @@
 import { ethers } from "ethers";
 import { Provider, formatDecimals, getProvider } from "./provider";
 import { abi as perpAbi } from "../config/perp";
+import { abi as tradeAbi } from "../config/trade";
 import { routers } from "../config/dex";
 import { assets } from "../config/assets";
 import { Asset } from "../config/assets";
 import logger from "./logger";
+import { isBuySignal, isSellSignal } from "./trade-analysis";
 
 export async function run(
   tokenToTrade: Asset,
   networkProviderUrl: string,
-  perpContractAddress: string
+  perpContractAddress: string,
+  tradeContractAddress: string,
+  delay: number
 ) {
   console.log("🚀 Starting bot...");
 
   const provider = getProvider(networkProviderUrl);
 
-  // Close current order
-  if (await closeTrade(perpContractAddress, provider)) {
-    console.log("Closed current trade");
-  }
+  const _prices: number[] = [];
+  let _lastPosition: "short" | "long" | null = null;
 
-  // Get current BNB price & balance
-  const bnbPrice = await getBNBPrice(provider);
-  const bnbBalance = await getBalance(provider);
+  while (true) {
+    // Get current BNB price & balance
+    const bnbPrice = await getBNBPrice(tradeContractAddress, provider);
+    const bnbBalance = await getBalance(provider);
 
-  if (bnbPrice && bnbBalance) {
-    console.log("BNB price", formatDecimals(bnbPrice, 18));
-    console.log("BNB balance", formatDecimals(bnbBalance, 18));
+    if (bnbPrice && bnbBalance) {
+      console.log("BNB price", formatDecimals(bnbPrice, 18));
+      console.log("BNB balance", formatDecimals(bnbBalance, 18));
 
-    const result = await openTrade(
-      tokenToTrade.address,
-      true,
-      bnbBalance / BigInt(2),
-      bnbPrice,
-      perpContractAddress,
-      provider
-    );
+      if (_prices.length > 500) _prices.shift();
 
-    console.log(result);
+      _prices.push(+formatDecimals(bnbPrice, 18));
+
+      const { sell: sellSignal, indicators } = isSellSignal(_prices);
+      const { buy: buySignal } = isBuySignal(_prices);
+
+      console.log(`MACD Signal: ${indicators.macdSignal}`);
+      console.log(`MACD: ${indicators.macd}`);
+      console.log(`Stochastic D: ${indicators.stochasticD}`);
+      console.log(`Stochastic K: ${indicators.stochasticK}`);
+      console.log(`Short Signal: ${sellSignal}`);
+      console.log(`Long Signal: ${buySignal}`);
+
+      if (_lastPosition !== "long" && buySignal) {
+        console.log("Long signal detected");
+
+        // Close current order
+        if (await closeTrade(perpContractAddress, provider)) {
+          console.log("Closed last trade");
+        }
+
+        const result = await openTrade(
+          tokenToTrade.address,
+          true,
+          bnbBalance / BigInt(2),
+          bnbPrice,
+          perpContractAddress,
+          provider
+        );
+
+        if (result) {
+          console.log("Opened long trade successfully\n\n");
+          _lastPosition = "long";
+        }
+      } else if (_lastPosition !== "short" && sellSignal) {
+        console.log("Short signal detected");
+
+        // Close current order
+        if (await closeTrade(perpContractAddress, provider)) {
+          console.log("Closed last trade");
+        }
+
+        const result = await openTrade(
+          tokenToTrade.address,
+          false,
+          bnbBalance / BigInt(2),
+          bnbPrice,
+          perpContractAddress,
+          provider
+        );
+
+        if (result) {
+          console.log("Opened short trade successfully\n\n");
+          _lastPosition = "short";
+        }
+      } else {
+        console.log("No signal detected\n\n");
+      }
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, delay));
   }
 }
 
@@ -52,19 +107,28 @@ async function getBalance(provider: Provider) {
   }
 }
 
-async function getBNBPrice(provider: Provider): Promise<bigint | null> {
+async function getBNBPrice(
+  tradeContractAddress: string,
+  provider: Provider
+): Promise<bigint | null> {
   try {
-    const response = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=USD"
+    const trader = new ethers.Contract(
+      tradeContractAddress,
+      tradeAbi,
+      provider.ethers
     );
 
-    const bnbPrice = await response.json();
+    const baseLinePrice = await trader.getBaseLinePrice(
+      routers.PancakeSwap,
+      assets.BUSD.address
+    );
 
-    return BigInt(bnbPrice.binancecoin.usd * 10 ** 18);
+    return baseLinePrice;
   } catch (error) {
-    console.error("Error getBNBPrice", error);
-    return null;
+    console.error("Error getBaseLinePrice", error);
   }
+
+  return BigInt(0);
 }
 
 async function closeTrade(perpContractAddress: string, provider: Provider) {
@@ -107,9 +171,10 @@ async function openTrade(
       amountIn: amount,
       qty: Math.round(+formatDecimals(amount * BigInt(49), 8)),
       price: Math.round(+formatDecimals(price, 8)),
-      takeProfit: Math.round(+formatDecimals(price, 10) * 2),
+      takeProfit: isLong
+        ? Math.round(+formatDecimals(price, 10) * 2)
+        : Math.round(+formatDecimals(price, 10) / 2),
     };
-    console.log("openDataInput", openDataInput);
     const tx = await perp.openTradeBNB(
       openDataInput.pairBase,
       openDataInput.isLong,

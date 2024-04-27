@@ -42,7 +42,7 @@ contract PerpetualBot is Ownable {
         uint80 _qty,
         uint64 _price,
         uint64 _takeProfit
-    ) external payable onlyOwner returns (bytes32 tradeHash) {
+    ) external onlyOwner returns (bytes32 tradeHash) {
         require(address(this).balance >= _amount, "Insufficient balance");
 
         IFuture.OpenDataInput memory openData = IFuture.OpenDataInput({
