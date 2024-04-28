@@ -143,56 +143,7 @@ export async function run(
   }
 
   async function getAmountsOut(amountIn: bigint, path: string[]) {
-    if (fs.existsSync("price.log")) {
-      const data = fs.readFileSync("price.log", "utf8");
-      const lines = data.split("\n");
-
-      try {
-        const priceData = JSON.parse(lines[epoch]);
-
-        // For simulation we only use the baseline prices
-        if (priceData.price2 && priceData.price3) {
-          if (amountIn === toDecimals(1, 18) && path[0] === WETH) {
-            return [
-              amountIn,
-              BigInt(
-                Math.round(
-                  priceData.price2 *
-                    +formatDecimals(amountIn, 18) *
-                    10 ** assetsToCheck[0].decimals
-                )
-              ),
-            ];
-          } else if (path[0] === WETH) {
-            return [
-              amountIn,
-              BigInt(
-                Math.round(
-                  priceData.price2 *
-                    +formatDecimals(amountIn, 18) *
-                    10 ** assetsToCheck[0].decimals
-                )
-              ),
-            ];
-          } else {
-            return [
-              amountIn,
-              BigInt(
-                Math.round(
-                  priceData.price3 *
-                    +formatDecimals(amountIn, assetsToCheck[0].decimals) *
-                    10 ** 18
-                )
-              ),
-            ];
-          }
-        }
-      } catch (e) {
-        throw new Error(
-          "✅ No more data to read from price.log. Please run the bot again."
-        );
-      }
-    } else if (fs.existsSync("price.csv")) {
+    if (fs.existsSync("price.csv")) {
       const data = fs.readFileSync("price.csv", "utf8");
       const lines = data.split("\n");
 

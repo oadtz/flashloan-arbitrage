@@ -19,7 +19,7 @@ import fs from "fs";
 const asset = assets.WBNB;
 
 const leverage = 50;
-const delay = 0;
+const delay = 300000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
@@ -105,7 +105,7 @@ async function run(
   }
 
   function closeTrade() {
-    _balance += openPosition.pnl;
+    _balance += openPosition.pnl > 0 ? openPosition.pnl : BigInt(0);
 
     _lastPosition = null;
     _roi = [];
