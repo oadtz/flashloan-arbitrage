@@ -194,12 +194,12 @@ export function isShortSignal(data: number[]): {
   //   SimpleMAOscillator: false,
   //   SimpleMASignal: false,
   // });
-  const ema = EMA.calculate({ period: 50, values: price });
-  const sma = SMA.calculate({ period: 200, values: price });
+  const shortMA = SMA.calculate({ period: 10, values: price });
+  const longMA = SMA.calculate({ period: 30, values: price });
   const stochRsi = StochasticRSI.calculate({
     values: price,
     rsiPeriod: 14,
-    stochasticPeriod: 21,
+    stochasticPeriod: 14,
     kPeriod: 3,
     dPeriod: 3,
   });
@@ -217,12 +217,12 @@ export function isShortSignal(data: number[]): {
     period: 14,
     signalPeriod: 3,
   });
-  // const adx = ADX.calculate({
-  //   period: 14,
-  //   high: price,
-  //   low: price,
-  //   close: price,
-  // });
+  const adx = ADX.calculate({
+    period: 14,
+    high: price,
+    low: price,
+    close: price,
+  });
   const bollinger = BollingerBands.calculate({
     period: 20,
     values: price,
@@ -230,24 +230,27 @@ export function isShortSignal(data: number[]): {
   });
 
   const currentPrice = price[price.length - 1];
-  // const rsiValue = rsi[rsi.length - 1];
+  const rsiValue = rsi[rsi.length - 1];
   const macdValue = macd[macd.length - 1]?.MACD || 0;
   const macdSignalValue = macd[macd.length - 1]?.signal || 0;
   const stochasticValueK = stochastic[stochastic.length - 1]?.k || 0;
   const stochasticValueD = stochastic[stochastic.length - 1]?.d || 0;
-  // const adxValue = adx[adx.length - 1]?.adx;
-  const emaValue = ema[ema.length - 1];
-  const smaValue = sma[sma.length - 1];
+  const adxValue = adx[adx.length - 1]?.adx;
+  const shortMAValue = shortMA[shortMA.length - 1];
+  const previousShortMAValue = shortMA[shortMA.length - 2];
+  const longMAValue = longMA[longMA.length - 1];
+  const previousLongMAValue = longMA[longMA.length - 2];
   const stochRsiValueK = stochRsi[stochRsi.length - 1]?.k || 0;
   const stochRsiValueD = stochRsi[stochRsi.length - 1]?.d || 0;
-  // const adxPreviousValue = adx[adx.length - 2]?.adx;
   const bollingerUpper = bollinger[bollinger.length - 1]?.upper;
   const bollingerMiddle = bollinger[bollinger.length - 1]?.middle;
   const bollingerLower = bollinger[bollinger.length - 1]?.lower;
 
   const shortSignal =
-    macdValue < macdSignalValue &&
-    macdSignalValue !== 0 &&
+    previousShortMAValue >= previousLongMAValue &&
+    shortMAValue < longMAValue &&
+    // macdValue < macdSignalValue &&
+    // macdSignalValue !== 0 &&
     // adxValue > 25 &&
     // stochRsiValueK < stochRsiValueD &&
     // stochRsiValueD >= 80 &&
@@ -255,10 +258,10 @@ export function isShortSignal(data: number[]): {
     // stochasticValueK < stochasticValueD &&
     // stochasticValueD >= 80 &&
     // stochasticValueK >= 80 &&
-    // rsiValue >= 70 &&
+    //rsiValue >= 70 &&
     // currentPrice < bollingerMiddle &&
-    //currentPrice < emaValue &&
-    //currentPrice < smaValue &&
+    // currentPrice < emaValue &&
+    // currentPrice < smaValue &&
     // emaValue < smaValue &&
     // stochRsiValueD !== 0 &&
     // stochRsiValueK !== 0 &&
@@ -331,12 +334,12 @@ export function isLongSignal(data: number[]): {
   //   SimpleMAOscillator: false,
   //   SimpleMASignal: false,
   // });
-  const ema = EMA.calculate({ period: 50, values: price });
-  const sma = SMA.calculate({ period: 200, values: price });
+  const shortMA = SMA.calculate({ period: 10, values: price });
+  const longMA = SMA.calculate({ period: 30, values: price });
   const stochRsi = StochasticRSI.calculate({
     values: price,
     rsiPeriod: 14,
-    stochasticPeriod: 21,
+    stochasticPeriod: 14,
     kPeriod: 3,
     dPeriod: 3,
   });
@@ -354,12 +357,12 @@ export function isLongSignal(data: number[]): {
     period: 14,
     signalPeriod: 3,
   });
-  // const adx = ADX.calculate({
-  //   period: 14,
-  //   high: price,
-  //   low: price,
-  //   close: price,
-  // });
+  const adx = ADX.calculate({
+    period: 14,
+    high: price,
+    low: price,
+    close: price,
+  });
   const bollinger = BollingerBands.calculate({
     period: 20,
     values: price,
@@ -367,24 +370,27 @@ export function isLongSignal(data: number[]): {
   });
 
   const currentPrice = price[price.length - 1];
-  // const rsiValue = rsi[rsi.length - 1];
+  const rsiValue = rsi[rsi.length - 1];
   const macdValue = macd[macd.length - 1]?.MACD || 0;
   const macdSignalValue = macd[macd.length - 1]?.signal || 0;
   const stochasticValueK = stochastic[stochastic.length - 1]?.k || 0;
   const stochasticValueD = stochastic[stochastic.length - 1]?.d || 0;
-  // const adxValue = adx[adx.length - 1]?.adx;
-  const emaValue = ema[ema.length - 1];
-  const smaValue = sma[sma.length - 1];
+  const adxValue = adx[adx.length - 1]?.adx;
+  const shortMAValue = shortMA[shortMA.length - 1];
+  const previousShortMAValue = shortMA[shortMA.length - 2];
+  const longMAValue = longMA[longMA.length - 1];
+  const previousLongMAValue = longMA[longMA.length - 2];
   const stochRsiValueK = stochRsi[stochRsi.length - 1]?.k || 0;
   const stochRsiValueD = stochRsi[stochRsi.length - 1]?.d || 0;
-  // const adxPreviousValue = adx[adx.length - 2]?.adx;
   const bollingerUpper = bollinger[bollinger.length - 1]?.upper;
   const bollingerMiddle = bollinger[bollinger.length - 1]?.middle;
   const bollingerLower = bollinger[bollinger.length - 1]?.lower;
 
   const longSignal =
-    macdValue > macdSignalValue &&
-    macdSignalValue !== 0 &&
+    previousShortMAValue <= previousLongMAValue &&
+    shortMAValue > longMAValue &&
+    // macdValue > macdSignalValue &&
+    // macdSignalValue !== 0 &&
     // stochRsiValueK > stochRsiValueD &&
     // stochRsiValueD <= 20 &&
     // stochRsiValueK <= 20 &&
@@ -394,8 +400,8 @@ export function isLongSignal(data: number[]): {
     // stochasticValueK <= 20 &&
     // rsiValue <= 30 &&
     // currentPrice > bollingerMiddle &&
-    //currentPrice < emaValue &&
-    //currentPrice < smaValue &&
+    // currentPrice > emaValue &&
+    // currentPrice > smaValue &&
     // emaValue > smaValue &&
     // stochRsiValueD !== 0 &&
     // stochRsiValueK !== 0 &&

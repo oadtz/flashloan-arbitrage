@@ -186,18 +186,18 @@ async function run(
           _lastPosition = "short";
         }
       } else if (_lastPosition !== "long" && longSignal) {
-        console.log("⬆️ Long signal detected");
+        // console.log("⬆️ Long signal detected");
 
         if (closeTrade()) {
           console.log("Closed last trade");
         }
 
-        const result = openTrade(true, _balance / BigInt(2), currentPrice);
+        // const result = openTrade(true, _balance / BigInt(2), currentPrice);
 
-        if (result) {
-          console.log("Opened long trade successfully\n\n");
-          _lastPosition = "long";
-        }
+        // if (result) {
+        //   console.log("Opened long trade successfully\n\n");
+        _lastPosition = "long";
+        // }
       } else {
         console.log("❌ No signal detected\n\n");
       }
