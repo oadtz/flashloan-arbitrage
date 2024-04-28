@@ -9,15 +9,17 @@ import {
   toDecimals,
 } from "./utils/provider";
 import { ethers } from "ethers";
-import { isShortSignal, isLongSignal } from "./utils/trade-analysis";
-import { routers } from "./config/dex";
-import { abi as tradeAbi } from "./config/trade";
+import {
+  isShortSignal,
+  isLongSignal,
+  isROISellSignal,
+} from "./utils/trade-analysis";
 import fs from "fs";
 
 const asset = assets.WBNB;
 
 const leverage = 50;
-const delay = 0;
+const delay = 60000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
@@ -33,6 +35,7 @@ async function run(
   const provider = getProvider(networkProviderUrl);
 
   const _prices: number[] = [];
+  let _roi: number[] = [];
   let _lastPosition: "short" | "long" | null = null;
 
   let epoch = 0;
@@ -62,36 +65,21 @@ async function run(
       }
     } else {
       try {
-        const trader = new ethers.Contract(
-          tradeContractAddress,
-          tradeAbi,
+        const oracle = new ethers.Contract(
+          "0x1b6F2d3844C6ae7D56ceb3C3643b9060ba28FEb0",
+          ["function getPrice(address token) external view returns (uint256)"],
           provider.ethers
         );
 
-        const baseLinePrice = await trader.getBaseLinePrice(
-          routers.PancakeSwap,
-          assets.BUSD.address
-        );
+        const baseLinePrice = await oracle.getPrice(tokenToTrade.address);
 
-        return baseLinePrice;
+        return toDecimals(baseLinePrice, 10);
       } catch (error) {
         console.error("Error getBaseLinePrice", error);
       }
 
       return BigInt(0);
     }
-  }
-
-  function closeTrade() {
-    _balance += openPosition.pnl;
-
-    openPosition.amount = BigInt(0);
-    openPosition.price = BigInt(0);
-    openPosition.pnl = BigInt(0);
-
-    console.log(`Updated balance: ${formatDecimals(_balance, 18)}`);
-
-    return true;
   }
 
   function calculateROI(price: bigint, position: any) {
@@ -116,6 +104,21 @@ async function run(
     return true;
   }
 
+  function closeTrade() {
+    _balance += openPosition.pnl;
+
+    _lastPosition = null;
+    _roi = [];
+
+    openPosition.amount = BigInt(0);
+    openPosition.price = BigInt(0);
+    openPosition.pnl = BigInt(0);
+
+    console.log(`Updated balance: ${formatDecimals(_balance, 18)}`);
+
+    return true;
+  }
+
   while (true) {
     // Get current BNB price & balance
     const currentPrice = await getBNBPrice(tradeContractAddress, provider);
@@ -136,13 +139,12 @@ async function run(
         );
         console.log(`PNL: ${formatDecimals(openPosition.pnl, 18)}`);
 
-        if (roi <= -90) {
-          console.log("Liquidated");
-          openPosition.amount = BigInt(0);
-          openPosition.price = BigInt(0);
-          openPosition.pnl = BigInt(0);
-        } else if (roi <= -50) {
-          console.log("Stop loss");
+        if (_roi.length > 500) _roi.shift();
+
+        _roi.push(roi);
+
+        if (roi <= -75 || isROISellSignal(_roi)) {
+          console.log("Stop loss/Take profit signal detected");
           closeTrade();
         }
       }
@@ -186,18 +188,18 @@ async function run(
           _lastPosition = "short";
         }
       } else if (_lastPosition !== "long" && longSignal) {
-        // console.log("⬆️ Long signal detected");
+        console.log("⬆️ Long signal detected");
 
         if (closeTrade()) {
           console.log("Closed last trade");
         }
 
-        // const result = openTrade(true, _balance / BigInt(2), currentPrice);
+        const result = openTrade(true, _balance / BigInt(2), currentPrice);
 
-        // if (result) {
-        //   console.log("Opened long trade successfully\n\n");
-        _lastPosition = "long";
-        // }
+        if (result) {
+          console.log("Opened long trade successfully\n\n");
+          _lastPosition = "long";
+        }
       } else {
         console.log("❌ No signal detected\n\n");
       }
