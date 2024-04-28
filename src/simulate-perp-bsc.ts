@@ -19,7 +19,7 @@ import fs from "fs";
 const asset = assets.WBNB;
 
 const leverage = 50;
-const delay = 60000;
+const delay = 0;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
