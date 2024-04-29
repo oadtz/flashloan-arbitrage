@@ -29,6 +29,7 @@
     "start:trade:eth": "ts-node src/bot-trade-eth.ts",
     "start:trade:bsc": "ts-node src/bot-trade-bsc.ts",
     "start:trade:polygon": "ts-node src/bot-trade-polygon.ts",
+    "start:perp:bsc": "ts-node src/bot-perp-bsc.ts",
     "withdraw:trade:localhost": "ts-node src/withdraw-trade-localhost.ts",
     "withdraw:trade:btc": "ts-node src/withdraw-trade-btc.ts",
     "withdraw:trade:eth": "ts-node src/withdraw-trade-eth.ts",
@@ -37,6 +38,7 @@
     "simulate:trade:eth": "ts-node src/simulate-trade-eth.ts",
     "simulate:trade:bsc": "ts-node src/simulate-trade-bsc.ts",
     "simulate:trade:polygon": "ts-node src/simulate-trade-polygon.ts",
+    "withdraw:perp:bsc": "ts-node src/withdraw-perp-bsc.ts",
     "simulate:perp:bsc": "ts-node src/simulate-perp-bsc.ts"
   },
   "keywords": [],

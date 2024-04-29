@@ -1,18 +1,15 @@
 import { ethers } from "ethers";
-import { Provider, formatDecimals, getProvider } from "./provider";
+import { Provider, formatDecimals, getProvider, toDecimals } from "./provider";
 import { abi as perpAbi } from "../config/perp";
-import { abi as tradeAbi } from "../config/trade";
-import { routers } from "../config/dex";
-import { assets } from "../config/assets";
 import { Asset } from "../config/assets";
 import logger from "./logger";
-import { isBuySignal, isSellSignal } from "./trade-analysis";
+import { isShortSignal, isLongSignal, isROISellSignal } from "./trade-analysis";
 
 export async function run(
   tokenToTrade: Asset,
   networkProviderUrl: string,
   perpContractAddress: string,
-  tradeContractAddress: string,
+  leverage: number,
   delay: number
 ) {
   console.log("🚀 Starting bot...");
@@ -20,85 +17,172 @@ export async function run(
   const provider = getProvider(networkProviderUrl);
 
   const _prices: number[] = [];
+  let _roi: number[] = [];
   let _lastPosition: "short" | "long" | null = null;
+
+  let epoch = 0;
+  const openPosition = {
+    price: BigInt(0),
+    amount: BigInt(0),
+    pnl: BigInt(0),
+  };
 
   while (true) {
     // Get current BNB price & balance
-    const bnbPrice = await getBNBPrice(tradeContractAddress, provider);
-    const bnbBalance = await getBalance(provider);
+    const currentPrice = await getBNBPrice(tokenToTrade.address, provider);
+    const currentBalance = await getBalance(perpContractAddress, provider);
 
-    if (bnbPrice && bnbBalance) {
-      console.log("BNB price", formatDecimals(bnbPrice, 18));
-      console.log("BNB balance", formatDecimals(bnbBalance, 18));
+    console.log(`Epoch: ${epoch}`);
+    console.log("Current price", formatDecimals(currentPrice!, 18));
+    console.log("Current balance", formatDecimals(currentBalance!, 18));
+
+    if (currentPrice && currentBalance) {
+      if (openPosition.amount > 0) {
+        console.log(`Last position: ${_lastPosition}`);
+        console.log(`Open position: ${formatDecimals(openPosition.price, 18)}`);
+        const roi = calculateROI(
+          currentPrice,
+          leverage,
+          openPosition,
+          _lastPosition!
+        );
+        console.log(`ROI: ${roi}%`);
+        openPosition.pnl = toDecimals(
+          Math.round(+formatDecimals(openPosition.amount, 0) * (1 + roi / 100)),
+          0
+        );
+        console.log(`PNL: ${formatDecimals(openPosition.pnl, 18)}`);
+
+        if (_roi.length > 500) _roi.shift();
+
+        _roi.push(roi);
+
+        if (roi <= -50 || isROISellSignal(_roi)) {
+          console.log("Stop loss/Take profit signal detected");
+          await closeTrade(perpContractAddress, provider);
+          _lastPosition = null;
+          _roi = [];
+
+          openPosition.amount = BigInt(0);
+          openPosition.price = BigInt(0);
+          openPosition.pnl = BigInt(0);
+        }
+      }
 
       if (_prices.length > 500) _prices.shift();
 
-      _prices.push(+formatDecimals(bnbPrice, 18));
+      _prices.push(+formatDecimals(currentPrice, 18));
 
-      const { sell: sellSignal, indicators } = isSellSignal(_prices);
-      const { buy: buySignal } = isBuySignal(_prices);
+      const { short: shortSignal, indicators } = isShortSignal(_prices);
+      const { long: longSignal } = isLongSignal(_prices);
 
-      console.log(`MACD Signal: ${indicators.macdSignal}`);
-      console.log(`MACD: ${indicators.macd}`);
-      console.log(`Stochastic D: ${indicators.stochasticD}`);
-      console.log(`Stochastic K: ${indicators.stochasticK}`);
-      console.log(`Short Signal: ${sellSignal}`);
-      console.log(`Long Signal: ${buySignal}`);
+      console.log(`Long Term Signal: ${indicators.longTermSignal}`);
+      console.log(`Short Term Signal: ${indicators.shortTermSignal}`);
+      console.log(`Short Signal: ${shortSignal}`);
+      console.log(`Long Signal: ${longSignal}`);
 
-      if (_lastPosition !== "long" && buySignal) {
-        console.log("Long signal detected");
+      logger.warn({
+        price0: 0,
+        price1: 0,
+        price2: +formatDecimals(currentPrice, 18),
+        price3: 0,
+        sell: _lastPosition !== "short" && shortSignal,
+        buy: _lastPosition !== "long" && longSignal,
+        ...indicators,
+      });
+      logger.flush();
 
-        // Close current order
+      if (_lastPosition !== "short" && shortSignal) {
+        console.log("⬇️ Short signal detected");
+
         if (await closeTrade(perpContractAddress, provider)) {
           console.log("Closed last trade");
-        }
+          _lastPosition = null;
+          _roi = [];
 
-        const result = await openTrade(
-          tokenToTrade.address,
-          true,
-          bnbBalance / BigInt(2),
-          bnbPrice,
-          perpContractAddress,
-          provider
-        );
-
-        if (result) {
-          console.log("Opened long trade successfully\n\n");
-          _lastPosition = "long";
-        }
-      } else if (_lastPosition !== "short" && sellSignal) {
-        console.log("Short signal detected");
-
-        // Close current order
-        if (await closeTrade(perpContractAddress, provider)) {
-          console.log("Closed last trade");
+          openPosition.amount = BigInt(0);
+          openPosition.price = BigInt(0);
+          openPosition.pnl = BigInt(0);
         }
 
         const result = await openTrade(
           tokenToTrade.address,
           false,
-          bnbBalance / BigInt(2),
-          bnbPrice,
+          currentBalance / BigInt(2),
+          currentPrice,
           perpContractAddress,
           provider
         );
+        _lastPosition = "short";
+
+        openPosition.amount = currentBalance / BigInt(2);
+        openPosition.price = currentPrice;
 
         if (result) {
-          console.log("Opened short trade successfully\n\n");
+          console.log("Opened short trade successfully");
           _lastPosition = "short";
         }
+      } else if (_lastPosition !== "long" && longSignal) {
+        console.log("⬆️ Long signal detected");
+
+        if (await closeTrade(perpContractAddress, provider)) {
+          console.log("Closed last trade");
+          _lastPosition = null;
+          _roi = [];
+
+          openPosition.amount = BigInt(0);
+          openPosition.price = BigInt(0);
+          openPosition.pnl = BigInt(0);
+        }
+
+        const result = await openTrade(
+          tokenToTrade.address,
+          true,
+          currentBalance / BigInt(2),
+          currentPrice,
+          perpContractAddress,
+          provider
+        );
+        _lastPosition = "long";
+
+        openPosition.amount = currentBalance / BigInt(2);
+        openPosition.price = currentPrice;
+
+        if (result) {
+          console.log("Opened long trade successfully");
+          _lastPosition = "long";
+        }
       } else {
-        console.log("No signal detected\n\n");
+        console.log("❌ No signal detected");
       }
     }
 
+    epoch++;
+    console.log("\n\n");
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 }
 
-async function getBalance(provider: Provider) {
+function calculateROI(
+  price: bigint,
+  leverage: number,
+  position: any,
+  lastPosition?: string
+) {
+  const openPrice = +formatDecimals(position.price, 18);
+  const currentPrice = +formatDecimals(price, 18);
+
+  const roi =
+    lastPosition === "long"
+      ? (currentPrice - openPrice) / openPrice
+      : (openPrice - currentPrice) / openPrice;
+
+  return roi * leverage * 100;
+}
+
+async function getBalance(perpContractAddress: string, provider: Provider) {
   try {
-    const balance = await provider.ethers.getBalance(provider.wallet.address);
+    const balance = await provider.ethers.getBalance(perpContractAddress);
 
     return balance;
   } catch (error) {
@@ -106,24 +190,20 @@ async function getBalance(provider: Provider) {
     return null;
   }
 }
-
 async function getBNBPrice(
-  tradeContractAddress: string,
+  tokenAddress: string,
   provider: Provider
 ): Promise<bigint | null> {
   try {
-    const trader = new ethers.Contract(
-      tradeContractAddress,
-      tradeAbi,
+    const oracle = new ethers.Contract(
+      "0x1b6F2d3844C6ae7D56ceb3C3643b9060ba28FEb0",
+      ["function getPrice(address token) external view returns (uint256)"],
       provider.ethers
     );
 
-    const baseLinePrice = await trader.getBaseLinePrice(
-      routers.PancakeSwap,
-      assets.BUSD.address
-    );
+    const baseLinePrice = await oracle.getPrice(tokenAddress);
 
-    return baseLinePrice;
+    return toDecimals(baseLinePrice, 10);
   } catch (error) {
     console.error("Error getBaseLinePrice", error);
   }

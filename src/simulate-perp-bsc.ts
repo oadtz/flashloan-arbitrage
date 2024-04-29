@@ -15,6 +15,7 @@ import {
   isROISellSignal,
 } from "./utils/trade-analysis";
 import fs from "fs";
+import { BigUnit } from "bigunit";
 
 const asset = assets.WBNB;
 
@@ -39,7 +40,7 @@ async function run(
   let _lastPosition: "short" | "long" | null = null;
 
   let epoch = 0;
-  let _balance: bigint = toDecimals(1, 18);
+  let _balance: bigint = BigUnit.from(1, 18).toBigInt();
   const openPosition = {
     price: BigInt(0),
     amount: BigInt(0),
@@ -143,7 +144,7 @@ async function run(
 
         _roi.push(roi);
 
-        if (roi <= -75 || isROISellSignal(_roi)) {
+        if (roi <= -50 || isROISellSignal(_roi)) {
           console.log("Stop loss/Take profit signal detected");
           closeTrade();
         }

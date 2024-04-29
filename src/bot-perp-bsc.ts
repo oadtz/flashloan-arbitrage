@@ -6,20 +6,16 @@ import { assets } from "./config/assets";
 
 const asset = assets.WBNB;
 
-const delay = 300000;
+const leverage = 50;
+const delay = 10000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
 const perpContractAddress = perpContractAddresses.bsc;
-const tradeContractAddress = tradeContractAddresses.bsc;
 
-run(
-  asset,
-  networkProviderUrl,
-  perpContractAddress,
-  tradeContractAddress,
-  delay
-).catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+run(asset, networkProviderUrl, perpContractAddress, leverage, delay).catch(
+  (error) => {
+    console.error(error);
+    process.exit(1);
+  }
+);

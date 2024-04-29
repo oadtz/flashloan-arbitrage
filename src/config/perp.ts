@@ -1,6 +1,6 @@
 export const addresses = {
   localhost: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  bsc: "",
+  bsc: "0xed6fc141295d663c067c25b59b8e6cee89e7ebe9",
 };
 
 export const abi = [
@@ -124,7 +124,7 @@ export const abi = [
         type: "bytes32",
       },
     ],
-    stateMutability: "payable",
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
