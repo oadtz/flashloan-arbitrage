@@ -156,10 +156,8 @@ async function run(
       const { short: shortSignal, indicators } = isShortSignal(_prices);
       const { long: longSignal } = isLongSignal(_prices);
 
-      console.log(`MACD Signal: ${indicators.macdSignal}`);
-      console.log(`MACD: ${indicators.macd}`);
-      console.log(`Stochastic D: ${indicators.stochasticD}`);
-      console.log(`Stochastic K: ${indicators.stochasticK}`);
+      console.log(`Long Term Signal: ${indicators.longTermSignal}`);
+      console.log(`Short Term Signal: ${indicators.shortTermSignal}`);
       console.log(`Short Signal: ${shortSignal}`);
       console.log(`Long Signal: ${longSignal}`);
 

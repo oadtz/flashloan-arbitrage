@@ -90,7 +90,10 @@ export function isShortSignal(data: number[]): {
 
   return {
     short: shortSignal,
-    indicators: {},
+    indicators: {
+      longTermSignal,
+      shortTermSignal,
+    },
   };
 }
 
@@ -132,7 +135,10 @@ export function isLongSignal(data: number[]): {
 
   return {
     long: longSignal,
-    indicators: {},
+    indicators: {
+      longTermSignal,
+      shortTermSignal,
+    },
   };
 }
 
