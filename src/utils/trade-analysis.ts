@@ -86,7 +86,7 @@ export function isShortSignal(data: number[]): {
   const shortTermSignal = shortTermStoch[shortTermStoch.length - 1]?.MACD || 0;
   const longTermSignal = longTermStoch[longTermStoch.length - 1]?.signal || 0;
 
-  const shortSignal = shortTermSignal < longTermSignal && longTermSignal >= 1;
+  const shortSignal = shortTermSignal < longTermSignal && longTermSignal > 0;
 
   return {
     short: shortSignal,
@@ -131,7 +131,7 @@ export function isLongSignal(data: number[]): {
   const shortTermSignal = shortTermStoch[shortTermStoch.length - 1]?.MACD || 0;
   const longTermSignal = longTermStoch[longTermStoch.length - 1]?.signal || 0;
 
-  const longSignal = shortTermSignal > longTermSignal && longTermSignal <= -1;
+  const longSignal = shortTermSignal > longTermSignal && longTermSignal < 0;
 
   return {
     long: longSignal,
