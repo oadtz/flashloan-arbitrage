@@ -109,7 +109,19 @@ async function run(
   function closeTrade() {
     openPosition.falseSignal = openPosition.pnl <= 0;
 
-    _balance += openPosition.pnl > 0 ? openPosition.pnl : BigInt(0);
+    _balance +=
+      openPosition.pnl > 0
+        ? (openPosition.pnl * BigInt(100)) / BigInt(100)
+        : BigInt(0);
+
+    // if (openPosition.pnl > 0) {
+    //   console.log("openPosition.pnl100%", openPosition.pnl);
+    //   console.log(
+    //     "openPosition.pnl 95%",
+    //     (openPosition.pnl * BigInt(95)) / BigInt(100)
+    //   );
+    //   process.exit(0);
+    // }
 
     _lastPosition = null;
     _roi = [];

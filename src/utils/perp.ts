@@ -5,6 +5,7 @@ import { Asset } from "../config/assets";
 import logger from "./logger";
 import { isShortSignal, isLongSignal, isROISellSignal } from "./trade-analysis";
 import _ from "lodash";
+import { BigUnit } from "bigunit";
 
 export async function run(
   tokenToTrade: Asset,
@@ -34,12 +35,15 @@ export async function run(
     provider.ethers
   );
 
-  perpPortal.on("MarketPendingTrade", (address: string, tradeHash: string) => {
-    if (address === provider.wallet.address) {
-      _tradeHash = tradeHash;
-      console.log("New trade hash", tradeHash);
+  perpPortal.on(
+    "MarketPendingTrade",
+    (address: string, tradeHash: string, data: any) => {
+      if (address === provider.wallet.address) {
+        _tradeHash = tradeHash;
+        console.log("New trade hash", tradeHash);
+      }
     }
-  });
+  );
 
   while (true) {
     // Get current BNB price & balance
@@ -131,15 +135,16 @@ export async function run(
         );
         _lastPosition = "short";
 
-        openPosition.amount = currentBalance / BigInt(2);
-        openPosition.price = currentPrice;
-
         if (result) {
           console.log("Opened short trade successfully");
-          _lastPosition = "short";
+
+          openPosition.amount = currentBalance / BigInt(2);
+          openPosition.price = currentPrice;
+        } else {
+          console.log("☹️ Cannot open short trade, wait for next signal");
         }
       } else if (_lastPosition !== "long" && longSignal) {
-        console.log("⬆️ Long signal detected");
+        // console.log("⬆️ Long signal detected");
 
         if (await closeTrade(_tradeHash, perpContractAddress, provider)) {
           console.log(`Closed last trade ${_tradeHash}`);
@@ -152,23 +157,24 @@ export async function run(
           openPosition.pnl = BigInt(0);
         }
 
-        const result = await openTrade(
-          tokenToTrade.address,
-          true,
-          currentBalance / BigInt(2),
-          currentPrice,
-          perpContractAddress,
-          provider
-        );
+        // const result = await openTrade(
+        //   tokenToTrade.address,
+        //   true,
+        //   currentBalance / BigInt(2),
+        //   currentPrice,
+        //   perpContractAddress,
+        //   provider
+        // );
         _lastPosition = "long";
 
-        openPosition.amount = currentBalance / BigInt(2);
-        openPosition.price = currentPrice;
+        // if (result) {
+        //   console.log("Opened long trade successfully");
 
-        if (result) {
-          console.log("Opened long trade successfully");
-          _lastPosition = "long";
-        }
+        //   openPosition.amount = currentBalance / BigInt(2);
+        //   openPosition.price = currentPrice;
+        // } else {
+        //   console.log("☹️ Cannot open long trade, wait for next signal");
+        // }
       } else {
         console.log("❌ No signal detected");
       }
@@ -234,6 +240,8 @@ async function closeTrade(
   perpContractAddress: string,
   provider: Provider
 ) {
+  if (!tradeHash) return true; // Skip closing if no trade hash is provided
+
   try {
     const perp = new ethers.Contract(
       perpContractAddress,
@@ -270,17 +278,17 @@ async function openTrade(
     const openDataInput = {
       pairBase: tokenAddress,
       isLong: isLong,
-      tokenIn: 0n,
+      tokenIn: "0x0000000000000000000000000000000000000000",
       amountIn: amount,
       qty: Math.round(+formatDecimals(amount * BigInt(49), 8)),
-      price: Math.round(+formatDecimals(price, 8)),
+      price: Math.round(+formatDecimals(price, 8) * 0.95),
       stopLoss: 0,
       takeProfit: isLong
         ? Math.round(+formatDecimals(price, 10) * 2)
-        : Math.round(+formatDecimals(price, 10) / 2),
+        : Math.round(+formatDecimals(price, 10) * 0.5),
       broker: 2,
     };
-
+    console.log("Open trade data", openDataInput);
     const tx = await perp.openMarketTradeBNB(openDataInput, {
       value: amount,
     });
@@ -291,7 +299,6 @@ async function openTrade(
   } catch (error) {
     logger.error({ error }, "Error openMarketTradeBNB");
     logger.flush();
-    process.exit(1);
     return false;
   }
 }
