@@ -139,7 +139,7 @@ export async function run(
           console.log("Opened short trade successfully");
 
           openPosition.amount = currentBalance / BigInt(2);
-          openPosition.price = (currentPrice * BigInt(1001)) / BigInt(1000);
+          openPosition.price = (currentPrice * BigInt(999)) / BigInt(1000);
         } else {
           console.log("☹️ Cannot open short trade, wait for next signal");
         }
@@ -282,12 +282,12 @@ async function openTrade(
       amountIn: amount,
       qty: Math.round(+formatDecimals(amount * BigInt(49), 8)),
       price: isLong
-        ? Math.round(+formatDecimals(price, 10) * 2)
-        : Math.round(+formatDecimals(price, 10) * 0.5),
+        ? Math.round(+formatDecimals(price, 10) * 1.25)
+        : Math.round(+formatDecimals(price, 10) * 0.75),
       stopLoss: 0,
       takeProfit: isLong
         ? Math.round(+formatDecimals(price, 10) * 4)
-        : Math.round(+formatDecimals(price, 10) * 0.25),
+        : Math.round(+formatDecimals(price, 10) * 0.5),
       broker: 2,
     };
     console.log("Open trade data", openDataInput);
