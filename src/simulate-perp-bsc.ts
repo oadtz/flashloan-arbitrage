@@ -111,7 +111,7 @@ async function run(
 
     _balance +=
       openPosition.pnl > 0
-        ? (openPosition.pnl * BigInt(100)) / BigInt(100)
+        ? (openPosition.pnl * BigInt(99)) / BigInt(100)
         : BigInt(0);
 
     // if (openPosition.pnl > 0) {

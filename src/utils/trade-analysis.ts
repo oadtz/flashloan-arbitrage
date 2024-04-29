@@ -52,20 +52,10 @@ export function isSellSignal(data: number[]): {
   };
 }
 
-export function isShortSignal(data: number[]): {
+export function isShortSignal(price: number[]): {
   short: boolean;
   indicators?: any;
 } {
-  let price = [...data];
-
-  // if (data.length < 29) {
-  //   const chunkSize = Math.round(29 / data.length);
-
-  //   for (let i = 0; i < 29; i++) {
-  //     const chunkIndex = Math.floor(i / chunkSize);
-  //     price[i] = data[chunkIndex] ? data[chunkIndex] : data[data.length - 1];
-  //   }
-  // }
   const shortTermStoch = MACD.calculate({
     values: price,
     fastPeriod: 9,
@@ -97,20 +87,10 @@ export function isShortSignal(data: number[]): {
   };
 }
 
-export function isLongSignal(data: number[]): {
+export function isLongSignal(price: number[]): {
   long: boolean;
   indicators?: any;
 } {
-  let price = [...data];
-
-  // if (data.length < 29) {
-  //   const chunkSize = Math.round(29 / data.length);
-
-  //   for (let i = 0; i < 29; i++) {
-  //     const chunkIndex = Math.floor(i / chunkSize);
-  //     price[i] = data[chunkIndex] ? data[chunkIndex] : data[data.length - 1];
-  //   }
-  // }
   const shortTermStoch = MACD.calculate({
     values: price,
     fastPeriod: 9,
@@ -163,9 +143,12 @@ export function isROISellSignal(data: number[]): boolean {
   const shortTermSignal = shortTermStoch[shortTermStoch.length - 1]?.MACD || 0;
   const longTermSignal = longTermStoch[longTermStoch.length - 1]?.signal || 0;
 
+  console.log("ROI Long Term Signal: ", longTermSignal);
+  console.log("ROI Short Term Signal: ", shortTermSignal);
+
   const signal =
-    (shortTermSignal > longTermSignal && longTermSignal < 0) ||
-    (shortTermSignal < longTermSignal && longTermSignal > 0);
+    (shortTermSignal > longTermSignal && longTermSignal <= 1) ||
+    (shortTermSignal < longTermSignal && longTermSignal >= -1);
 
   return signal;
 }

@@ -144,7 +144,7 @@ export async function run(
           console.log("☹️ Cannot open short trade, wait for next signal");
         }
       } else if (_lastPosition !== "long" && longSignal) {
-        // console.log("⬆️ Long signal detected");
+        console.log("⬆️ Long signal detected");
 
         if (await closeTrade(_tradeHash, perpContractAddress, provider)) {
           console.log(`Closed last trade ${_tradeHash}`);
@@ -157,24 +157,24 @@ export async function run(
           openPosition.pnl = BigInt(0);
         }
 
-        // const result = await openTrade(
-        //   tokenToTrade.address,
-        //   true,
-        //   currentBalance / BigInt(2),
-        //   currentPrice,
-        //   perpContractAddress,
-        //   provider
-        // );
+        const result = await openTrade(
+          tokenToTrade.address,
+          true,
+          currentBalance / BigInt(2),
+          currentPrice,
+          perpContractAddress,
+          provider
+        );
         _lastPosition = "long";
 
-        // if (result) {
-        //   console.log("Opened long trade successfully");
+        if (result) {
+          console.log("Opened long trade successfully");
 
-        //   openPosition.amount = currentBalance / BigInt(2);
-        //   openPosition.price = currentPrice;
-        // } else {
-        //   console.log("☹️ Cannot open long trade, wait for next signal");
-        // }
+          openPosition.amount = currentBalance / BigInt(2);
+          openPosition.price = currentPrice;
+        } else {
+          console.log("☹️ Cannot open long trade, wait for next signal");
+        }
       } else {
         console.log("❌ No signal detected");
       }
@@ -225,7 +225,7 @@ async function getBNBPrice(
       provider.ethers
     );
 
-    const [baseLinePrice] = await perp.getPriceFromCacheOrOracle(tokenAddress);
+    const baseLinePrice = await perp.getPrice(tokenAddress);
 
     return toDecimals(baseLinePrice, 10);
   } catch (error) {
@@ -281,10 +281,10 @@ async function openTrade(
       tokenIn: "0x0000000000000000000000000000000000000000",
       amountIn: amount,
       qty: Math.round(+formatDecimals(amount * BigInt(49), 8)),
-      price: Math.round(+formatDecimals(price, 8) * 0.95),
+      price: isLong ? Math.round(+formatDecimals(price, 10) * 2) : BigInt(1),
       stopLoss: 0,
       takeProfit: isLong
-        ? Math.round(+formatDecimals(price, 10) * 2)
+        ? Math.round(+formatDecimals(price, 10) * 4)
         : Math.round(+formatDecimals(price, 10) * 0.5),
       broker: 2,
     };
