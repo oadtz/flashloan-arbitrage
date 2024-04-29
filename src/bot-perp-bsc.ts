@@ -1,12 +1,11 @@
 import { appConfig } from "./config/app";
 import { run } from "./utils/perp";
 import { addresses as perpContractAddresses } from "./config/perp";
-import { addresses as tradeContractAddresses } from "./config/trade";
 import { assets } from "./config/assets";
 
 const asset = assets.WBNB;
 
-const leverage = 50;
+const leverage = 49;
 const delay = 10000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-contract Future {
+contract PerpetualPortal {
     struct OpenDataInput {
         // Pair.base
         address pairBase;
@@ -18,11 +18,21 @@ contract Future {
         uint24 broker;
     }
 
+    event MarketPendingTrade(
+        address indexed user,
+        bytes32 indexed tradeHash,
+        OpenDataInput trade
+    );
+
     function openMarketTradeBNB(
         OpenDataInput memory openData
-    ) external payable returns (bytes32 tradeHash) {
-        return 0x0;
-    }
+    ) external payable returns (bytes32 tradeHash) {}
 
     function closeTrade(bytes32 tradeHash) external {}
+
+    function getPrice(address token) external view returns (uint256) {}
+
+    function getPriceFromCacheOrOracle(
+        address token
+    ) external view returns (uint64 price, uint40 updatedAt) {}
 }

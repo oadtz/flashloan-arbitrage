@@ -1,122 +1,193 @@
 export const addresses = {
   localhost: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  bsc: "0xed6fc141295d663c067c25b59b8e6cee89e7ebe9",
+  bsc: "0x1b6F2d3844C6ae7D56ceb3C3643b9060ba28FEb0",
 };
 
 export const abi = [
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_market",
-        type: "address",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "constructor",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "owner",
-        type: "address",
-      },
-    ],
-    name: "OwnableInvalidOwner",
-    type: "error",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "account",
-        type: "address",
-      },
-    ],
-    name: "OwnableUnauthorizedAccount",
-    type: "error",
-  },
   {
     anonymous: false,
     inputs: [
       {
         indexed: true,
         internalType: "address",
-        name: "previousOwner",
+        name: "user",
         type: "address",
       },
       {
         indexed: true,
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
+        internalType: "bytes32",
+        name: "tradeHash",
+        type: "bytes32",
+      },
+      {
+        components: [
+          {
+            internalType: "address",
+            name: "pairBase",
+            type: "address",
+          },
+          {
+            internalType: "bool",
+            name: "isLong",
+            type: "bool",
+          },
+          {
+            internalType: "address",
+            name: "tokenIn",
+            type: "address",
+          },
+          {
+            internalType: "uint96",
+            name: "amountIn",
+            type: "uint96",
+          },
+          {
+            internalType: "uint80",
+            name: "qty",
+            type: "uint80",
+          },
+          {
+            internalType: "uint64",
+            name: "price",
+            type: "uint64",
+          },
+          {
+            internalType: "uint64",
+            name: "stopLoss",
+            type: "uint64",
+          },
+          {
+            internalType: "uint64",
+            name: "takeProfit",
+            type: "uint64",
+          },
+          {
+            internalType: "uint24",
+            name: "broker",
+            type: "uint24",
+          },
+        ],
+        indexed: false,
+        internalType: "struct PerpetualPortal.OpenDataInput",
+        name: "trade",
+        type: "tuple",
       },
     ],
-    name: "OwnershipTransferred",
+    name: "MarketPendingTrade",
     type: "event",
   },
   {
-    inputs: [],
-    name: "MARKET",
-    outputs: [
+    inputs: [
       {
-        internalType: "address",
-        name: "",
-        type: "address",
+        internalType: "bytes32",
+        name: "tradeHash",
+        type: "bytes32",
       },
     ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "closeTrade",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
   {
-    inputs: [],
-    name: "depositBNB",
-    outputs: [],
-    stateMutability: "payable",
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+    ],
+    name: "getPrice",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
     inputs: [
       {
         internalType: "address",
-        name: "_token",
+        name: "token",
         type: "address",
       },
-      {
-        internalType: "bool",
-        name: "_isLong",
-        type: "bool",
-      },
-      {
-        internalType: "uint96",
-        name: "_amount",
-        type: "uint96",
-      },
-      {
-        internalType: "uint80",
-        name: "_qty",
-        type: "uint80",
-      },
+    ],
+    name: "getPriceFromCacheOrOracle",
+    outputs: [
       {
         internalType: "uint64",
-        name: "_price",
+        name: "price",
         type: "uint64",
       },
       {
-        internalType: "uint64",
-        name: "_takeProfit",
-        type: "uint64",
+        internalType: "uint40",
+        name: "updatedAt",
+        type: "uint40",
       },
     ],
-    name: "openTradeBNB",
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        components: [
+          {
+            internalType: "address",
+            name: "pairBase",
+            type: "address",
+          },
+          {
+            internalType: "bool",
+            name: "isLong",
+            type: "bool",
+          },
+          {
+            internalType: "address",
+            name: "tokenIn",
+            type: "address",
+          },
+          {
+            internalType: "uint96",
+            name: "amountIn",
+            type: "uint96",
+          },
+          {
+            internalType: "uint80",
+            name: "qty",
+            type: "uint80",
+          },
+          {
+            internalType: "uint64",
+            name: "price",
+            type: "uint64",
+          },
+          {
+            internalType: "uint64",
+            name: "stopLoss",
+            type: "uint64",
+          },
+          {
+            internalType: "uint64",
+            name: "takeProfit",
+            type: "uint64",
+          },
+          {
+            internalType: "uint24",
+            name: "broker",
+            type: "uint24",
+          },
+        ],
+        internalType: "struct PerpetualPortal.OpenDataInput",
+        name: "openData",
+        type: "tuple",
+      },
+    ],
+    name: "openMarketTradeBNB",
     outputs: [
       {
         internalType: "bytes32",
@@ -124,51 +195,7 @@ export const abi = [
         type: "bytes32",
       },
     ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "owner",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "renounceOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      },
-    ],
-    name: "transferOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "withdrawBNB",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     stateMutability: "payable",
-    type: "receive",
+    type: "function",
   },
 ];

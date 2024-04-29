@@ -76,6 +76,10 @@ contract PerpetualBot is Ownable {
         payable(owner()).transfer(balance);
     }
 
+    function lastTradeHash() external view returns (bytes32) {
+        return _lastTradeHash;
+    }
+
     function depositBNB() external payable {}
 
     receive() external payable {}
