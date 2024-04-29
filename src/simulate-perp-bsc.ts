@@ -45,6 +45,7 @@ async function run(
     price: BigInt(0),
     amount: BigInt(0),
     pnl: BigInt(0),
+    falseSignal: false,
   };
 
   async function getBNBPrice(
@@ -106,6 +107,8 @@ async function run(
   }
 
   function closeTrade() {
+    openPosition.falseSignal = openPosition.pnl <= 0;
+
     _balance += openPosition.pnl > 0 ? openPosition.pnl : BigInt(0);
 
     _lastPosition = null;
@@ -169,6 +172,7 @@ async function run(
         price3: 0,
         sell: _lastPosition !== "short" && shortSignal,
         buy: _lastPosition !== "long" && longSignal,
+        falseSignal: openPosition.falseSignal,
         ...indicators,
       });
       logger.flush();
