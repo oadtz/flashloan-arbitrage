@@ -108,6 +108,7 @@ export async function run(
           openPosition.pnl = BigInt(0);
 
           currentBalance = await getBalance(provider);
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
 
