@@ -13,7 +13,7 @@ import { appConfig } from "./config/app";
 import _, { shuffle } from "lodash";
 import { isSellSignal } from "./utils/trade-analysis";
 
-const assetsToCheck = [assets.BTCB, assets.USDT];
+const assetsToCheck = [assets.BTCB];
 const routersToCheck = [routers.PancakeSwap];
 const WETH = assets.WBNB.address;
 
