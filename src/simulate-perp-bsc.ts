@@ -20,7 +20,7 @@ import { BigUnit } from "bigunit";
 const asset = assets.WBNB;
 
 const leverage = 49;
-const delay = 0;
+const delay = fs.existsSync("price.csv") ? 0 : 10000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
@@ -155,6 +155,13 @@ async function run(
       console.log("Current price", formatDecimals(currentPrice, 18));
       console.log("Current balance", formatDecimals(_balance, 18));
 
+      if (_prices.length > 500) _prices.shift();
+
+      _prices.push(+formatDecimals(currentPrice, 18));
+
+      const { short: shortSignal, indicators } = isShortSignal(_prices);
+      const { long: longSignal } = isLongSignal(_prices);
+
       if (openPosition.amount > 0) {
         console.log(`Current position: ${_lastPosition}`);
         console.log(`Entry price: ${formatDecimals(openPosition.price, 18)}`);
@@ -170,18 +177,15 @@ async function run(
 
         _roi.push(roi);
 
-        if (isROISellSignal(_roi)) {
-          console.log("Stop loss/Take profit signal detected");
+        if (
+          isROISellSignal(_roi) ||
+          (longSignal && _lastPosition !== "long") ||
+          (shortSignal && _lastPosition !== "short")
+        ) {
+          console.log("👁️ Stop loss/Take profit/Reversal signal detected");
           closeTrade();
         }
       }
-
-      if (_prices.length > 500) _prices.shift();
-
-      _prices.push(+formatDecimals(currentPrice, 18));
-
-      const { short: shortSignal, indicators } = isShortSignal(_prices);
-      const { long: longSignal } = isLongSignal(_prices);
 
       console.log(`Long Term Signal: ${indicators.longTermSignal}`);
       console.log(`Short Term Signal: ${indicators.shortTermSignal}`);
@@ -203,11 +207,6 @@ async function run(
       if (_lastPosition === null && shortSignal) {
         console.log("⬇️ Short signal detected");
 
-        // if (_lastPosition !== null) {
-        //   closeTrade();
-        //   console.log("Closed last trade");
-        // }
-
         const result = openTrade(false, _balance / BigInt(2), currentPrice);
 
         if (result) {
@@ -216,11 +215,6 @@ async function run(
         }
       } else if (_lastPosition === null && longSignal) {
         console.log("⬆️ Long signal detected");
-
-        // if (_lastPosition !== null) {
-        //   closeTrade();
-        //   console.log("Closed last trade");
-        // }
 
         const result = openTrade(true, _balance / BigInt(2), currentPrice);
 
