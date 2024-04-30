@@ -127,30 +127,31 @@ export function isROISellSignal(data: number[]): boolean {
 
   const shortTermStoch = MACD.calculate({
     values: data,
-    fastPeriod: 12,
-    slowPeriod: 26,
-    signalPeriod: 9,
-    SimpleMAOscillator: false,
-    SimpleMASignal: false,
-  });
-  const longTermStoch = MACD.calculate({
-    values: data,
     fastPeriod: 9,
     slowPeriod: 21,
     signalPeriod: 9,
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   });
+  const longTermStoch = MACD.calculate({
+    values: data,
+    fastPeriod: 12,
+    slowPeriod: 26,
+    signalPeriod: 9,
+    SimpleMAOscillator: false,
+    SimpleMASignal: false,
+  });
 
-  const shortTermSignal = shortTermStoch[shortTermStoch.length - 1]?.MACD || 0;
-  const longTermSignal = longTermStoch[longTermStoch.length - 1]?.signal || 0;
+  const shortTermSignal =
+    shortTermStoch[shortTermStoch.length - 1]?.signal || 0;
+  const longTermSignal = longTermStoch[longTermStoch.length - 1]?.MACD || 0;
 
   console.log("ROI Long Term Signal: ", longTermSignal);
   console.log("ROI Short Term Signal: ", shortTermSignal);
 
   const signal =
-    (shortTermSignal > longTermSignal && longTermSignal <= 1) ||
-    (shortTermSignal < longTermSignal && longTermSignal >= -1);
+    (longTermSignal > shortTermSignal && longTermSignal >= 1) ||
+    (longTermSignal < shortTermSignal && longTermSignal <= -1);
 
   return signal;
 }
