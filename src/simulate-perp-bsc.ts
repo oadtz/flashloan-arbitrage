@@ -19,7 +19,7 @@ import { BigUnit } from "bigunit";
 
 const asset = assets.WBNB;
 
-const leverage = 50;
+const leverage = 49;
 const delay = 0;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
@@ -101,7 +101,10 @@ async function run(
     _lastPosition = isLong ? "long" : "short";
 
     openPosition.amount = amount;
-    openPosition.price = price;
+    // openPosition.price = price;
+    openPosition.price = isLong
+      ? (price * BigInt(1001)) / BigInt(1000)
+      : (price * BigInt(999)) / BigInt(1000);
 
     return true;
   }
@@ -159,7 +162,7 @@ async function run(
 
         _roi.push(roi);
 
-        if (roi <= -50 || isROISellSignal(_roi)) {
+        if (isROISellSignal(_roi)) {
           console.log("Stop loss/Take profit signal detected");
           closeTrade();
         }
@@ -189,12 +192,12 @@ async function run(
       });
       logger.flush();
 
-      if (_lastPosition !== "short" && shortSignal) {
+      if (_lastPosition === null && shortSignal) {
         console.log("⬇️ Short signal detected");
 
-        if (closeTrade()) {
-          console.log("Closed last trade");
-        }
+        // if (closeTrade()) {
+        //   console.log("Closed last trade");
+        // }
 
         const result = openTrade(false, _balance / BigInt(2), currentPrice);
 
@@ -202,12 +205,12 @@ async function run(
           console.log("Opened short trade successfully\n\n");
           _lastPosition = "short";
         }
-      } else if (_lastPosition !== "long" && longSignal) {
+      } else if (_lastPosition === null && longSignal) {
         console.log("⬆️ Long signal detected");
 
-        if (closeTrade()) {
-          console.log("Closed last trade");
-        }
+        // if (closeTrade()) {
+        //   console.log("Closed last trade");
+        // }
 
         const result = openTrade(true, _balance / BigInt(2), currentPrice);
 

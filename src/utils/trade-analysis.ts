@@ -123,6 +123,8 @@ export function isLongSignal(price: number[]): {
 }
 
 export function isROISellSignal(data: number[]): boolean {
+  if (data[data.length - 1] < -50) return true;
+
   const shortTermStoch = MACD.calculate({
     values: data,
     fastPeriod: 12,

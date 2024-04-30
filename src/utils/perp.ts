@@ -91,11 +91,7 @@ export async function run(
 
         _roi.push(roi);
 
-        if (
-          roi <= -50 ||
-          (isROISellSignal(_roi) && shortSignal && _lastPosition !== "short") ||
-          (isROISellSignal(_roi) && longSignal && _lastPosition !== "long")
-        ) {
+        if (isROISellSignal(_roi)) {
           console.log("Stop loss/Take profit signal detected");
           await closeTrade(_tradeHash, perpContractAddress, provider);
           console.log(`Closed last trade ${_tradeHash}`);
@@ -111,19 +107,19 @@ export async function run(
         }
       }
 
-      if (_lastPosition !== "short" && shortSignal) {
+      if (_lastPosition === null && shortSignal) {
         console.log("⬇️ Short signal detected");
 
-        if (await closeTrade(_tradeHash, perpContractAddress, provider)) {
-          console.log(`Closed last trade ${_tradeHash}`);
-          _lastPosition = null;
-          _roi = [];
-          _tradeHash = "";
+        // if (await closeTrade(_tradeHash, perpContractAddress, provider)) {
+        //   console.log(`Closed last trade ${_tradeHash}`);
+        //   _lastPosition = null;
+        //   _roi = [];
+        //   _tradeHash = "";
 
-          openPosition.amount = BigInt(0);
-          openPosition.price = BigInt(0);
-          openPosition.pnl = BigInt(0);
-        }
+        //   openPosition.amount = BigInt(0);
+        //   openPosition.price = BigInt(0);
+        //   openPosition.pnl = BigInt(0);
+        // }
 
         const result = await openTrade(
           tokenToTrade.address,
@@ -143,19 +139,19 @@ export async function run(
         } else {
           console.log("☹️ Cannot open short trade, wait for next signal");
         }
-      } else if (_lastPosition !== "long" && longSignal) {
+      } else if (_lastPosition === null && longSignal) {
         console.log("⬆️ Long signal detected");
 
-        if (await closeTrade(_tradeHash, perpContractAddress, provider)) {
-          console.log(`Closed last trade ${_tradeHash}`);
-          _lastPosition = null;
-          _roi = [];
-          _tradeHash = "";
+        // if (await closeTrade(_tradeHash, perpContractAddress, provider)) {
+        //   console.log(`Closed last trade ${_tradeHash}`);
+        //   _lastPosition = null;
+        //   _roi = [];
+        //   _tradeHash = "";
 
-          openPosition.amount = BigInt(0);
-          openPosition.price = BigInt(0);
-          openPosition.pnl = BigInt(0);
-        }
+        //   openPosition.amount = BigInt(0);
+        //   openPosition.price = BigInt(0);
+        //   openPosition.pnl = BigInt(0);
+        // }
 
         const result = await openTrade(
           tokenToTrade.address,
@@ -282,7 +278,7 @@ async function openTrade(
       amountIn: amount,
       qty: Math.round(+formatDecimals(amount * BigInt(49), 8)),
       price: isLong
-        ? Math.round(+formatDecimals(price, 10) * 1.25)
+        ? Math.round(+formatDecimals(price, 10) * 2)
         : Math.round(+formatDecimals(price, 10) * 0.75),
       stopLoss: 0,
       takeProfit: isLong
