@@ -105,8 +105,10 @@ async function run(
   function openTrade(isLong: boolean, amount: bigint, price: bigint) {
     _balance -= amount;
     _lastPosition = isLong ? "long" : "short";
+    const fee =
+      (openPosition.amount * BigInt(leverage) * BigInt(2)) / BigInt(1000);
 
-    openPosition.amount = amount;
+    openPosition.amount = amount - fee;
     // openPosition.price = price;
     openPosition.price = isLong
       ? (price * BigInt(1001)) / BigInt(1000)
