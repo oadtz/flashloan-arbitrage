@@ -188,8 +188,13 @@ function calculateROI(
   position: any,
   lastPosition?: string
 ) {
+  let adjustedPrice = price;
+  if (lastPosition === "long")
+    adjustedPrice = (price * BigInt(1001)) / BigInt(1000);
+  else if (lastPosition === "short")
+    adjustedPrice = (price * BigInt(999)) / BigInt(1000);
   const openPrice = +formatDecimals(position.price, 18);
-  const currentPrice = +formatDecimals(price, 18);
+  const currentPrice = +formatDecimals(adjustedPrice, 18);
 
   const roi =
     lastPosition === "long"

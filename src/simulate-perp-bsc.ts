@@ -61,6 +61,7 @@ async function run(
 
         return BigInt(Number(priceData[4]) * 1e18);
       } catch (error) {
+        console.log(error);
         throw new Error(
           "✅ No more data to read from price.csv. Please run the bot again."
         );
@@ -85,8 +86,13 @@ async function run(
   }
 
   function calculateROI(price: bigint, position: any) {
+    let adjustedPrice = price;
+    if (_lastPosition === "long")
+      adjustedPrice = (price * BigInt(1001)) / BigInt(1000);
+    else if (_lastPosition === "short")
+      adjustedPrice = (price * BigInt(999)) / BigInt(1000);
     const openPrice = +formatDecimals(position.price, 18);
-    const currentPrice = +formatDecimals(price, 18);
+    const currentPrice = +formatDecimals(adjustedPrice, 18);
 
     const roi =
       _lastPosition === "long"
@@ -195,7 +201,8 @@ async function run(
       if (_lastPosition === null && shortSignal) {
         console.log("⬇️ Short signal detected");
 
-        // if (closeTrade()) {
+        // if (_lastPosition !== null) {
+        //   closeTrade();
         //   console.log("Closed last trade");
         // }
 
@@ -208,7 +215,8 @@ async function run(
       } else if (_lastPosition === null && longSignal) {
         console.log("⬆️ Long signal detected");
 
-        // if (closeTrade()) {
+        // if (_lastPosition !== null) {
+        //   closeTrade();
         //   console.log("Closed last trade");
         // }
 
