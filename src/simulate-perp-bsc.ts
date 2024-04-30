@@ -154,8 +154,8 @@ async function run(
       console.log("Current balance", formatDecimals(_balance, 18));
 
       if (openPosition.amount > 0) {
-        console.log(`Last position: ${_lastPosition}`);
-        console.log(`Open position: ${formatDecimals(openPosition.price, 18)}`);
+        console.log(`Current position: ${_lastPosition}`);
+        console.log(`Entry price: ${formatDecimals(openPosition.price, 18)}`);
         const roi = calculateROI(currentPrice, openPosition);
         console.log(`ROI: ${roi}%`);
         openPosition.pnl = toDecimals(
