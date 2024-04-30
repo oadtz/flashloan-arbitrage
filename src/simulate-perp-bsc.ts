@@ -20,7 +20,7 @@ import { BigUnit } from "bigunit";
 const asset = assets.WBNB;
 
 const leverage = 49;
-const delay = 10000;
+const delay = 0;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 

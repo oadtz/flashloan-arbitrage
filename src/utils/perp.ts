@@ -91,7 +91,11 @@ export async function run(
 
         _roi.push(roi);
 
-        if (isROISellSignal(_roi)) {
+        if (
+          isROISellSignal(_roi) &&
+          ((longSignal && _lastPosition !== "long") ||
+            (shortSignal && _lastPosition !== "short"))
+        ) {
           console.log("Stop loss/Take profit signal detected");
           await closeTrade(_tradeHash, perpContractAddress, provider);
           console.log(`Closed last trade ${_tradeHash}`);
