@@ -117,7 +117,7 @@ async function run(
 
   function closeTrade() {
     const fee =
-      (openPosition.amount * BigInt(leverage) * BigInt(0)) / BigInt(1000);
+      (openPosition.amount * BigInt(leverage) * BigInt(2)) / BigInt(1000);
 
     openPosition.falseSignal = openPosition.pnl <= 0;
 

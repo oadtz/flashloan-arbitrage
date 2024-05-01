@@ -56,27 +56,51 @@ export function isShortSignal(price: number[]): {
   short: boolean;
   indicators?: any;
 } {
-  const shortTermStoch = MACD.calculate({
-    values: price,
+  const shortTermPrices = price.filter((_, i) => i % 1 === 0);
+  const midTermPrices = price.filter((_, i) => i % 6 === 0);
+  const longTermPrices = price.filter((_, i) => i % 12 === 0);
+
+  const shortTermIndicator = MACD.calculate({
+    values: shortTermPrices,
     fastPeriod: 9,
     slowPeriod: 21,
     signalPeriod: 9,
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   });
-  const longTermStoch = MACD.calculate({
-    values: price,
-    fastPeriod: 12,
-    slowPeriod: 26,
+  const midTermIndicator = MACD.calculate({
+    values: midTermPrices,
+    fastPeriod: 9,
+    slowPeriod: 21,
+    signalPeriod: 9,
+    SimpleMAOscillator: false,
+    SimpleMASignal: false,
+  });
+  const longTermIndicator = MACD.calculate({
+    values: longTermPrices,
+    fastPeriod: 9,
+    slowPeriod: 21,
     signalPeriod: 9,
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   });
 
-  const shortTermSignal = longTermStoch[longTermStoch.length - 1]?.MACD || 0;
-  const longTermSignal = longTermStoch[longTermStoch.length - 1]?.signal || 0;
+  const shortTermMACD =
+    shortTermIndicator[shortTermIndicator.length - 1]?.MACD || 0;
+  const shortTermSignal =
+    shortTermIndicator[shortTermIndicator.length - 1]?.signal || 0;
+  const midTermMACD = midTermIndicator[midTermIndicator.length - 1]?.MACD || 0;
+  const midTermSignal =
+    midTermIndicator[midTermIndicator.length - 1]?.signal || 0;
+  const longTermMACD =
+    longTermIndicator[longTermIndicator.length - 1]?.MACD || 0;
+  const longTermSignal =
+    longTermIndicator[longTermIndicator.length - 1]?.signal || 0;
 
-  const shortSignal = shortTermSignal < longTermSignal && longTermSignal > 0;
+  const shortSignal =
+    shortTermMACD < shortTermSignal &&
+    midTermMACD < midTermSignal &&
+    longTermMACD < longTermSignal;
 
   return {
     short: shortSignal,
@@ -91,27 +115,51 @@ export function isLongSignal(price: number[]): {
   long: boolean;
   indicators?: any;
 } {
-  const shortTermStoch = MACD.calculate({
-    values: price,
+  const shortTermPrices = price.filter((_, i) => i % 1 === 0);
+  const midTermPrices = price.filter((_, i) => i % 6 === 0);
+  const longTermPrices = price.filter((_, i) => i % 12 === 0);
+
+  const shortTermIndicator = MACD.calculate({
+    values: shortTermPrices,
     fastPeriod: 9,
     slowPeriod: 21,
     signalPeriod: 9,
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   });
-  const longTermStoch = MACD.calculate({
-    values: price,
-    fastPeriod: 12,
-    slowPeriod: 26,
+  const midTermIndicator = MACD.calculate({
+    values: midTermPrices,
+    fastPeriod: 9,
+    slowPeriod: 21,
+    signalPeriod: 9,
+    SimpleMAOscillator: false,
+    SimpleMASignal: false,
+  });
+  const longTermIndicator = MACD.calculate({
+    values: longTermPrices,
+    fastPeriod: 9,
+    slowPeriod: 21,
     signalPeriod: 9,
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   });
 
-  const shortTermSignal = longTermStoch[longTermStoch.length - 1]?.MACD || 0;
-  const longTermSignal = longTermStoch[longTermStoch.length - 1]?.signal || 0;
+  const shortTermMACD =
+    shortTermIndicator[shortTermIndicator.length - 1]?.MACD || 0;
+  const shortTermSignal =
+    shortTermIndicator[shortTermIndicator.length - 1]?.signal || 0;
+  const midTermMACD = midTermIndicator[midTermIndicator.length - 1]?.MACD || 0;
+  const midTermSignal =
+    midTermIndicator[midTermIndicator.length - 1]?.signal || 0;
+  const longTermMACD =
+    longTermIndicator[longTermIndicator.length - 1]?.MACD || 0;
+  const longTermSignal =
+    longTermIndicator[longTermIndicator.length - 1]?.signal || 0;
 
-  const longSignal = shortTermSignal > longTermSignal && longTermSignal < 0;
+  const longSignal =
+    shortTermMACD > shortTermSignal &&
+    midTermMACD > midTermSignal &&
+    longTermMACD > longTermSignal;
 
   return {
     long: longSignal,
@@ -124,7 +172,7 @@ export function isLongSignal(price: number[]): {
 
 export function isROISellSignal(data: number[]): boolean {
   if (data.length === 0) return false;
-  if (data[data.length - 1] < 0) return true;
+  if (data[data.length - 1] < -10) return true;
 
   const shortTermStoch = MACD.calculate({
     values: data,
