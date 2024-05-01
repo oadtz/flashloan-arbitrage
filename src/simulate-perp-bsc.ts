@@ -105,10 +105,8 @@ async function run(
   function openTrade(isLong: boolean, amount: bigint, price: bigint) {
     _balance -= amount;
     _lastPosition = isLong ? "long" : "short";
-    const fee =
-      (openPosition.amount * BigInt(leverage) * BigInt(2)) / BigInt(1000);
 
-    openPosition.amount = amount - fee;
+    openPosition.amount = amount;
     // openPosition.price = price;
     openPosition.price = isLong
       ? (price * BigInt(1001)) / BigInt(1000)
@@ -118,12 +116,12 @@ async function run(
   }
 
   function closeTrade() {
+    const fee =
+      (openPosition.amount * BigInt(leverage) * BigInt(0)) / BigInt(1000);
+
     openPosition.falseSignal = openPosition.pnl <= 0;
 
-    _balance +=
-      openPosition.pnl > 0
-        ? (openPosition.pnl * BigInt(100)) / BigInt(100)
-        : BigInt(0);
+    _balance += openPosition.pnl - fee > 0 ? openPosition.pnl - fee : BigInt(0);
 
     // if (openPosition.pnl > 0) {
     //   console.log("openPosition.pnl100%", openPosition.pnl);
