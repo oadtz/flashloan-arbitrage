@@ -73,7 +73,7 @@ export function isShortSignal(price: number[]): {
     SimpleMASignal: false,
   });
 
-  const shortTermSignal = shortTermStoch[shortTermStoch.length - 1]?.MACD || 0;
+  const shortTermSignal = longTermStoch[longTermStoch.length - 1]?.MACD || 0;
   const longTermSignal = longTermStoch[longTermStoch.length - 1]?.signal || 0;
 
   const shortSignal = shortTermSignal < longTermSignal && longTermSignal > 0;
@@ -108,7 +108,7 @@ export function isLongSignal(price: number[]): {
     SimpleMASignal: false,
   });
 
-  const shortTermSignal = shortTermStoch[shortTermStoch.length - 1]?.MACD || 0;
+  const shortTermSignal = longTermStoch[longTermStoch.length - 1]?.MACD || 0;
   const longTermSignal = longTermStoch[longTermStoch.length - 1]?.signal || 0;
 
   const longSignal = shortTermSignal > longTermSignal && longTermSignal < 0;
@@ -124,7 +124,7 @@ export function isLongSignal(price: number[]): {
 
 export function isROISellSignal(data: number[]): boolean {
   if (data.length === 0) return false;
-  if (data[data.length - 1] < -50) return true;
+  if (data[data.length - 1] < -10) return true;
 
   const shortTermStoch = MACD.calculate({
     values: data,

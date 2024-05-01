@@ -181,12 +181,13 @@ async function run(
           (isROISellSignal(_roi) && longSignal && _lastPosition !== "long") ||
           (isROISellSignal(_roi) && shortSignal && _lastPosition !== "short") ||
           (isROISellSignal(_roi) && !shortSignal && !longSignal)
-          // isROISellSignal(_roi)
-          // || (longSignal && _lastPosition !== "long")
-          // || (shortSignal && _lastPosition !== "short")
+          // isROISellSignal(_roi) ||
+          // (longSignal && _lastPosition !== "long") ||
+          // (shortSignal && _lastPosition !== "short")
         ) {
-          console.log("👁️ Stop loss/Take profit/Reversal signal detected\n\n");
+          console.log("👁️ Stop loss/Take profit/Reversal signal detected");
           closeTrade();
+          console.log(`Closed last trade\n\n`);
           continue;
         }
       }
