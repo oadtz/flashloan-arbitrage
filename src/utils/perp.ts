@@ -70,10 +70,13 @@ export async function run(
     console.log(`Short Signal: ${shortSignal}`);
     console.log(`Long Signal: ${longSignal}`);
 
+    if (_lastPosition !== null)
+      console.log(`Current position: ${_lastPosition}`);
+    if (openPosition.price !== BigInt(0))
+      console.log(`Entry price: ${formatDecimals(openPosition.price, 18)}`);
+
     if (currentPrice && currentBalance) {
       if (openPosition.amount > 0) {
-        console.log(`Current position: ${_lastPosition}`);
-        console.log(`Entry price: ${formatDecimals(openPosition.price, 18)}`);
         const roi = calculateROI(
           currentPrice,
           leverage,
