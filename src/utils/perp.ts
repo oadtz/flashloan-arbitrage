@@ -101,7 +101,7 @@ export async function run(
         ) {
           console.log("👁️ Stop loss/Take profit/Reversal signal detected");
           await closeTrade(_tradeHash, perpContractAddress, provider);
-          console.log(`Closed last trade ${_tradeHash}`);
+          console.log(`Closed last trade ${_tradeHash}\n\n`);
           _lastPosition = null;
           _roi = [];
           _tradeHash = "";
