@@ -184,6 +184,7 @@ async function run(
         ) {
           console.log("👁️ Stop loss/Take profit/Reversal signal detected");
           closeTrade();
+          continue;
         }
       }
 

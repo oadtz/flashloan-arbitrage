@@ -110,8 +110,8 @@ export async function run(
           openPosition.price = BigInt(0);
           openPosition.pnl = BigInt(0);
 
-          currentBalance = await getBalance(provider);
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          //currentBalance = await getBalance(provider);
+          continue;
         }
       }
 
@@ -137,13 +137,13 @@ export async function run(
           perpContractAddress,
           provider
         );
-        _lastPosition = "short";
 
         if (result) {
           console.log("Opened short trade successfully");
 
           openPosition.amount = currentBalance / BigInt(2);
           openPosition.price = (currentPrice * BigInt(999)) / BigInt(1000);
+          _lastPosition = "short";
         } else {
           console.log("☹️ Cannot open short trade, wait for next signal");
         }
@@ -169,13 +169,13 @@ export async function run(
           perpContractAddress,
           provider
         );
-        _lastPosition = "long";
 
         if (result) {
           console.log("Opened long trade successfully");
 
           openPosition.amount = currentBalance / BigInt(2);
           openPosition.price = (currentPrice * BigInt(1001)) / BigInt(1000);
+          _lastPosition = "long";
         } else {
           console.log("☹️ Cannot open long trade, wait for next signal");
         }

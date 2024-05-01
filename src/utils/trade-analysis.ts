@@ -150,7 +150,8 @@ export function isROISellSignal(data: number[]): boolean {
   console.log("ROI Short Term Signal: ", shortTermSignal);
 
   const signal =
-    (longTermSignal > shortTermSignal && longTermSignal >= 1) ||
+    (longTermSignal > shortTermSignal &&
+      longTermSignal >= 2) ||
     (longTermSignal < shortTermSignal && longTermSignal <= -1);
 
   return signal;
