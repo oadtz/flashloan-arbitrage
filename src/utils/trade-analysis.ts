@@ -151,7 +151,8 @@ export function isROISellSignal(data: number[]): boolean {
 
   const signal =
     (longTermSignal > shortTermSignal &&
-      longTermSignal >= 2) ||
+      longTermSignal >= 2 &&
+      data[data.length - 1] >= 10) ||
     (longTermSignal < shortTermSignal && longTermSignal <= -1);
 
   return signal;
