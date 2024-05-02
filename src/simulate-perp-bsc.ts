@@ -36,6 +36,7 @@ async function run(
   const provider = getProvider(networkProviderUrl);
 
   const _prices: number[] = [];
+  const _priceData: string[] = getPriceCsv();
   let _roi: number[] = [];
   let _lastPosition: "short" | "long" | null = null;
 
@@ -48,16 +49,24 @@ async function run(
     falseSignal: false,
   };
 
-  async function getBNBPrice(
-    tradeContractAddress: string,
-    provider: Provider
-  ): Promise<bigint | null> {
+  function getPriceCsv() {
     if (fs.existsSync("price.csv")) {
       const data = fs.readFileSync("price.csv", "utf8");
       const lines = data.split("\n");
 
+      return lines;
+    }
+
+    return [];
+  }
+
+  async function getBNBPrice(
+    tradeContractAddress: string,
+    provider: Provider
+  ): Promise<bigint | null> {
+    if (_priceData.length > 0) {
       try {
-        const priceData = lines[epoch].split(",");
+        const priceData = _priceData[epoch].split(",");
 
         return BigInt(Number(priceData[4]) * 1e18);
       } catch (error) {
@@ -176,12 +185,12 @@ async function run(
         _roi.push(roi);
 
         if (
-          (isROISellSignal(_roi) && longSignal && _lastPosition !== "long") ||
-          (isROISellSignal(_roi) && shortSignal && _lastPosition !== "short") ||
-          (isROISellSignal(_roi) && !shortSignal && !longSignal)
-          // isROISellSignal(_roi) ||
-          // (longSignal && _lastPosition !== "long") ||
-          // (shortSignal && _lastPosition !== "short")
+          // (isROISellSignal(_roi) && longSignal && _lastPosition !== "long") ||
+          // (isROISellSignal(_roi) && shortSignal && _lastPosition !== "short") ||
+          // (isROISellSignal(_roi) && !shortSignal && !longSignal)
+          isROISellSignal(_roi) ||
+          (longSignal && _lastPosition !== "long") ||
+          (shortSignal && _lastPosition !== "short")
         ) {
           console.log("👁️ Stop loss/Take profit/Reversal signal detected");
           closeTrade();
