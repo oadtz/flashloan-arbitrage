@@ -117,7 +117,7 @@ async function run(
 
   function closeTrade() {
     const fee =
-      (openPosition.amount * BigInt(leverage) * BigInt(0)) / BigInt(1000);
+      (openPosition.amount * BigInt(leverage) * BigInt(2)) / BigInt(1000);
 
     openPosition.falseSignal = openPosition.pnl <= 0;
 
@@ -190,6 +190,7 @@ async function run(
         }
       }
 
+      console.log(`BBand Signal: ${indicators.bbandSignal}`);
       console.log(`Long Term Signal: ${indicators.longTermSignal}`);
       console.log(`Short Term Signal: ${indicators.shortTermSignal}`);
       console.log(`Short Signal: ${shortSignal}`);
