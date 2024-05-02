@@ -61,7 +61,15 @@ export function isShortSignal(price: number[]): {
     values: price,
     stdDev: 2,
   });
-  const macd = MACD.calculate({
+  const macdShort = MACD.calculate({
+    values: price,
+    fastPeriod: 9,
+    slowPeriod: 21,
+    signalPeriod: 9,
+    SimpleMAOscillator: false,
+    SimpleMASignal: false,
+  });
+  const macdLong = MACD.calculate({
     values: price,
     fastPeriod: 12,
     slowPeriod: 26,
@@ -72,13 +80,13 @@ export function isShortSignal(price: number[]): {
 
   const lastPrice = price[price.length - 1];
   const bbandSignal = bband[bband.length - 1]?.middle || 0;
-  const shortTermSignal = macd[macd.length - 1]?.MACD || 0;
-  const longTermSignal = macd[macd.length - 1]?.signal || 0;
+  const shortTermSignal = macdShort[macdShort.length - 1]?.signal || 0;
+  const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
 
   const shortSignal =
     shortTermSignal < longTermSignal &&
     lastPrice < bbandSignal &&
-    longTermSignal >= 1;
+    longTermSignal >= 0.3;
 
   return {
     short: shortSignal,
@@ -99,7 +107,15 @@ export function isLongSignal(price: number[]): {
     values: price,
     stdDev: 2,
   });
-  const macd = MACD.calculate({
+  const macdShort = MACD.calculate({
+    values: price,
+    fastPeriod: 9,
+    slowPeriod: 21,
+    signalPeriod: 9,
+    SimpleMAOscillator: false,
+    SimpleMASignal: false,
+  });
+  const macdLong = MACD.calculate({
     values: price,
     fastPeriod: 12,
     slowPeriod: 26,
@@ -110,13 +126,13 @@ export function isLongSignal(price: number[]): {
 
   const lastPrice = price[price.length - 1];
   const bbandSignal = bband[bband.length - 1]?.middle || 0;
-  const shortTermSignal = macd[macd.length - 1]?.MACD || 0;
-  const longTermSignal = macd[macd.length - 1]?.signal || 0;
+  const shortTermSignal = macdShort[macdShort.length - 1]?.signal || 0;
+  const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
 
   const longSignal =
     shortTermSignal > longTermSignal &&
     lastPrice > bbandSignal &&
-    shortTermSignal <= -1;
+    shortTermSignal <= -0.3;
 
   return {
     long: longSignal,
@@ -159,7 +175,7 @@ export function isROISellSignal(data: number[]): boolean {
   const signal =
     longTermSignal > shortTermSignal &&
     longTermSignal >= 2 &&
-    data[data.length - 1] >= 20;
+    data[data.length - 1] >= 10;
   // || (longTermSignal < shortTermSignal && longTermSignal <= -1);
 
   return signal;
