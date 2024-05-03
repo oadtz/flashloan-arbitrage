@@ -39,6 +39,10 @@ async function run(
   const _priceData: string[] = getPriceCsv();
   let _roi: number[] = [];
   let _lastPosition: "short" | "long" | null = null;
+  let shortCount = 0;
+  let longCount = 0;
+  let falseShortCount = 0;
+  let falseLongCount = 0;
 
   let epoch = 0;
   let _balance: bigint = BigUnit.from(1, 18).toBigInt();
@@ -132,14 +136,10 @@ async function run(
 
     _balance += openPosition.pnl - fee > 0 ? openPosition.pnl - fee : BigInt(0);
 
-    // if (openPosition.pnl > 0) {
-    //   console.log("openPosition.pnl100%", openPosition.pnl);
-    //   console.log(
-    //     "openPosition.pnl 95%",
-    //     (openPosition.pnl * BigInt(95)) / BigInt(100)
-    //   );
-    //   process.exit(0);
-    // }
+    if (_roi[_roi.length - 1] < 0) {
+      if (_lastPosition === "long") falseLongCount++;
+      else if (_lastPosition === "short") falseShortCount++;
+    }
 
     _lastPosition = null;
     _roi = [];
@@ -157,6 +157,7 @@ async function run(
     // Get current BNB price & balance
     const currentPrice = await getBNBPrice(tradeContractAddress, provider);
 
+    console.clear();
     console.log(`Epoch: ${epoch}`);
     if (currentPrice && _balance) {
       console.log("Current price", formatDecimals(currentPrice, 18));
@@ -223,7 +224,7 @@ async function run(
         const result = openTrade(false, _balance / BigInt(2), currentPrice);
 
         if (result) {
-          console.log("Opened short trade successfully\n\n");
+          console.log(`Opened short trade#${++shortCount}\n\n`);
           _lastPosition = "short";
         }
       } else if (_lastPosition === null && longSignal) {
@@ -232,7 +233,7 @@ async function run(
         const result = openTrade(true, _balance / BigInt(2), currentPrice);
 
         if (result) {
-          console.log("Opened long trade successfully\n\n");
+          console.log(`Opened long trade#${++longCount}\n\n`);
           _lastPosition = "long";
         }
       } else {
@@ -241,6 +242,10 @@ async function run(
     }
 
     epoch++;
+    console.log(`Short count: ${shortCount}`);
+    console.log(`False short count: ${falseShortCount}`);
+    console.log(`Long count: ${longCount}`);
+    console.log(`False long count: ${falseLongCount}`);
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 }

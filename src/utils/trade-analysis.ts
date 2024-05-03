@@ -63,8 +63,8 @@ export function isShortSignal(price: number[]): {
   });
   const macdShort = MACD.calculate({
     values: price,
-    fastPeriod: 12,
-    slowPeriod: 26,
+    fastPeriod: 9,
+    slowPeriod: 21,
     signalPeriod: 9,
     SimpleMAOscillator: false,
     SimpleMASignal: false,
@@ -79,14 +79,14 @@ export function isShortSignal(price: number[]): {
   });
 
   const lastPrice = price[price.length - 1];
-  const bbandSignal = bband[bband.length - 1]?.middle || 0;
-  const shortTermSignal = macdShort[macdShort.length - 1]?.MACD || 0;
+  const bbandSignal = bband[bband.length - 1]?.upper || 0;
+  const shortTermSignal = macdShort[macdShort.length - 1]?.signal || 0;
   const longTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
 
   const shortSignal =
     shortTermSignal < longTermSignal &&
-    lastPrice < bbandSignal &&
-    longTermSignal >= 1;
+    lastPrice > bbandSignal &&
+    longTermSignal >= 0.8;
 
   return {
     short: shortSignal,
@@ -109,8 +109,8 @@ export function isLongSignal(price: number[]): {
   });
   const macdShort = MACD.calculate({
     values: price,
-    fastPeriod: 12,
-    slowPeriod: 26,
+    fastPeriod: 9,
+    slowPeriod: 21,
     signalPeriod: 9,
     SimpleMAOscillator: false,
     SimpleMASignal: false,
@@ -125,14 +125,14 @@ export function isLongSignal(price: number[]): {
   });
 
   const lastPrice = price[price.length - 1];
-  const bbandSignal = bband[bband.length - 1]?.middle || 0;
-  const shortTermSignal = macdShort[macdShort.length - 1]?.MACD || 0;
+  const bbandSignal = bband[bband.length - 1]?.upper || 0;
+  const shortTermSignal = macdShort[macdShort.length - 1]?.signal || 0;
   const longTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
 
   const longSignal =
     shortTermSignal > longTermSignal &&
-    lastPrice > bbandSignal &&
-    shortTermSignal <= -1;
+    lastPrice < bbandSignal &&
+    longTermSignal <= -0.8;
 
   return {
     long: longSignal,
