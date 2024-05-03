@@ -80,8 +80,8 @@ export function isShortSignal(price: number[]): {
 
   const lastPrice = price[price.length - 1];
   const bbandSignal = bband[bband.length - 1]?.upper || 0;
-  const shortTermSignal = macdShort[macdShort.length - 1]?.signal || 0;
-  const longTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
+  const shortTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
+  const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
 
   const shortSignal =
     shortTermSignal < longTermSignal &&
@@ -125,9 +125,9 @@ export function isLongSignal(price: number[]): {
   });
 
   const lastPrice = price[price.length - 1];
-  const bbandSignal = bband[bband.length - 1]?.upper || 0;
-  const shortTermSignal = macdShort[macdShort.length - 1]?.signal || 0;
-  const longTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
+  const bbandSignal = bband[bband.length - 1]?.lower || 0;
+  const shortTermSignal = macdShort[macdShort.length - 1]?.MACD || 0;
+  const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
 
   const longSignal =
     shortTermSignal > longTermSignal &&
@@ -148,7 +148,12 @@ export function isROISellSignal(data: number[]): boolean {
   if (data.length === 0) return false;
   if (data[data.length - 1] < -50) return true;
 
-  const shortTermStoch = MACD.calculate({
+  const bband = BollingerBands.calculate({
+    period: 20,
+    values: data,
+    stdDev: 2,
+  });
+  const macdShort = MACD.calculate({
     values: data,
     fastPeriod: 9,
     slowPeriod: 21,
@@ -156,7 +161,7 @@ export function isROISellSignal(data: number[]): boolean {
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   });
-  const longTermStoch = MACD.calculate({
+  const macdLong = MACD.calculate({
     values: data,
     fastPeriod: 12,
     slowPeriod: 26,
@@ -165,15 +170,17 @@ export function isROISellSignal(data: number[]): boolean {
     SimpleMASignal: false,
   });
 
-  const shortTermSignal =
-    shortTermStoch[shortTermStoch.length - 1]?.signal || 0;
-  const longTermSignal = longTermStoch[longTermStoch.length - 1]?.MACD || 0;
+  const lastPrice = data[data.length - 1];
+  const bbandSignal = bband[bband.length - 1]?.upper || 0;
+  const shortTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
+  const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
 
   console.log("ROI Long Term Signal: ", longTermSignal);
   console.log("ROI Short Term Signal: ", shortTermSignal);
 
   const signal =
     longTermSignal > shortTermSignal &&
+    lastPrice > bbandSignal &&
     longTermSignal >= 2 &&
     data[data.length - 1] >= 10;
   // || (longTermSignal < shortTermSignal && longTermSignal <= -1);
