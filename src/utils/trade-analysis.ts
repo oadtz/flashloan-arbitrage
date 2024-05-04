@@ -86,7 +86,7 @@ export function isShortSignal(price: number[]): {
   const shortSignal =
     shortTermSignal < longTermSignal &&
     lastPrice > bbandSignal &&
-    longTermSignal >= 0.08;
+    longTermSignal >= 0.1;
 
   return {
     short: shortSignal,
@@ -132,7 +132,7 @@ export function isLongSignal(price: number[]): {
   const longSignal =
     shortTermSignal > longTermSignal &&
     lastPrice < bbandSignal &&
-    longTermSignal <= -0.08;
+    longTermSignal <= -0.1;
 
   return {
     long: longSignal,
