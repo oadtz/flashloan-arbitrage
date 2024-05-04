@@ -6,7 +6,7 @@ import { assets } from "./config/assets";
 const asset = assets.WBNB;
 
 const leverage = 49;
-const delay = 10000;
+const delay = 5000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
