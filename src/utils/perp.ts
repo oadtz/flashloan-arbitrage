@@ -21,6 +21,10 @@ export async function run(
   const _prices: number[] = [];
   let _roi: number[] = [];
   let _lastPosition: "short" | "long" | null = null;
+  let shortCount = 0;
+  let longCount = 0;
+  let falseShortCount = 0;
+  let falseLongCount = 0;
   let _tradeHash = "";
   let epoch = 0;
   const openPosition = {
@@ -104,6 +108,10 @@ export async function run(
           // (shortSignal && _lastPosition !== "short")
         ) {
           console.log("👁️ Stop loss/Take profit/Reversal signal detected");
+          if (_roi[_roi.length - 1] < 0) {
+            if (_lastPosition === "long") falseLongCount++;
+            else if (_lastPosition === "short") falseShortCount++;
+          }
           await closeTrade(_tradeHash, perpContractAddress, provider);
           console.log(`Closed last trade ${_tradeHash}\n\n`);
           _lastPosition = null;
@@ -144,13 +152,14 @@ export async function run(
         );
 
         if (result) {
-          console.log("Opened short trade successfully");
+          console.log(`Opened short trade#${++shortCount}`);
 
           openPosition.amount = currentBalance / BigInt(2);
           openPosition.price = (currentPrice * BigInt(999)) / BigInt(1000);
           _lastPosition = "short";
         } else {
           console.log("☹️ Cannot open short trade, wait for next signal");
+          process.exit(1);
         }
       } else if (_lastPosition === null && longSignal) {
         console.log("⬆️ Long signal detected");
@@ -176,13 +185,14 @@ export async function run(
         );
 
         if (result) {
-          console.log("Opened long trade successfully");
+          console.log(`Opened long trade#${++longCount}`);
 
           openPosition.amount = currentBalance / BigInt(2);
           openPosition.price = (currentPrice * BigInt(1001)) / BigInt(1000);
           _lastPosition = "long";
         } else {
           console.log("☹️ Cannot open long trade, wait for next signal");
+          process.exit(1);
         }
       } else {
         console.log("❌ No signal detected");
@@ -190,6 +200,10 @@ export async function run(
     }
 
     epoch++;
+    console.log(`Short count: ${shortCount}`);
+    console.log(`False short count: ${falseShortCount}`);
+    console.log(`Long count: ${longCount}`);
+    console.log(`False long count: ${falseLongCount}`);
     console.log("\n\n");
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
