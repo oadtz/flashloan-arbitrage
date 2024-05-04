@@ -20,7 +20,7 @@ import { BigUnit } from "bigunit";
 const asset = assets.WBNB;
 
 const leverage = 49;
-const delay = fs.existsSync("price.csv") ? 0 : 10000;
+const delay = fs.existsSync("price.csv") ? 0 : 5000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
