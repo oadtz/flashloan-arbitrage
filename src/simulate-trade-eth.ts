@@ -401,7 +401,7 @@ export async function run(
     console.log(`Amount Token: ${amountToken}`);
 
     // Calculate Token Price
-    if (_trades[tokenToTrade.address].tokenPrices.length > 500)
+    if (_trades[tokenToTrade.address].tokenPrices.length > 1000)
       _trades[tokenToTrade.address].tokenPrices.shift();
 
     _trades[tokenToTrade.address].tokenPrices.push(baseLinePrice);
@@ -411,7 +411,7 @@ export async function run(
     // );
 
     // Calculate ETH Price
-    if (_trades[tokenToTrade.address].ethPrices.length > 500)
+    if (_trades[tokenToTrade.address].ethPrices.length > 1000)
       _trades[tokenToTrade.address].ethPrices.shift();
 
     _trades[tokenToTrade.address].ethPrices.push(1 / baseLinePrice);

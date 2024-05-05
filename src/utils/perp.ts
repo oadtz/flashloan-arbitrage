@@ -63,7 +63,7 @@ export async function run(
     console.log("Current price", formatDecimals(currentPrice!, 18));
     console.log("Current balance", formatDecimals(currentBalance!, 18));
 
-    if (_prices.length > 500) _prices.shift();
+    if (_prices.length > 1000) _prices.shift();
 
     _prices.push(+formatDecimals(currentPrice!, 18));
 
@@ -96,7 +96,7 @@ export async function run(
         );
         console.log(`PNL: ${formatDecimals(openPosition.pnl, 18)}`);
 
-        if (_roi.length > 500) _roi.shift();
+        if (_roi.length > 1000) _roi.shift();
 
         _roi.push(roi);
 
