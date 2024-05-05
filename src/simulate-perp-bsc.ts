@@ -20,7 +20,7 @@ import { BigUnit } from "bigunit";
 const asset = assets.WBNB;
 
 const leverage = 49;
-const delay = fs.existsSync("price.csv") ? 0 : 5000;
+const delay = fs.existsSync("price.csv") ? 0 : 1000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
@@ -100,10 +100,10 @@ async function run(
 
   function calculateROI(price: bigint, position: any) {
     let adjustedPrice = price;
-    if (_lastPosition === "long")
-      adjustedPrice = (price * BigInt(1001)) / BigInt(1000);
-    else if (_lastPosition === "short")
-      adjustedPrice = (price * BigInt(999)) / BigInt(1000);
+    // if (_lastPosition === "long")
+    //   adjustedPrice = (price * BigInt(1002)) / BigInt(1000);
+    // else if (_lastPosition === "short")
+    //   adjustedPrice = (price * BigInt(998)) / BigInt(1000);
     const openPrice = +formatDecimals(position.price, 18);
     const currentPrice = +formatDecimals(adjustedPrice, 18);
 
@@ -122,8 +122,8 @@ async function run(
     openPosition.amount = amount;
     // openPosition.price = price;
     openPosition.price = isLong
-      ? (price * BigInt(1001)) / BigInt(1000)
-      : (price * BigInt(999)) / BigInt(1000);
+      ? (price * BigInt(1002)) / BigInt(1000)
+      : (price * BigInt(998)) / BigInt(1000);
 
     return true;
   }

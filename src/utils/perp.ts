@@ -58,6 +58,7 @@ export async function run(
     );
     let currentBalance = await getBalance(provider);
 
+    console.clear();
     console.log(`Epoch: ${epoch}`);
     console.log("Current price", formatDecimals(currentPrice!, 18));
     console.log("Current balance", formatDecimals(currentBalance!, 18));
@@ -155,7 +156,7 @@ export async function run(
           console.log(`Opened short trade#${++shortCount}`);
 
           openPosition.amount = currentBalance / BigInt(2);
-          openPosition.price = (currentPrice * BigInt(999)) / BigInt(1000);
+          openPosition.price = (currentPrice * BigInt(998)) / BigInt(1000);
           _lastPosition = "short";
         } else {
           console.log("☹️ Cannot open short trade, wait for next signal");
@@ -188,7 +189,7 @@ export async function run(
           console.log(`Opened long trade#${++longCount}`);
 
           openPosition.amount = currentBalance / BigInt(2);
-          openPosition.price = (currentPrice * BigInt(1001)) / BigInt(1000);
+          openPosition.price = (currentPrice * BigInt(1002)) / BigInt(1000);
           _lastPosition = "long";
         } else {
           console.log("☹️ Cannot open long trade, wait for next signal");
@@ -216,10 +217,10 @@ function calculateROI(
   lastPosition?: string
 ) {
   let adjustedPrice = price;
-  if (lastPosition === "long")
-    adjustedPrice = (price * BigInt(1001)) / BigInt(1000);
-  else if (lastPosition === "short")
-    adjustedPrice = (price * BigInt(999)) / BigInt(1000);
+  // if (lastPosition === "long")
+  //   adjustedPrice = (price * BigInt(1002)) / BigInt(1000);
+  // else if (lastPosition === "short")
+  //   adjustedPrice = (price * BigInt(998)) / BigInt(1000);
   const openPrice = +formatDecimals(position.price, 18);
   const currentPrice = +formatDecimals(adjustedPrice, 18);
 

@@ -63,7 +63,7 @@ export function isShortSignal(price: number[]): {
   });
   const bbandTrend = BollingerBands.calculate({
     period: 20,
-    values: price.filter((_, i) => i % 6 === 0),
+    values: price.filter((_, i) => i % 30 === 0),
     stdDev: 2,
   });
   const macdLong = MACD.calculate({
@@ -75,7 +75,7 @@ export function isShortSignal(price: number[]): {
     SimpleMASignal: false,
   });
   const macdTrend = MACD.calculate({
-    values: price.filter((_, i) => i % 6 === 0),
+    values: price.filter((_, i) => i % 30 === 0),
     fastPeriod: 12,
     slowPeriod: 26,
     signalPeriod: 9,
@@ -97,7 +97,7 @@ export function isShortSignal(price: number[]): {
     longTermTrend > 0 &&
     shortTermSignal < longTermSignal &&
     lastPrice > bbandSignal &&
-    longTermSignal >= 0.12;
+    longTermSignal >= 0.1;
 
   return {
     short: shortSignal,
@@ -120,7 +120,7 @@ export function isLongSignal(price: number[]): {
   });
   const bbandTrend = BollingerBands.calculate({
     period: 20,
-    values: price.filter((_, i) => i % 6 === 0),
+    values: price.filter((_, i) => i % 30 === 0),
     stdDev: 2,
   });
   const macdLong = MACD.calculate({
@@ -132,7 +132,7 @@ export function isLongSignal(price: number[]): {
     SimpleMASignal: false,
   });
   const macdTrend = MACD.calculate({
-    values: price.filter((_, i) => i % 6 === 0),
+    values: price.filter((_, i) => i % 30 === 0),
     fastPeriod: 12,
     slowPeriod: 26,
     signalPeriod: 9,
@@ -154,7 +154,7 @@ export function isLongSignal(price: number[]): {
     longTermTrend < 0 &&
     shortTermSignal > longTermSignal &&
     lastPrice < bbandSignal &&
-    longTermSignal <= -0.12;
+    longTermSignal <= -0.1;
 
   return {
     long: longSignal,
@@ -203,7 +203,7 @@ export function isROISellSignal(data: number[]): boolean {
   const signal =
     longTermSignal > shortTermSignal &&
     lastPrice > bbandSignal &&
-    longTermSignal >= 2 &&
+    longTermSignal >= 0.75 && // 0.69
     data[data.length - 1] >= 10;
   // || (longTermSignal < shortTermSignal && longTermSignal <= -1);
 
