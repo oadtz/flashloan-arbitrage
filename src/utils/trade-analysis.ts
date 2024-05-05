@@ -61,13 +61,10 @@ export function isShortSignal(price: number[]): {
     values: price,
     stdDev: 2,
   });
-  const macdShort = MACD.calculate({
-    values: price,
-    fastPeriod: 9,
-    slowPeriod: 21,
-    signalPeriod: 9,
-    SimpleMAOscillator: false,
-    SimpleMASignal: false,
+  const bbandTrend = BollingerBands.calculate({
+    period: 20,
+    values: price.filter((_, i) => i % 6 === 0),
+    stdDev: 2,
   });
   const macdLong = MACD.calculate({
     values: price,
@@ -77,16 +74,30 @@ export function isShortSignal(price: number[]): {
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   });
+  const macdTrend = MACD.calculate({
+    values: price.filter((_, i) => i % 6 === 0),
+    fastPeriod: 12,
+    slowPeriod: 26,
+    signalPeriod: 9,
+    SimpleMAOscillator: true,
+    SimpleMASignal: true,
+  });
 
   const lastPrice = price[price.length - 1];
   const bbandSignal = bband[bband.length - 1]?.upper || 0;
+  const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.upper || 0;
   const shortTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
   const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
+  const shortTermTrend = macdTrend[macdTrend.length - 1]?.signal || 0;
+  const longTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
 
   const shortSignal =
+    shortTermTrend < longTermTrend &&
+    lastPrice > bbandTrendSignal &&
+    longTermTrend > 0 &&
     shortTermSignal < longTermSignal &&
     lastPrice > bbandSignal &&
-    longTermSignal >= 0.1;
+    longTermSignal >= 0.12;
 
   return {
     short: shortSignal,
@@ -107,13 +118,10 @@ export function isLongSignal(price: number[]): {
     values: price,
     stdDev: 2,
   });
-  const macdShort = MACD.calculate({
-    values: price,
-    fastPeriod: 9,
-    slowPeriod: 21,
-    signalPeriod: 9,
-    SimpleMAOscillator: false,
-    SimpleMASignal: false,
+  const bbandTrend = BollingerBands.calculate({
+    period: 20,
+    values: price.filter((_, i) => i % 6 === 0),
+    stdDev: 2,
   });
   const macdLong = MACD.calculate({
     values: price,
@@ -123,16 +131,30 @@ export function isLongSignal(price: number[]): {
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   });
+  const macdTrend = MACD.calculate({
+    values: price.filter((_, i) => i % 6 === 0),
+    fastPeriod: 12,
+    slowPeriod: 26,
+    signalPeriod: 9,
+    SimpleMAOscillator: true,
+    SimpleMASignal: true,
+  });
 
   const lastPrice = price[price.length - 1];
   const bbandSignal = bband[bband.length - 1]?.lower || 0;
-  const shortTermSignal = macdShort[macdShort.length - 1]?.MACD || 0;
+  const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.lower || 0;
+  const shortTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
   const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
+  const shortTermTrend = macdTrend[macdTrend.length - 1]?.signal || 0;
+  const longTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
 
   const longSignal =
+    shortTermTrend > longTermTrend &&
+    lastPrice < bbandTrendSignal &&
+    longTermTrend < 0 &&
     shortTermSignal > longTermSignal &&
     lastPrice < bbandSignal &&
-    longTermSignal <= -0.1;
+    longTermSignal <= -0.12;
 
   return {
     long: longSignal,
