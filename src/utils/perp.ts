@@ -19,6 +19,7 @@ export async function run(
   const provider = getProvider(networkProviderUrl);
 
   const _prices: number[] = [];
+  const _prices2: number[] = [];
   let _roi: number[] = [];
   let _lastPosition: "short" | "long" | null = null;
   let shortCount = 0;
@@ -63,12 +64,13 @@ export async function run(
     console.log("Current price", formatDecimals(currentPrice!, 18));
     console.log("Current balance", formatDecimals(currentBalance!, 18));
 
-    if (_prices.length > 1000) _prices.shift();
-
+    if (_prices.length > 500) _prices.shift();
     _prices.push(+formatDecimals(currentPrice!, 18));
+    if (_prices2.length > 500) _prices2.shift();
+    if (epoch % 60 === 0) _prices2.push(+formatDecimals(currentPrice!, 18));
 
-    const { short: shortSignal, indicators } = isShortSignal(_prices);
-    const { long: longSignal } = isLongSignal(_prices);
+    const { short: shortSignal, indicators } = isShortSignal(_prices, _prices2);
+    const { long: longSignal } = isLongSignal(_prices, _prices2);
 
     console.log(`BBand Signal: ${indicators.bbandSignal}`);
     console.log(`Long Term Signal: ${indicators.longTermSignal}`);

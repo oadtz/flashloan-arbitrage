@@ -36,6 +36,7 @@ async function run(
   const provider = getProvider(networkProviderUrl);
 
   const _prices: number[] = [];
+  const _prices2: number[] = [];
   const _priceData: string[] = getPriceCsv();
   let _roi: number[] = [];
   let _lastPosition: "short" | "long" | null = null;
@@ -164,11 +165,12 @@ async function run(
       console.log("Current balance", formatDecimals(_balance, 18));
 
       if (_prices.length > 500) _prices.shift();
-
       _prices.push(+formatDecimals(currentPrice, 18));
+      if (_prices2.length > 500) _prices2.shift();
+      if (epoch % 12 === 0) _prices2.push(+formatDecimals(currentPrice, 18));
 
-      const { short: shortSignal, indicators } = isShortSignal(_prices);
-      const { long: longSignal } = isLongSignal(_prices);
+      const { short: shortSignal, indicators } = isShortSignal(_prices, _prices2);
+      const { long: longSignal } = isLongSignal(_prices, _prices2);
 
       if (openPosition.amount > 0) {
         console.log(`Current position: ${_lastPosition}`);
@@ -181,7 +183,7 @@ async function run(
         );
         console.log(`PNL: ${formatDecimals(openPosition.pnl, 18)}`);
 
-        if (_roi.length > 500) _roi.shift();
+        if (_roi.length > 1000) _roi.shift();
 
         _roi.push(roi);
 
@@ -203,6 +205,11 @@ async function run(
       console.log(`BBand Signal: ${indicators.bbandSignal}`);
       console.log(`Long Term Signal: ${indicators.longTermSignal}`);
       console.log(`Short Term Signal: ${indicators.shortTermSignal}`);
+
+      console.log(`Trend BBand Signal: ${indicators.bbandTrendSignal}`);
+      console.log(`Trend Long Term Signal: ${indicators.longTermTrend}`);
+      console.log(`Trend Short Term Signal: ${indicators.shortTermTrend}`);
+
       console.log(`Short Signal: ${shortSignal}`);
       console.log(`Long Signal: ${longSignal}`);
 
