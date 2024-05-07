@@ -233,7 +233,7 @@ async function run(
       if (_lastPosition === null && shortSignal) {
         console.log("⬇️ Short signal detected");
 
-        const result = openTrade(false, _balance / BigInt(2), currentPrice);
+        const result = openTrade(true, _balance / BigInt(2), currentPrice);
 
         if (result) {
           console.log(`Opened short trade#${++shortCount}\n\n`);
@@ -242,7 +242,7 @@ async function run(
       } else if (_lastPosition === null && longSignal) {
         console.log("⬆️ Long signal detected");
 
-        const result = openTrade(true, _balance / BigInt(2), currentPrice);
+        const result = openTrade(false, _balance / BigInt(2), currentPrice);
 
         if (result) {
           console.log(`Opened long trade#${++longCount}\n\n`);
