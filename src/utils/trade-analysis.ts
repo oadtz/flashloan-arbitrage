@@ -90,10 +90,10 @@ export function isShortSignal(
   const lastPrice = price[price.length - 1];
   const bbandSignal = bband[bband.length - 1]?.middle || 0;
   const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.middle || 0;
-  const shortTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
-  const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
-  const shortTermTrend = macdTrend[macdTrend.length - 1]?.signal || 0;
-  const longTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
+  const shortTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
+  const longTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
+  const shortTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
+  const longTermTrend = macdTrend[macdTrend.length - 1]?.signal || 0;
 
   const shortSignal =
     shortTermTrend < longTermTrend &&
@@ -154,10 +154,10 @@ export function isLongSignal(
   const lastPrice = price[price.length - 1];
   const bbandSignal = bband[bband.length - 1]?.middle || 0;
   const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.middle || 0;
-  const shortTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
-  const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
-  const shortTermTrend = macdTrend[macdTrend.length - 1]?.signal || 0;
-  const longTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
+  const shortTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
+  const longTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
+  const shortTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
+  const longTermTrend = macdTrend[macdTrend.length - 1]?.signal || 0;
 
   const longSignal =
     shortTermTrend > longTermTrend &&
@@ -209,8 +209,8 @@ export function isROISellSignal(data: number[]): boolean {
 
   const lastPrice = data[data.length - 1];
   const bbandSignal = bband[bband.length - 1]?.upper || 0;
-  const shortTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
-  const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
+  const shortTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
+  const longTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
 
   console.log("ROI Long Term Signal: ", longTermSignal);
   console.log("ROI Short Term Signal: ", shortTermSignal);
