@@ -167,10 +167,16 @@ async function run(
       if (_prices.length > 500) _prices.shift();
       _prices.push(+formatDecimals(currentPrice, 18));
       if (_prices2.length > 500) _prices2.shift();
-      if (epoch % 12 === 0) _prices2.push(+formatDecimals(currentPrice, 18));
+      if (epoch % 60 === 0) _prices2.push(+formatDecimals(currentPrice, 18));
 
-      const { short: shortSignal, indicators } = isShortSignal(_prices, _prices2);
-      const { long: longSignal } = isLongSignal(_prices, _prices2);
+      const { short: shortSignal, indicators: shortIndicators } = isShortSignal(
+        _prices,
+        _prices2
+      );
+      const { long: longSignal, indicators: longIndicators } = isLongSignal(
+        _prices,
+        _prices2
+      );
 
       if (openPosition.amount > 0) {
         console.log(`Current position: ${_lastPosition}`);
@@ -202,14 +208,14 @@ async function run(
         }
       }
 
-      console.log(`BBand Signal: ${indicators.bbandSignal}`);
-      console.log(`Long Term Signal: ${indicators.longTermSignal}`);
-      console.log(`Short Term Signal: ${indicators.shortTermSignal}`);
-
-      console.log(`Trend BBand Signal: ${indicators.bbandTrendSignal}`);
-      console.log(`Trend Long Term Signal: ${indicators.longTermTrend}`);
-      console.log(`Trend Short Term Signal: ${indicators.shortTermTrend}`);
-
+      console.log(`BBand Middle: ${shortIndicators.bbandSignal}`);
+      console.log(`Long Term Signal: ${shortIndicators.longTermSignal}`);
+      console.log(`Short Term Signal: ${shortIndicators.shortTermSignal}`);
+      console.log("----------------");
+      console.log(`Trend BBand Middle: ${shortIndicators.bbandTrendSignal}`);
+      console.log(`Trend Long Term Signal: ${shortIndicators.longTermTrend}`);
+      console.log(`Trend Short Term Signal: ${shortIndicators.shortTermTrend}`);
+      console.log("----------------");
       console.log(`Short Signal: ${shortSignal}`);
       console.log(`Long Signal: ${longSignal}`);
 
@@ -221,7 +227,6 @@ async function run(
         sell: _lastPosition !== "short" && shortSignal,
         buy: _lastPosition !== "long" && longSignal,
         falseSignal: openPosition.falseSignal,
-        ...indicators,
       });
       logger.flush();
 

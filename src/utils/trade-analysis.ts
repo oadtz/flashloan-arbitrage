@@ -1,3 +1,4 @@
+import { last } from "lodash";
 import {
   RSI,
   MACD,
@@ -52,7 +53,10 @@ export function isSellSignal(data: number[]): {
   };
 }
 
-export function isShortSignal(price: number[], price2: number[]): {
+export function isShortSignal(
+  price: number[],
+  price2: number[]
+): {
   short: boolean;
   indicators?: any;
 } {
@@ -79,12 +83,12 @@ export function isShortSignal(price: number[], price2: number[]): {
     fastPeriod: 12,
     slowPeriod: 26,
     signalPeriod: 9,
-    SimpleMAOscillator: true,
-    SimpleMASignal: true,
+    SimpleMAOscillator: false,
+    SimpleMASignal: false,
   });
 
   const lastPrice = price[price.length - 1];
-  const bbandSignal = bband[bband.length - 1]?.upper || 0;
+  const bbandSignal = bband[bband.length - 1]?.middle || 0;
   const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.middle || 0;
   const shortTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
   const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
@@ -94,10 +98,11 @@ export function isShortSignal(price: number[], price2: number[]): {
   const shortSignal =
     shortTermTrend < longTermTrend &&
     lastPrice < bbandTrendSignal &&
-    longTermTrend < 0 &&
+    //lastPrice > bbandTrendSignal2 &&
+    //longTermTrend < 0 &&
     shortTermSignal < longTermSignal &&
     lastPrice > bbandSignal &&
-    longTermSignal >= 0.1;
+    longTermSignal >= 0.5;
 
   return {
     short: shortSignal,
@@ -107,12 +112,15 @@ export function isShortSignal(price: number[], price2: number[]): {
       shortTermSignal,
       bbandTrendSignal,
       longTermTrend,
-      shortTermTrend
+      shortTermTrend,
     },
   };
 }
 
-export function isLongSignal(price: number[], price2: number[]): {
+export function isLongSignal(
+  price: number[],
+  price2: number[]
+): {
   long: boolean;
   indicators?: any;
 } {
@@ -139,12 +147,12 @@ export function isLongSignal(price: number[], price2: number[]): {
     fastPeriod: 12,
     slowPeriod: 26,
     signalPeriod: 9,
-    SimpleMAOscillator: true,
-    SimpleMASignal: true,
+    SimpleMAOscillator: false,
+    SimpleMASignal: false,
   });
 
   const lastPrice = price[price.length - 1];
-  const bbandSignal = bband[bband.length - 1]?.lower || 0;
+  const bbandSignal = bband[bband.length - 1]?.middle || 0;
   const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.middle || 0;
   const shortTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
   const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
@@ -154,10 +162,11 @@ export function isLongSignal(price: number[], price2: number[]): {
   const longSignal =
     shortTermTrend > longTermTrend &&
     lastPrice > bbandTrendSignal &&
-    longTermTrend > 0 &&
+    //lastPrice < bbandTrendSignal2 &&
+    //longTermTrend > 0 &&
     shortTermSignal > longTermSignal &&
     lastPrice < bbandSignal &&
-    longTermSignal <= -0.1;
+    longTermSignal <= -0.5;
 
   return {
     long: longSignal,
@@ -167,7 +176,7 @@ export function isLongSignal(price: number[], price2: number[]): {
       shortTermSignal,
       bbandTrendSignal,
       longTermTrend,
-      shortTermTrend
+      shortTermTrend,
     },
   };
 }
@@ -210,7 +219,7 @@ export function isROISellSignal(data: number[]): boolean {
     longTermSignal > shortTermSignal &&
     lastPrice > bbandSignal &&
     longTermSignal >= 0.75 && // 0.69
-    data[data.length - 1] >= 20;
+    data[data.length - 1] >= 10;
   // || (longTermSignal < shortTermSignal && longTermSignal <= -1);
 
   return signal;
