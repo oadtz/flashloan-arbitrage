@@ -92,8 +92,8 @@ export function isShortSignal(
   const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.middle || 0;
   const shortTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
   const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
-  const shortTermTrend = macdTrend[macdTrend.length - 1]?.signal || 0;
-  const longTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
+  const shortTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
+  const longTermTrend = macdTrend[macdTrend.length - 1]?.signal || 0;
 
   const shortSignal =
     shortTermTrend < longTermTrend &&
@@ -156,8 +156,8 @@ export function isLongSignal(
   const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.middle || 0;
   const shortTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
   const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
-  const shortTermTrend = macdTrend[macdTrend.length - 1]?.signal || 0;
-  const longTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
+  const shortTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
+  const longTermTrend = macdTrend[macdTrend.length - 1]?.signal || 0;
 
   const longSignal =
     shortTermTrend > longTermTrend &&
