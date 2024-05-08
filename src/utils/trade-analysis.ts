@@ -96,8 +96,8 @@ export function isShortSignal(
   const longTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
 
   const shortSignal =
-    shortTermTrend < longTermTrend &&
-    lastPrice < bbandTrendSignal &&
+    // shortTermTrend < longTermTrend &&
+    // lastPrice < bbandTrendSignal &&
     //lastPrice > bbandTrendSignal2 &&
     //longTermTrend < 0 &&
     shortTermSignal < longTermSignal &&
@@ -160,8 +160,8 @@ export function isLongSignal(
   const longTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
 
   const longSignal =
-    shortTermTrend > longTermTrend &&
-    lastPrice > bbandTrendSignal &&
+    // shortTermTrend > longTermTrend &&
+    // lastPrice > bbandTrendSignal &&
     //lastPrice < bbandTrendSignal2 &&
     //longTermTrend > 0 &&
     shortTermSignal > longTermSignal &&
