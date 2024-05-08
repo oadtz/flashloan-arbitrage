@@ -181,9 +181,21 @@ export function isLongSignal(
   };
 }
 
-export function isROISellSignal(data: number[]): boolean {
-  if (data.length === 0) return false;
-  if (data[data.length - 1] < -50) return true;
+export function isROISellSignal(roi: number[]): boolean {
+  if (roi.length === 0) return false;
+  if (roi[roi.length - 1] < -50) return true;
+
+  
+  let data = [...roi];
+
+  if (roi.length < 33) {
+    const chunkSize = Math.round(33 / roi.length);
+
+    for (let i = 0; i < 33; i++) {
+      const chunkIndex = Math.floor(i / chunkSize);
+      data[i] = roi[chunkIndex] ? roi[chunkIndex] : roi[roi.length - 1];
+    }
+  }
 
   const bband = BollingerBands.calculate({
     period: 20,
