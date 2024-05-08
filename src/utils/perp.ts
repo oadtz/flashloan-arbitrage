@@ -161,7 +161,7 @@ export async function run(
           openPosition.price = (currentPrice * BigInt(1002)) / BigInt(1000);
           _lastPosition = "long";
         } else {
-          console.log("☹️ Cannot open short trade, wait for next signal");
+          console.log("☹️ Cannot open long trade, wait for next signal");
           process.exit(1);
         }
       } else if (_lastPosition === null && longSignal) {
@@ -194,7 +194,7 @@ export async function run(
           openPosition.price = (currentPrice * BigInt(998)) / BigInt(1000);
           _lastPosition = "short";
         } else {
-          console.log("☹️ Cannot open long trade, wait for next signal");
+          console.log("☹️ Cannot open short trade, wait for next signal");
           process.exit(1);
         }
       } else {
