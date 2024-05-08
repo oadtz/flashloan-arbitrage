@@ -155,7 +155,7 @@ export async function run(
         );
 
         if (result) {
-          console.log(`Opened short trade#${++shortCount}`);
+          console.log(`Opened long trade#${++shortCount}`);
 
           openPosition.amount = currentBalance / BigInt(2);
           openPosition.price = (currentPrice * BigInt(1002)) / BigInt(1000);
@@ -188,7 +188,7 @@ export async function run(
         );
 
         if (result) {
-          console.log(`Opened long trade#${++longCount}`);
+          console.log(`Opened short trade#${++longCount}`);
 
           openPosition.amount = currentBalance / BigInt(2);
           openPosition.price = (currentPrice * BigInt(998)) / BigInt(1000);
