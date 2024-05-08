@@ -102,7 +102,7 @@ export function isShortSignal(
     //longTermTrend < 0 &&
     shortTermSignal < longTermSignal &&
     lastPrice > bbandSignal &&
-    longTermSignal >= 0.1;
+    longTermSignal >= 0.5;
 
   return {
     short: shortSignal,
@@ -166,7 +166,7 @@ export function isLongSignal(
     //longTermTrend > 0 &&
     shortTermSignal > longTermSignal &&
     lastPrice < bbandSignal &&
-    longTermSignal <= -0.1;
+    longTermSignal <= -0.5;
 
   return {
     long: longSignal,
@@ -181,9 +181,21 @@ export function isLongSignal(
   };
 }
 
-export function isROISellSignal(data: number[]): boolean {
-  if (data.length === 0) return false;
-  if (data[data.length - 1] < -50) return true;
+export function isROISellSignal(roi: number[]): boolean {
+  if (roi.length === 0) return false;
+  if (roi[roi.length - 1] < -50) return true;
+
+  
+  let data = [...roi];
+
+  if (roi.length < 33) {
+    const chunkSize = Math.round(29 / roi.length);
+
+    for (let i = 0; i < 33; i++) {
+      const chunkIndex = Math.floor(i / chunkSize);
+      data[i] = roi[chunkIndex] ? roi[chunkIndex] : roi[roi.length - 1];
+    }
+  }
 
   const bband = BollingerBands.calculate({
     period: 20,
@@ -218,8 +230,8 @@ export function isROISellSignal(data: number[]): boolean {
   const signal =
     longTermSignal > shortTermSignal &&
     //lastPrice > bbandSignal &&
-    longTermSignal >= 0.75 && // 0.69
-    data[data.length - 1] >= 40;
+    //longTermSignal >= 0.75 && // 0.69
+    data[data.length - 1] >= 25;
   // || (longTermSignal < shortTermSignal && longTermSignal <= -1);
 
   return signal;
