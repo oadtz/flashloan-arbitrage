@@ -147,7 +147,7 @@ export async function run(
 
         const result = await openTrade(
           tokenToTrade.address,
-          false,
+          true,
           currentBalance / BigInt(2),
           currentPrice,
           perpContractAddress,
@@ -158,8 +158,8 @@ export async function run(
           console.log(`Opened short trade#${++shortCount}`);
 
           openPosition.amount = currentBalance / BigInt(2);
-          openPosition.price = (currentPrice * BigInt(998)) / BigInt(1000);
-          _lastPosition = "short";
+          openPosition.price = (currentPrice * BigInt(1002)) / BigInt(1000);
+          _lastPosition = "long";
         } else {
           console.log("☹️ Cannot open short trade, wait for next signal");
           process.exit(1);
@@ -180,7 +180,7 @@ export async function run(
 
         const result = await openTrade(
           tokenToTrade.address,
-          true,
+          false,
           currentBalance / BigInt(2),
           currentPrice,
           perpContractAddress,
@@ -191,8 +191,8 @@ export async function run(
           console.log(`Opened long trade#${++longCount}`);
 
           openPosition.amount = currentBalance / BigInt(2);
-          openPosition.price = (currentPrice * BigInt(1002)) / BigInt(1000);
-          _lastPosition = "long";
+          openPosition.price = (currentPrice * BigInt(998)) / BigInt(1000);
+          _lastPosition = "short";
         } else {
           console.log("☹️ Cannot open long trade, wait for next signal");
           process.exit(1);
