@@ -183,7 +183,7 @@ export function isLongSignal(
 
 export function isROISellSignal(roi: number[]): boolean {
   if (roi.length === 0) return false;
-  if (roi[roi.length - 1] < -50) return true;
+  if (roi[roi.length - 1] < -20) return true;
 
   let data = [...roi];
 
