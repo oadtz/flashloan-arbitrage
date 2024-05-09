@@ -9,6 +9,7 @@ import {
   ADX,
   BollingerBands,
 } from "technicalindicators";
+import isOperatingHour from "./isOperatingHour";
 
 export function isSellSignal(data: number[]): {
   sell: boolean;
