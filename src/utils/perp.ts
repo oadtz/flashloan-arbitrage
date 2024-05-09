@@ -6,6 +6,7 @@ import logger from "./logger";
 import { isShortSignal, isLongSignal, isROISellSignal } from "./trade-analysis";
 import _ from "lodash";
 import { BigUnit } from "bigunit";
+import isOperatingHour from "./isOperatingHour";
 
 export async function run(
   tokenToTrade: Asset,
@@ -202,6 +203,8 @@ export async function run(
           console.log("☹️ Cannot open short trade, wait for next signal");
           process.exit(1);
         }
+      } else if(!isOperatingHour()) {
+        console.log("❌ Not operating hour");
       } else {
         console.log("❌ No signal detected");
       }

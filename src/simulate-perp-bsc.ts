@@ -16,6 +16,7 @@ import {
 } from "./utils/trade-analysis";
 import fs from "fs";
 import { BigUnit } from "bigunit";
+import isOperatingHour from "./utils/isOperatingHour";
 
 const asset = assets.WBNB;
 
@@ -248,8 +249,10 @@ async function run(
           console.log(`Opened long trade#${++longCount}\n\n`);
           _lastPosition = "long";
         }
+      } else if(!isOperatingHour()) {
+        console.log("❌ Not operating hour");
       } else {
-        console.log("❌ No signal detected\n\n");
+        console.log("❌ No signal detected");
       }
     }
 
