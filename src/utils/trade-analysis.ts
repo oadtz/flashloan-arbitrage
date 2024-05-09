@@ -185,7 +185,6 @@ export function isROISellSignal(roi: number[]): boolean {
   if (roi.length === 0) return false;
   if (roi[roi.length - 1] < -50) return true;
 
-  
   let data = [...roi];
 
   if (roi.length < 33) {
@@ -231,7 +230,7 @@ export function isROISellSignal(roi: number[]): boolean {
     longTermSignal > shortTermSignal &&
     //lastPrice > bbandSignal &&
     longTermSignal >= 1 && // 0.69
-    data[data.length - 1] >= 10;
+    data[data.length - 1] >= 25;
   // || (longTermSignal < shortTermSignal && longTermSignal <= -1);
 
   return signal;
