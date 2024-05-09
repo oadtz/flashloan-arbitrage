@@ -9,7 +9,6 @@ import {
   ADX,
   BollingerBands,
 } from "technicalindicators";
-import isOperatingHour from "./isOperatingHour";
 
 export function isSellSignal(data: number[]): {
   sell: boolean;
@@ -97,7 +96,6 @@ export function isShortSignal(
   const longTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
 
   const shortSignal =
-    isOperatingHour() &&
     // shortTermTrend < longTermTrend &&
     // lastPrice < bbandTrendSignal &&
     //lastPrice > bbandTrendSignal2 &&
@@ -162,7 +160,6 @@ export function isLongSignal(
   const longTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
 
   const longSignal =
-    isOperatingHour() &&
     // shortTermTrend > longTermTrend &&
     // lastPrice > bbandTrendSignal &&
     //lastPrice < bbandTrendSignal2 &&
