@@ -72,9 +72,14 @@ export async function run(
     const { short: shortSignal, indicators } = isShortSignal(_prices, _prices2);
     const { long: longSignal } = isLongSignal(_prices, _prices2);
 
-    console.log(`BBand Signal: ${indicators.bbandSignal}`);
+    console.log(`BBand Middle: ${indicators.bbandSignal}`);
     console.log(`Long Term Signal: ${indicators.longTermSignal}`);
     console.log(`Short Term Signal: ${indicators.shortTermSignal}`);
+    console.log("----------------");
+    console.log(`Trend BBand Middle: ${indicators.bbandTrendSignal}`);
+    console.log(`Trend Long Term Signal: ${indicators.longTermTrend}`);
+    console.log(`Trend Short Term Signal: ${indicators.shortTermTrend}`);
+    console.log("----------------");
     console.log(`Short Signal: ${shortSignal}`);
     console.log(`Long Signal: ${longSignal}`);
 
