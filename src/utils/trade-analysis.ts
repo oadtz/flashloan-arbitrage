@@ -101,8 +101,8 @@ export function isShortSignal(
     //lastPrice > bbandTrendSignal2 &&
     //longTermTrend < 0 &&
     shortTermSignal < longTermSignal &&
-    lastPrice > bbandSignal &&
-    longTermSignal >= 0.1;
+    lastPrice < bbandSignal &&
+    longTermSignal >= 0.05;
 
   return {
     short: shortSignal,
@@ -165,8 +165,8 @@ export function isLongSignal(
     //lastPrice < bbandTrendSignal2 &&
     //longTermTrend > 0 &&
     shortTermSignal > longTermSignal &&
-    lastPrice < bbandSignal &&
-    longTermSignal <= -0.1;
+    lastPrice > bbandSignal &&
+    longTermSignal <= -0.05;
 
   return {
     long: longSignal,
