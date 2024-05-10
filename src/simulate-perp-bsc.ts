@@ -21,7 +21,7 @@ import isOperatingHour from "./utils/isOperatingHour";
 const asset = assets.WBNB;
 
 const leverage = 49;
-const delay = fs.existsSync("price.csv") ? 0 : 1000;
+const delay = fs.existsSync("price.csv") ? 0 : 10000;
 
 const networkProviderUrl = appConfig.bscRpcUrl;
 
