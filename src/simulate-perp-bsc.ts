@@ -249,8 +249,6 @@ async function run(
           console.log(`Opened short trade#${++shortCount}\n\n`);
           _lastPosition = "short";
         }
-      } else if (!isOperatingHour()) {
-        console.log("❌ Not operating hour");
       } else {
         console.log("❌ No signal detected");
       }
