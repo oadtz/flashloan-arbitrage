@@ -237,8 +237,8 @@ async function run(
         const result = openTrade(true, _balance / BigInt(2), currentPrice);
 
         if (result) {
-          console.log(`Opened short trade#${++shortCount}\n\n`);
-          _lastPosition = "short";
+          console.log(`Opened long trade#${++longCount}\n\n`);
+          _lastPosition = "long";
         }
       } else if (_lastPosition === null && longSignal) {
         console.log("⬆️ Long signal detected");
@@ -246,10 +246,10 @@ async function run(
         const result = openTrade(false, _balance / BigInt(2), currentPrice);
 
         if (result) {
-          console.log(`Opened long trade#${++longCount}\n\n`);
-          _lastPosition = "long";
+          console.log(`Opened short trade#${++shortCount}\n\n`);
+          _lastPosition = "short";
         }
-      } else if(!isOperatingHour()) {
+      } else if (!isOperatingHour()) {
         console.log("❌ Not operating hour");
       } else {
         console.log("❌ No signal detected");
