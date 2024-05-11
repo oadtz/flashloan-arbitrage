@@ -89,19 +89,18 @@ export function isShortSignal(
 
   const lastPrice = price[price.length - 1];
   const bbandSignal = bband[bband.length - 1]?.upper || 0;
-  const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.middle || 0;
+  const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.upper || 0;
   const shortTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
   const longTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
   const shortTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
   const longTermTrend = macdTrend[macdTrend.length - 1]?.signal || 0;
 
   const shortSignal =
-    // shortTermTrend < longTermTrend &&
-    // lastPrice < bbandTrendSignal &&
-    //lastPrice > bbandTrendSignal2 &&
+    shortTermTrend < longTermTrend &&
+    lastPrice > bbandTrendSignal
     //longTermTrend < 0 &&
-    shortTermSignal < longTermSignal &&
-    lastPrice > bbandSignal;
+    // shortTermSignal < longTermSignal &&
+    // lastPrice > bbandSignal;
    // longTermSignal >= 0.1;
 
   return {
@@ -153,19 +152,18 @@ export function isLongSignal(
 
   const lastPrice = price[price.length - 1];
   const bbandSignal = bband[bband.length - 1]?.lower || 0;
-  const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.middle || 0;
+  const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.lower || 0;
   const shortTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
   const longTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
   const shortTermTrend = macdTrend[macdTrend.length - 1]?.MACD || 0;
   const longTermTrend = macdTrend[macdTrend.length - 1]?.signal || 0;
 
   const longSignal =
-    // shortTermTrend > longTermTrend &&
-    // lastPrice > bbandTrendSignal &&
-    //lastPrice < bbandTrendSignal2 &&
+    shortTermTrend > longTermTrend &&
+    lastPrice < bbandTrendSignal;
     //longTermTrend > 0 &&
-    shortTermSignal > longTermSignal &&
-    lastPrice < bbandSignal;
+    // shortTermSignal > longTermSignal &&
+    // lastPrice < bbandSignal;
     //longTermSignal <= -0.1;
 
   return {
