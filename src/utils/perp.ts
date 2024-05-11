@@ -137,8 +137,8 @@ export async function run(
         }
       }
 
-      if (_lastPosition === null && shortSignal && isOperatingHour()) {
-        console.log("⬇️ Short signal detected");
+      if (_lastPosition === null && longSignal && isOperatingHour()) {
+        console.log("⬆️ Long signal detected");
 
         // if (await closeTrade(_tradeHash, perpContractAddress, provider)) {
         //   console.log(`Closed last trade ${_tradeHash}`);
@@ -171,8 +171,8 @@ export async function run(
           console.log("☹️ Cannot open long trade, wait for next signal");
           process.exit(1);
         }
-      } else if (_lastPosition === null && longSignal && isOperatingHour()) {
-        console.log("⬆️ Long signal detected");
+      } else if (_lastPosition === null && shortSignal && isOperatingHour()) {
+        console.log("⬇️ Short signal detected");
 
         // if (await closeTrade(_tradeHash, perpContractAddress, provider)) {
         //   console.log(`Closed last trade ${_tradeHash}`);
