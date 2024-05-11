@@ -156,6 +156,7 @@ export async function run(
           true,
           currentBalance / BigInt(2),
           currentPrice,
+          leverage,
           perpContractAddress,
           provider
         );
@@ -189,6 +190,7 @@ export async function run(
           false,
           currentBalance / BigInt(2),
           currentPrice,
+          leverage,
           perpContractAddress,
           provider
         );
@@ -304,6 +306,7 @@ async function openTrade(
   isLong: boolean,
   amount: bigint,
   price: bigint,
+  leverage: number,
   perpContractAddress: string,
   provider: Provider
 ) {
@@ -319,7 +322,7 @@ async function openTrade(
       isLong: isLong,
       tokenIn: "0x0000000000000000000000000000000000000000",
       amountIn: amount,
-      qty: Math.round(+formatDecimals(amount * BigInt(49), 8)),
+      qty: Math.round(+formatDecimals(amount * BigInt(leverage), 8)),
       price: isLong
         ? Math.round(+formatDecimals(price, 10) * 2)
         : Math.round(+formatDecimals(price, 10) * 0.75),
