@@ -154,7 +154,7 @@ export async function run(
         const result = await openTrade(
           tokenToTrade.address,
           true,
-          currentBalance / BigInt(2),
+          currentBalance / BigInt(3),
           currentPrice,
           leverage,
           perpContractAddress,
@@ -188,7 +188,7 @@ export async function run(
         const result = await openTrade(
           tokenToTrade.address,
           false,
-          currentBalance / BigInt(2),
+          currentBalance / BigInt(3),
           currentPrice,
           leverage,
           perpContractAddress,
