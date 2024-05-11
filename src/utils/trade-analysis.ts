@@ -88,7 +88,7 @@ export function isShortSignal(
   });
 
   const lastPrice = price[price.length - 1];
-  const bbandSignal = bband[bband.length - 1]?.middle || 0;
+  const bbandSignal = bband[bband.length - 1]?.upper || 0;
   const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.middle || 0;
   const shortTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
   const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
@@ -152,7 +152,7 @@ export function isLongSignal(
   });
 
   const lastPrice = price[price.length - 1];
-  const bbandSignal = bband[bband.length - 1]?.middle || 0;
+  const bbandSignal = bband[bband.length - 1]?.lower || 0;
   const bbandTrendSignal = bbandTrend[bbandTrend.length - 1]?.middle || 0;
   const shortTermSignal = macdLong[macdLong.length - 1]?.signal || 0;
   const longTermSignal = macdLong[macdLong.length - 1]?.MACD || 0;
